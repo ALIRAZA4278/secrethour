@@ -189,7 +189,7 @@ export default function ProductPage({ params }) {
                   <p className="text-gold text-base" style={serif}>{p.price}</p>
                   <button
                     onClick={() => addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numericPrice, img: p.img })}
-                    className="mt-auto border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] px-4 py-2 btn-glow transition-all duration-300"
+                    className="mt-auto bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] px-4 py-2 btn-glow transition-all duration-300"
                   >
                     Add to Cart
                   </button>

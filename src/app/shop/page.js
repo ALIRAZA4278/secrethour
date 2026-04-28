@@ -15,20 +15,17 @@ export const metadata = {
 
 export default function ShopPage() {
   return (
-    <div className="bg-sh-bg text-cream min-h-screen flex flex-col">
+    <div className="text-cream flex flex-col bg-sh-bg">
+
       <Navbar />
 
-      {/* Header — matches original: py-20, silk bg opacity-30, centered logo h-14 */}
-      <section className="relative py-20 overflow-hidden mt-[64px]">
-        <Image
-          src={SILK}
-          alt=""
-          fill
-          className="object-cover opacity-30"
-          unoptimized
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-sh-bg/40 to-sh-bg" />
-        <div className="relative z-10 text-center px-6">
+      {/* Main content with silk background */}
+      <div className="relative flex-1" style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={SILK} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 rotate-180 pointer-events-none z-0" loading="lazy" />
+
+        {/* Header */}
+        <section className="relative z-10 py-20 mt-16 text-center px-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={LOGO}
@@ -41,38 +38,38 @@ export default function ShopPage() {
           <p className="text-cream/55 italic text-sm max-w-md mx-auto" style={serif}>
             Quiet luxuries, made for the hours that belong only to the two of you.
           </p>
-        </div>
-      </section>
+        </section>
 
-      {/* Products grid — 2 cols default, 3 cols at lg */}
-      <section className="flex-1 px-5 md:px-7 pb-24 pt-8">
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 md:gap-7 max-w-6xl mx-auto">
-          {PRODUCTS.map((p) => (
-            <Link
-              key={p.slug}
-              href={`/product/${p.slug}`}
-              className="rounded overflow-hidden group flex flex-col border border-gold-border/60 hover:border-gold transition-colors duration-300"
-            >
-              <div className="relative aspect-square overflow-hidden bg-sh-card">
-                <Image
-                  src={p.img}
-                  alt={p.title}
-                  fill
-                  className="object-contain group-hover:scale-[1.03] transition-transform duration-700"
-                  unoptimized
-                />
-              </div>
-              <div className="px-4 py-3 text-center space-y-1 flex-1 flex flex-col justify-between">
-                <p className="text-gold/70 text-[10px] uppercase tracking-[0.3em]">{p.category}</p>
-                <h2 className="text-sm md:text-base italic text-cream leading-snug line-clamp-2" style={serif}>
-                  {p.title}
-                </h2>
-                <p className="text-gold text-base md:text-lg pt-1" style={serif}>{p.price}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+        {/* Products grid */}
+        <section className="relative z-10 px-5 md:px-7 pb-24 pt-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 md:gap-7 max-w-6xl mx-auto">
+            {PRODUCTS.map((p) => (
+              <Link
+                key={p.slug}
+                href={`/product/${p.slug}`}
+                className="rounded overflow-hidden group flex flex-col border border-gold-border/60 hover:border-gold transition-colors duration-300"
+              >
+                <div className="relative aspect-square overflow-hidden bg-sh-card">
+                  <Image
+                    src={p.img}
+                    alt={p.title}
+                    fill
+                    className="object-contain group-hover:scale-[1.03] transition-transform duration-700"
+                    unoptimized
+                  />
+                </div>
+                <div className="px-4 py-3 text-center space-y-1 flex-1 flex flex-col justify-between">
+                  <p className="text-gold/70 text-[10px] uppercase tracking-[0.3em]">{p.category}</p>
+                  <h2 className="text-sm md:text-base italic text-cream leading-snug line-clamp-2" style={serif}>
+                    {p.title}
+                  </h2>
+                  <p className="text-gold text-base md:text-lg pt-1" style={serif}>{p.price}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </div>
 
       <Footer />
     </div>

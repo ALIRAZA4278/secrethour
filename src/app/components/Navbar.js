@@ -20,6 +20,8 @@ const LOGO = 'https://secrethour.lovable.app/assets/logo-secret-hour-DN-hyC6c.pn
 export default function Navbar() {
   const pathname                = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { setOpen, totalItems }  = useCart();
 
   return (
@@ -47,11 +49,36 @@ export default function Navbar() {
         </ul>
 
         <div className="flex items-center gap-4">
-          <button aria-label="Search" className="text-cream/75 hover:text-gold transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-            </svg>
-          </button>
+          {searchOpen ? (
+            <div className="flex items-center gap-2 border border-gold-border/60 px-3 py-1.5 bg-sh-card/80">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gold shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+              <input
+                autoFocus
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="bg-transparent text-cream/80 placeholder:text-cream/35 text-sm outline-none w-44"
+              />
+              <button
+                onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+                className="text-cream/50 hover:text-cream transition-colors"
+                aria-label="Close search"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <button aria-label="Search" onClick={() => setSearchOpen(true)} className="text-cream/75 hover:text-gold transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+            </button>
+          )}
           <button
             aria-label="Open cart"
             onClick={() => setOpen(true)}
