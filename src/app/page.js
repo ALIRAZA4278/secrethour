@@ -50,16 +50,15 @@ export default function Home() {
       <Navbar />
 
       {/* ─── Hero ───────────────────────────────────────────── */}
-      <section className="relative min-h-screen flex items-center justify-center">
-        <div className="absolute inset-0">
-          <Image src={IMG.hero} alt="Secret Hour couple" fill className="object-cover" priority unoptimized />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
-        </div>
+      <section className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={IMG.hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black" />
 
         <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
           <h1 className="text-5xl md:text-7xl italic mb-6 leading-[1.15] text-cream" style={serif}>
             The hours that{' '}
-            <span className="text-gold">belong to you</span>
+            <span className="text-gold-gradient">belong to you</span>
           </h1>
           <p className="text-cream/75 text-lg md:text-xl italic mb-12 max-w-xl mx-auto leading-relaxed" style={serif}>
             Quietly luxurious gifts crafted for married couples — to slow down, come closer, and remember why.
@@ -73,7 +72,7 @@ export default function Home() {
             </Link>
             <Link
               href="/product/secret-hour-card-experience"
-              className="bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-10 py-4 btn-glow transition-all duration-300 min-w-60 text-center"
+              className="bg-sh-bg border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-10 py-4 btn-glow transition-all duration-300 min-w-60 text-center"
             >
               Discover the Card Game
             </Link>
@@ -82,48 +81,48 @@ export default function Home() {
       </section>
 
       {/* ─── Featured Product ────────────────────────────────── */}
-      <section className="relative py-28 px-6 overflow-hidden">
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
+      <section className="relative min-h-screen px-6 overflow-hidden flex items-center">
+        <div className="absolute inset-0 opacity-40 pointer-events-none">
           <Image src={IMG.silk} alt="" fill className="object-cover" unoptimized />
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-          <div className="relative p-3 border border-gold-border">
-            <div className="relative aspect-[4/3]">
+        <div className="relative z-10 max-w-7xl mx-auto w-full grid md:grid-cols-2 gap-20 items-center py-20">
+          <div className="relative p-4 border border-gold-border bg-black">
+            <div className="relative aspect-square">
               <Image
                 src={IMG.cardGame}
                 alt="Secret Hour – The Couple's Card Experience"
                 fill
-                className="object-cover"
+                className="object-contain"
                 unoptimized
               />
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="flex items-center gap-3">
-              <div className="h-px w-8 bg-gold-border" />
+              <div className="h-px w-10 bg-gold-border" />
               <span className="text-gold text-[10px] uppercase tracking-[0.3em]">Featured</span>
-              <div className="h-px w-8 bg-gold-border" />
+              <div className="h-px w-10 bg-gold-border" />
             </div>
 
-            <h2 className="text-4xl md:text-5xl italic leading-tight text-cream" style={serif}>
+            <h2 className="text-5xl md:text-6xl italic leading-tight text-cream" style={serif}>
               Secret Hour
               <br />
               <span className="text-gold-light">The Couple&apos;s Card Experience</span>
             </h2>
 
-            <p className="text-cream/65 leading-relaxed text-sm">
+            <p className="text-cream/65 leading-relaxed text-base">
               A private invitation to rediscover each other. Crafted for married couples, The Midnight
               Deck turns ordinary nights into unforgettable rituals. Housed in a matte black box with
               soft gold detailing.
             </p>
 
-            <p className="text-3xl text-gold" style={serif}>Rs. 3,499</p>
+            <p className="text-4xl text-gold" style={serif}>Rs. 3,499</p>
 
             <Link
               href="/product/secret-hour-card-experience"
-              className="inline-block bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300"
+              className="inline-block bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-10 py-5 btn-glow transition-all duration-300"
             >
               Open the Box
             </Link>
@@ -132,8 +131,8 @@ export default function Home() {
       </section>
 
       {/* ─── Bundles ─────────────────────────────────────────── */}
-      <section className="py-28 px-6">
-        <div className="max-w-5xl mx-auto">
+      <section className="relative min-h-screen px-6 flex items-center py-24" style={{ background: 'linear-gradient(to bottom, hsl(350 60% 12%) 0%, hsl(20 10% 4%) 100%)' }}>
+        <div className="max-w-6xl mx-auto w-full">
           <div className="text-center mb-16">
             <span className="text-gold text-[10px] uppercase tracking-[0.3em] block mb-4">
               Curated Bundles
@@ -146,7 +145,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-10">
             {PRODUCTS.map((p) => (
               <Link
                 key={p.href}
@@ -162,10 +161,10 @@ export default function Home() {
                     unoptimized
                   />
                 </div>
-                <div className="p-6 space-y-2">
-                  <h3 className="text-xl italic text-cream" style={serif}>{p.title}</h3>
-                  <p className="text-cream/55 text-sm">{p.subtitle}</p>
-                  <p className="text-gold" style={serif}>{p.price}</p>
+                <div className="p-8 space-y-3 bg-black/40 text-center">
+                  <h3 className="text-2xl italic text-cream" style={serif}>{p.title}</h3>
+                  <p className="text-cream/55 text-sm italic" style={serif}>{p.subtitle}</p>
+                  <p className="text-gold text-xl" style={serif}>{p.price}</p>
                 </div>
               </Link>
             ))}
@@ -175,7 +174,7 @@ export default function Home() {
 
       {/* ─── Testimonials ────────────────────────────────────── */}
       <section className="relative py-28 px-6 overflow-hidden">
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute inset-0 opacity-40 pointer-events-none">
           <Image src={IMG.silk} alt="" fill className="object-cover" unoptimized />
         </div>
 
