@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
+import { supabase } from '../../lib/supabase';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 
@@ -31,8 +32,39 @@ export default function CheckoutPage() {
   const discount = promoApplied && payment === 'bank' ? Math.round(totalPrice * 0.10) : 0;
   const total = totalPrice - discount;
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+    const { data: order, error: orderErr } = await supabase
+      .from('orders')
+      .insert({
+        first_name: form.firstName,
+        last_name: form.lastName,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        city: form.city,
+        postal_code: form.postalCode,
+        country: form.country,
+        payment_method: payment,
+        subtotal: totalPrice,
+        discount,
+        total,
+      })
+      .select('id')
+      .single();
+
+    if (!orderErr && order) {
+      await supabase.from('order_items').insert(
+        items.map((item) => ({
+          order_id: order.id,
+          product_slug: item.slug,
+          product_title: item.title,
+          product_img: item.img,
+          quantity: item.qty,
+          price: item.numericPrice,
+        }))
+      );
+    }
     setSubmitted(true);
   }
 
@@ -41,7 +73,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26), rgb(11,10,9) 60%)' }}>
         <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
+        <main className="flex-1 flex flex-col items-center justify-center gap-6 px-6 pt-24">
           <p className="text-3xl italic text-cream/70" style={serif}>Your cart is empty</p>
           <Link
             href="/shop"
@@ -60,7 +92,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26), rgb(11,10,9) 60%)' }}>
         <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <main className="flex-1 flex flex-col items-center justify-center px-6 text-center pt-24">
           <div className={`${cardCls} max-w-md w-full space-y-5`}>
             <p className="text-gold text-3xl italic" style={serif}>Order Placed</p>
             <p className="text-cream/55 text-sm italic leading-relaxed" style={serif}>
@@ -84,7 +116,7 @@ export default function CheckoutPage() {
     <div className="min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26), rgb(11,10,9) 60%)' }}>
       <Navbar />
 
-      <main className="pt-28 md:pt-32 pb-20">
+      <main className="pt-36 md:pt-40 pb-20">
         <div className="max-w-6xl mx-auto px-4 md:px-6">
 
           {/* ── Header ── */}
@@ -237,7 +269,7 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Trust badges */}
-                  <div className="flex items-center justify-center gap-6 mt-5 pt-4 border-t border-gold-border/20">
+                  <div className="flex flex-wrap items-center justify-center gap-4 mt-5 pt-4 border-t border-gold-border/20">
                     {[
                       { icon: 'M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z', label: 'Secure Checkout' },
                       { icon: 'M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z', label: 'Private & Discreet' },

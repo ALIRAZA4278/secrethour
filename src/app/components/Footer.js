@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 
-const LOGO = 'https://secrethour.lovable.app/assets/logo-secret-hour-DN-hyC6c.png';
+const LOGO = '/assets/logo-secret-hour-DN-hyC6c.png';
 
 const SOCIAL = [
   {
@@ -46,8 +46,16 @@ const SOCIAL = [
 
 export default function Footer() {
   return (
-    <footer className="bg-sh-bg border-t border-gold-border/30 pt-16 pb-8 px-6">
-      <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+    <footer className="bg-sh-bg border-t border-gold-border/30">
+      {/* Copyright banner */}
+      <div className="border-b border-gold-border/20 py-3 px-6 text-center">
+        <p className="text-cream/30 text-[9px] uppercase tracking-[0.25em]">
+          All products, designs, and content are protected under copyright.
+        </p>
+      </div>
+
+      <div className="pt-16 pb-8 px-4 md:px-6">
+      <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 mb-12">
         <div className="col-span-2 md:col-span-1 space-y-5">
           <div className="relative w-36 h-10">
             <Image src={LOGO} alt="Secret Hour" fill className="object-contain object-left" unoptimized />
@@ -79,11 +87,13 @@ export default function Footer() {
           <h4 className="text-cream italic text-base mb-4" style={serif}>House</h4>
           <ul className="space-y-3">
             {[
-              ['About Us',     '/about'],
-              ['Testimonials', '/testimonials'],
-              ['Contact',      '/contact'],
+              ['About Us',        '/about'],
+              ['Testimonials',    '/testimonials'],
+              ['Contact',         '/contact'],
+              ['FAQ',             '/contact'],
+              ['Referral Program','/contact'],
             ].map(([label, href]) => (
-              <li key={href}>
+              <li key={label}>
                 <Link href={href} className="text-cream/55 hover:text-gold text-sm transition-colors">
                   {label}
                 </Link>
@@ -93,29 +103,47 @@ export default function Footer() {
         </div>
 
         <div className="space-y-5">
-          <h4 className="text-cream italic text-base mb-4" style={serif}>Follow</h4>
-          <div className="flex gap-2">
-            {SOCIAL.map(({ label, href, icon }) => (
-              <a
-                key={label}
-                href={href}
-                aria-label={label}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 border border-gold-border flex items-center justify-center text-cream/55 hover:text-gold hover:border-gold transition-colors"
-              >
-                {icon}
-              </a>
+          <h4 className="text-cream italic text-base mb-4" style={serif}>Information</h4>
+          <ul className="space-y-3">
+            {[
+              ['Shipping Policy',    '/contact'],
+              ['Refund Policy',      '/contact'],
+              ['Returns & Exchange', '/contact'],
+              ['Privacy Policy',     '/contact'],
+              ['Terms & Conditions', '/contact'],
+            ].map(([label, href]) => (
+              <li key={label}>
+                <Link href={href} className="text-cream/55 hover:text-gold text-sm transition-colors">
+                  {label}
+                </Link>
+              </li>
             ))}
-          </div>
-          <p className="text-cream/40 text-xs">info@secrethour.pk</p>
+          </ul>
         </div>
       </div>
 
-      <div className="border-t border-gold-border/25 pt-8 text-center">
-        <p className="text-cream/25 text-xs tracking-[0.12em]">
-          © 2026 Secret Hour · Discreet Packaging · Private Experience
+      <div className="border-t border-gold-border/25 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex gap-2">
+          {SOCIAL.map(({ label, href, icon }) => (
+            <a
+              key={label}
+              href={href}
+              aria-label={label}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-8 h-8 border border-gold-border flex items-center justify-center text-cream/55 hover:text-gold hover:border-gold transition-colors"
+            >
+              {icon}
+            </a>
+          ))}
+        </div>
+        <p className="text-cream/25 text-xs tracking-[0.12em] text-center">
+          info@secrethour.pk · Discreet Packaging · Private Experience
         </p>
+        <p className="text-cream/25 text-xs tracking-[0.12em]">
+          © 2026 Secret Hour. All rights reserved.
+        </p>
+      </div>
       </div>
     </footer>
   );

@@ -15,7 +15,7 @@ const NAV_LINKS = [
   { label: 'Contact',      href: '/contact' },
 ];
 
-const LOGO = 'https://secrethour.lovable.app/assets/logo-secret-hour-DN-hyC6c.png';
+const LOGO = '/assets/logo-secret-hour-DN-hyC6c.png';
 
 export default function Navbar() {
   const pathname                = usePathname();
@@ -25,7 +25,14 @@ export default function Navbar() {
   const { setOpen, totalItems }  = useCart();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gold-border/40">
+    <>
+    {/* Announcement Bar */}
+    <div className="fixed top-0 left-0 right-0 z-[60] text-center py-2 px-4" style={{ background: 'hsl(350 80% 5%)' }}>
+      <p className="text-gold text-[10px] md:text-xs uppercase tracking-[0.25em] font-medium">
+        ✦ Get 10% Off on Online Payment ✦
+      </p>
+    </div>
+    <nav className="fixed top-8 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gold-border/40">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <Link href="/" className="relative w-36 h-10 shrink-0">
           <Image src={LOGO} alt="Secret Hour" fill className="object-contain object-left" priority unoptimized />
@@ -50,7 +57,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           {searchOpen ? (
-            <div className="flex items-center gap-2 border border-gold-border/60 px-3 py-1.5 bg-sh-card/80">
+            <div className="flex items-center gap-2 border border-gold-border/60 px-3 py-1.5 bg-sh-card/80 w-44 sm:w-52">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gold shrink-0">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
@@ -60,7 +67,7 @@ export default function Navbar() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products..."
-                className="bg-transparent text-cream/80 placeholder:text-cream/35 text-sm outline-none w-44"
+                className="bg-transparent text-cream/80 placeholder:text-cream/35 text-sm outline-none w-full"
               />
               <button
                 onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
@@ -123,5 +130,6 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+    </>
   );
 }

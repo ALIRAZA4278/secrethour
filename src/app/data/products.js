@@ -2,17 +2,25 @@ export const PRODUCTS = [
   {
     slug:         'secret-hour-card-experience',
     category:     'Card Game',
+    tagline:      'Designed for meaningful connection',
     title:        'Secret Hour – The Couple\'s Card Experience',
     subtitle:     'A private invitation to rediscover each other.',
     price:        'Rs. 3,499',
     numericPrice: 3499,
-    img:      'https://secrethour.lovable.app/assets/sh-card-game-Cw972EQC.png',
+    stockNote:    'Limited stock available',
+    img:      '/assets/sh-card-game-Cw972EQC.png',
     images: [
-      'https://secrethour.lovable.app/assets/sh-card-game-Cw972EQC.png',
-      'https://secrethour.lovable.app/assets/sh-cards-prompts-BszawJq3.png',
-      'https://secrethour.lovable.app/assets/sh-card-back-BT2gsHSE.png',
+      '/assets/sh-card-game-Cw972EQC.png',
+      '/assets/sh-cards-prompts-BszawJq3.png',
+      '/assets/sh-card-back-BT2gsHSE.png',
     ],
     description: 'Crafted for married couples, The Midnight Deck turns ordinary nights into unforgettable rituals. Quiet questions, playful dares and tender prompts across four intimate categories — all wrapped in a matte black box with soft gold detailing.',
+    features: [
+      'Easy to use',
+      'No awkwardness',
+      'Perfect for couples at any stage',
+      'Designed for a private, comfortable experience',
+    ],
     included: [
       '48 prompt cards',
       'Wild cards across four intimate categories',
@@ -24,6 +32,14 @@ export const PRODUCTS = [
       'Take turns drawing a card — Wild, Sensual, Playful or Romantic.',
       'Move from soft prompts to deeper, more intimate ones at your own pace.',
     ],
+    quote:      '"This isn\'t just a product — it\'s a moment you create together."',
+    quoteLabel: 'Loved by couples across Pakistan',
+    upsellSlug: 'velvet-bond',
+    faq: [
+      { q: 'Is it discreet?', a: 'Yes — every order ships in plain packaging with no product details visible from the outside.' },
+      { q: 'Is it easy to use?', a: 'Absolutely. Everything is designed to feel natural and intuitive — no instructions needed, no awkwardness.' },
+      { q: 'Is it suitable for newly married couples?', a: 'Yes. Secret Hour is crafted especially to help couples ease in, build comfort, and connect at their own pace.' },
+    ],
   },
   {
     slug:         'bridal-box',
@@ -32,11 +48,11 @@ export const PRODUCTS = [
     subtitle:     'The wedding-night gift she will never forget.',
     price:        'Rs. 8,999',
     numericPrice: 8999,
-    img:      'https://secrethour.lovable.app/assets/sh-bridal-box-Bmv6nl8o.jpg',
+    img:      '/assets/sh-bridal-box-Bmv6nl8o.jpg',
     images: [
-      'https://secrethour.lovable.app/assets/sh-bridal-box-Bmv6nl8o.jpg',
-      'https://secrethour.lovable.app/assets/sh-card-game-Cw972EQC.png',
-      'https://secrethour.lovable.app/assets/sh-candle-B33huzfN.jpg',
+      '/assets/sh-bridal-box-Bmv6nl8o.jpg',
+      '/assets/sh-card-game-Cw972EQC.png',
+      '/assets/sh-candle-B33huzfN.jpg',
     ],
     description: 'A complete wedding-night experience, thoughtfully assembled. The Bridal Box brings together our most intimate pieces — wrapped in layers of silk tissue, sealed with a wax stamp, and delivered in a keepsake outer box.',
     included: [
@@ -59,11 +75,11 @@ export const PRODUCTS = [
     subtitle:     'Three small luxuries. One unforgettable evening.',
     price:        'Rs. 5,499',
     numericPrice: 5499,
-    img:      'https://secrethour.lovable.app/assets/sh-night-set-DlV1-dhc.jpg',
+    img:      '/assets/sh-night-set-DlV1-dhc.jpg',
     images: [
-      'https://secrethour.lovable.app/assets/sh-night-set-DlV1-dhc.jpg',
-      'https://secrethour.lovable.app/assets/sh-candle-B33huzfN.jpg',
-      'https://secrethour.lovable.app/assets/sh-card-game-Cw972EQC.png',
+      '/assets/sh-night-set-DlV1-dhc.jpg',
+      '/assets/sh-candle-B33huzfN.jpg',
+      '/assets/sh-card-game-Cw972EQC.png',
     ],
     description: 'For the couple that wants to reconnect without an occasion. The Intimate Night Set is designed for any evening you want to make feel different — quieter, warmer, closer.',
     included: [
@@ -84,10 +100,10 @@ export const PRODUCTS = [
     subtitle:     'A scent that sets the mood before a word is spoken.',
     price:        'Rs. 1,499',
     numericPrice: 1499,
-    img:      'https://secrethour.lovable.app/assets/sh-candle-B33huzfN.jpg',
+    img:      '/assets/sh-candle-B33huzfN.jpg',
     images: [
-      'https://secrethour.lovable.app/assets/sh-candle-B33huzfN.jpg',
-      'https://secrethour.lovable.app/assets/sh-night-set-DlV1-dhc.jpg',
+      '/assets/sh-candle-B33huzfN.jpg',
+      '/assets/sh-night-set-DlV1-dhc.jpg',
     ],
     description: 'Hand-poured in small batches, the Midnight Glow burns for up to 40 hours. Its warm, woody fragrance — sandalwood and oud — is designed to slow the room down and invite presence.',
     included: [
@@ -109,9 +125,9 @@ export const PRODUCTS = [
     subtitle:     'Eight handcrafted chocolates for two.',
     price:        'Rs. 1,200',
     numericPrice: 1200,
-    img:      'https://secrethour.lovable.app/assets/sh-chocolates-BzBJo79h.jpg',
+    img:      '/assets/sh-chocolates-BzBJo79h.jpg',
     images: [
-      'https://secrethour.lovable.app/assets/sh-chocolates-BzBJo79h.jpg',
+      '/assets/sh-chocolates-BzBJo79h.jpg',
     ],
     description: 'Eight artisan chocolates, each one a small pause. The Sweet Moments Collection is made to be shared slowly — one at a time, between conversations, in the hours that belong only to you.',
     included: [
@@ -132,9 +148,9 @@ export const PRODUCTS = [
     subtitle:     'A soft, intentional ritual for two.',
     price:        'Rs. 999',
     numericPrice: 999,
-    img:      'https://secrethour.lovable.app/assets/sh-velvet-bond-CTb2fah6.jpg',
+    img:      '/assets/sh-velvet-bond-CTb2fah6.jpg',
     images: [
-      'https://secrethour.lovable.app/assets/sh-velvet-bond-CTb2fah6.jpg',
+      '/assets/sh-velvet-bond-CTb2fah6.jpg',
     ],
     description: 'Made from pure satin, the Velvet Bond is a soft tie designed for couples who want to add a layer of trust and intention to their evenings. Comes with a small gold Secret Hour charm.',
     included: [
@@ -154,9 +170,9 @@ export const PRODUCTS = [
     subtitle:     'Say the things you save for the dark.',
     price:        'Rs. 300',
     numericPrice: 300,
-    img:      'https://secrethour.lovable.app/assets/sh-message-card-BQ1uKHY7.jpg',
+    img:      '/assets/sh-message-card-BQ1uKHY7.jpg',
     images: [
-      'https://secrethour.lovable.app/assets/sh-message-card-BQ1uKHY7.jpg',
+      '/assets/sh-message-card-BQ1uKHY7.jpg',
     ],
     description: 'A thick matte black card with minimal gold typography — a small, personal way to leave a message that lingers.',
     included: [
