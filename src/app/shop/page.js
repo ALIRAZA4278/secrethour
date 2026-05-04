@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getServerSupabase } from '../../lib/supabase-server';
+import AddToCartBtn from './AddToCartBtn';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 const SILK = '/assets/bg-silk-B9_HjwKe.jpg';
@@ -21,7 +22,7 @@ export default async function ShopPage() {
     const supabase = getServerSupabase();
     const { data } = await supabase
       .from('products')
-      .select('slug, title, category, img, price')
+      .select('slug, title, category, img, price, numeric_price')
       .order('created_at');
     if (data) products = data;
   } catch {
@@ -69,12 +70,15 @@ export default async function ShopPage() {
                       unoptimized
                     />
                   </div>
-                  <div className="px-4 py-3 text-center space-y-1 flex-1 flex flex-col justify-between">
-                    <p className="text-gold/70 text-[10px] uppercase tracking-[0.3em]">{p.category}</p>
-                    <h2 className="text-sm md:text-base italic text-cream leading-snug line-clamp-2" style={serif}>
-                      {p.title}
-                    </h2>
-                    <p className="text-gold text-base md:text-lg pt-1" style={serif}>{p.price}</p>
+                  <div className="px-4 py-3 text-center space-y-2 flex-1 flex flex-col justify-between">
+                    <div className="space-y-1">
+                      <p className="text-gold/70 text-[10px] uppercase tracking-[0.3em]">{p.category}</p>
+                      <h2 className="text-sm md:text-base italic text-cream leading-snug line-clamp-2" style={serif}>
+                        {p.title}
+                      </h2>
+                      <p className="text-gold text-base md:text-lg pt-1" style={serif}>{p.price}</p>
+                    </div>
+                    <AddToCartBtn product={p} />
                   </div>
                 </Link>
               ))}

@@ -320,7 +320,7 @@ export default function CheckoutPage() {
                       type="text"
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                      placeholder="MIDNIGHTHOUR"
+                      placeholder="Enter promo code"
                       className={`${inputCls} flex-1`}
                     />
                     <button

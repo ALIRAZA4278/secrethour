@@ -56,7 +56,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="bg-sh-bg text-cream min-h-screen flex flex-col">
+    <div className="text-cream min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>
       <Navbar />
 
       <section className="flex-1 pt-32 pb-24 px-6">
