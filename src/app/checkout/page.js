@@ -147,7 +147,7 @@ export default function CheckoutPage() {
                     <h2 className="italic text-lg text-cream" style={serif}>Shipping Details</h2>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className={labelCls}>First Name</label>
                       <input type="text" required value={form.firstName} onChange={set('firstName')} className={inputCls} />
@@ -218,7 +218,7 @@ export default function CheckoutPage() {
                         {/* Bank details — inside the card */}
                         {payment === 'bank' && (
                           <div className="mt-4 pt-4 border-t border-gold/20 space-y-3">
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                               <div>
                                 <p className="text-cream/45 text-[10px] uppercase tracking-[0.15em]">Account Title</p>
                                 <p className="text-cream text-sm font-medium mt-0.5">Secret Hour</p>

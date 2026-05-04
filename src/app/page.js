@@ -286,7 +286,7 @@ export default function Home() {
           </p>
 
           <form
-            className="flex mt-8"
+            className="flex flex-col sm:flex-row mt-8 gap-0"
             onSubmit={(e) => {
               e.preventDefault();
               setEmail('');
@@ -302,7 +302,7 @@ export default function Home() {
             />
             <button
               type="submit"
-              className="bg-burgundy border border-l-0 border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-6 py-4 btn-glow transition-all whitespace-nowrap"
+              className="bg-burgundy border border-gold-muted sm:border-l-0 text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-6 py-4 btn-glow transition-all whitespace-nowrap"
             >
               Subscribe
             </button>
