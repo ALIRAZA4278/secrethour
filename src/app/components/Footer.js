@@ -69,10 +69,10 @@ export default function Footer() {
           <h4 className="text-cream italic text-base mb-4" style={serif}>Shop</h4>
           <ul className="space-y-3">
             {[
-              ['All Products', '/shop'],
-              ['Card Game',    '/product/secret-hour-card-experience'],
-              ['Bridal Box',   '/product/bridal-box'],
-              ['Night Set',    '/product/intimate-night-set'],
+              ['All Products',  '/shop'],
+              ['Take the Quiz', '/product/secret-hour-card-experience'],
+              ['Bridal Box',    '/product/bridal-box'],
+              ['Night Set',     '/product/intimate-night-set'],
             ].map(([label, href]) => (
               <li key={href}>
                 <Link href={href} className="text-cream/55 hover:text-gold text-sm transition-colors">
@@ -106,11 +106,11 @@ export default function Footer() {
           <h4 className="text-cream italic text-base mb-4" style={serif}>Information</h4>
           <ul className="space-y-3">
             {[
-              ['Shipping Policy',    '/contact'],
-              ['Refund Policy',      '/contact'],
-              ['Returns & Exchange', '/contact'],
-              ['Privacy Policy',     '/contact'],
-              ['Terms & Conditions', '/contact'],
+              ['Shipping Policy',    '/info/shipping'],
+              ['Refund Policy',      '/info/refund'],
+              ['Returns & Exchange', '/info/returns'],
+              ['Privacy Policy',     '/info/privacy'],
+              ['Terms & Conditions', '/info/terms'],
             ].map(([label, href]) => (
               <li key={label}>
                 <Link href={href} className="text-cream/55 hover:text-gold text-sm transition-colors">
@@ -131,7 +131,7 @@ export default function Footer() {
               aria-label={label}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-8 h-8 border border-gold-border flex items-center justify-center text-cream/55 hover:text-gold hover:border-gold transition-colors"
+              className="w-8 h-8 rounded-full border border-gold-border flex items-center justify-center text-cream/55 hover:text-gold hover:border-gold transition-colors"
             >
               {icon}
             </a>
