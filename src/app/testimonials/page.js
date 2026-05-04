@@ -51,15 +51,15 @@ const STATS = [
 
 export default function TestimonialsPage() {
   return (
-    <div className="bg-sh-bg text-cream min-h-screen flex flex-col">
+    <div className="text-cream min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(40,12,18) 0%, rgb(9,8,7) 55%)' }}>
       <Navbar />
 
       <div className="relative flex-1">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={SILK} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
+        <img src={SILK} alt="" className="absolute inset-0 w-full h-full object-cover opacity-8 rotate-180 pointer-events-none" />
 
         {/* Header */}
-        <section className="relative z-10 pt-36 pb-12 px-6 text-center mt-[0px]">
+        <section className="relative z-10 pt-36 pb-12 px-6 text-center">
           <div className="max-w-2xl mx-auto space-y-4">
             <h1 className="text-4xl md:text-6xl italic text-cream" style={serif}>
               Loved by Couples Like You
