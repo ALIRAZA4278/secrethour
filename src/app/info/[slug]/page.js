@@ -59,16 +59,18 @@ export function generateStaticParams() {
   return Object.keys(POLICIES).map((slug) => ({ slug }));
 }
 
-export function generateMetadata({ params }) {
-  const policy = POLICIES[params.slug];
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const policy = POLICIES[slug];
   if (!policy) return {};
   return {
     title: `${policy.title} — Secret Hour`,
   };
 }
 
-export default function PolicyPage({ params }) {
-  const policy = POLICIES[params.slug];
+export default async function PolicyPage({ params }) {
+  const { slug } = await params;
+  const policy = POLICIES[slug];
   if (!policy) notFound();
 
   return (
