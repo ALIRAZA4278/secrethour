@@ -79,8 +79,8 @@ export default function TestimonialsPage() {
       });
       if (err) throw err;
       setSubmitted(true);
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (e) {
+      setError(e?.message || 'Something went wrong. Please try again.');
     } finally {
       setSubmitting(false);
     }

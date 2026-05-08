@@ -1021,14 +1021,20 @@ function ProductsTab() {
 function ReviewsTab() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [err,     setErr]     = useState('');
 
-  useEffect(() => {
-    supabase
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
       .from('product_reviews')
       .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => { setReviews(data || []); setLoading(false); });
+      .order('created_at', { ascending: false });
+    if (error) setErr(error.message);
+    setReviews(data || []);
+    setLoading(false);
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   async function toggleApprove(id, approved) {
     await supabase.from('product_reviews').update({ approved: !approved }).eq('id', id);
@@ -1050,9 +1056,19 @@ function ReviewsTab() {
         <h1 className="text-4xl italic text-gray-900" style={serif}>Reviews</h1>
         <p className="text-gray-400 text-sm mt-1">{reviews.length} total · {reviews.filter(r => !r.approved).length} pending approval</p>
       </div>
-      {reviews.length === 0 ? (
-        <p className="text-gray-400 text-sm italic">No reviews yet. Create the product_reviews table in Supabase to enable this feature.</p>
-      ) : (
+      {err && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+          <strong>Supabase error:</strong> {err}
+        </div>
+      )}
+      {!err && reviews.length === 0 ? (
+        <div className="text-center py-16 space-y-3">
+          <p className="text-gray-400 text-sm italic">No reviews submitted yet.</p>
+          <button onClick={load} className="text-xs uppercase tracking-[0.2em] text-gray-500 hover:text-gray-900 border border-gray-300 px-4 py-2 rounded-lg transition">
+            Refresh
+          </button>
+        </div>
+      ) : !err && (
         <div className="border border-gray-200 bg-white rounded-xl overflow-hidden shadow-sm">
           {reviews.map(r => (
             <div key={r.id} className="px-5 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition">
