@@ -13,7 +13,7 @@ const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE
 
 const PRODUCTS = [
   {
-    slug: 'secret-hour-card-experience',
+    slug: 'The-Midnight-Deck',
     category: 'Card Game',
     tagline: 'Designed for meaningful connection',
     title: "Secret Hour – The Couple's Card Experience",

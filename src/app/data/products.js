@@ -1,9 +1,9 @@
 export const PRODUCTS = [
   {
-    slug:         'secret-hour-card-experience',
+    slug:         'The-Midnight-Deck',
     category:     'Card Game',
     tagline:      'Designed for meaningful connection',
-    title:        'Secret Hour – The Couple\'s Card Experience',
+    title:        'The Midnight Deck',
     subtitle:     'A private invitation to rediscover each other.',
     price:        'Rs. 3,499',
     numericPrice: 3499,

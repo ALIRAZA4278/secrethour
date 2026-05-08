@@ -1,14 +1,13 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { supabase } from '../../lib/supabase';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 const SILK = '/assets/bg-silk-B9_HjwKe.jpg';
-
-export const metadata = {
-  title: 'Testimonials — Secret Hour',
-  description: 'Loved by couples like you. Whispered back to us — in confidence.',
-};
 
 const FEATURED = {
   quote: "Our wedding night felt sacred. We will never forget the way it began.",
@@ -49,7 +48,44 @@ const STATS = [
   },
 ];
 
+const INP = 'w-full bg-transparent border border-gold-border/50 text-cream/90 placeholder:text-cream/30 px-4 py-3 text-sm outline-none focus:border-gold/60 transition-colors';
+
 export default function TestimonialsPage() {
+  const [form, setForm] = useState({ name: '', email: '', location: '', body: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+  const f = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const displayName = form.name.trim()
+    ? form.name.trim()
+    : 'Anonymous';
+  const displayAuthor = form.location.trim()
+    ? `${displayName}, ${form.location.trim()}`
+    : displayName;
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.email.trim() || !form.body.trim()) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const { error: err } = await supabase.from('testimonials').insert({
+        name: form.name.trim() || null,
+        email: form.email.trim(),
+        location: form.location.trim() || null,
+        body: form.body.trim(),
+      });
+      if (err) throw err;
+      setSubmitted(true);
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="text-cream min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(40,12,18) 0%, rgb(9,8,7) 55%)' }}>
       <Navbar />
@@ -120,8 +156,114 @@ export default function TestimonialsPage() {
           </div>
         </section>
 
+        {/* ── Write a Review ── */}
+        <section className="relative z-10 px-6 py-16 border-t border-gold-border/20">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-10">
+              <p className="text-gold text-[10px] uppercase tracking-[0.3em] mb-3">Share Your Experience</p>
+              <h2 className="text-2xl md:text-3xl italic text-cream" style={serif}>Write a Review</h2>
+              <p className="text-cream/45 text-xs mt-2 italic" style={serif}>
+                Your review will appear after approval.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 items-start">
+
+              {/* Form */}
+              <div>
+                {submitted ? (
+                  <div className="border border-gold-border/50 p-8 text-center space-y-3" style={{ background: 'rgba(11,10,9,0.6)' }}>
+                    <p className="text-gold text-2xl">✦</p>
+                    <p className="text-cream italic text-lg" style={serif}>Thank you.</p>
+                    <p className="text-cream/55 text-sm italic" style={serif}>
+                      Your review has been received and will be shared after a quick review.
+                    </p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <input
+                        type="email"
+                        required
+                        value={form.email}
+                        onChange={f('email')}
+                        placeholder="Email address *"
+                        className={INP}
+                      />
+                      <p className="text-cream/30 text-[10px] mt-1.5 px-1">
+                        For record-keeping only — your email will never appear on the website.
+                      </p>
+                    </div>
+
+                    <input
+                      type="text"
+                      value={form.name}
+                      onChange={f('name')}
+                      placeholder="Your name (optional — shows as Anonymous if left blank)"
+                      className={INP}
+                    />
+
+                    <input
+                      type="text"
+                      value={form.location}
+                      onChange={f('location')}
+                      placeholder="City / Location (optional)"
+                      className={INP}
+                    />
+
+                    <textarea
+                      required
+                      rows={5}
+                      value={form.body}
+                      onChange={f('body')}
+                      placeholder="Share your experience..."
+                      className={`${INP} resize-none`}
+                    />
+
+                    {error && (
+                      <p className="text-red-400 text-xs">{error}</p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={submitting || !form.email.trim() || !form.body.trim()}
+                      className="w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] uppercase tracking-[0.2em] py-3.5 btn-glow transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {submitting ? 'Submitting…' : 'Submit Review'}
+                    </button>
+                  </form>
+                )}
+              </div>
+
+              {/* Live preview */}
+              <div>
+                <p className="text-cream/30 text-[10px] uppercase tracking-[0.25em] mb-4 text-center">Preview</p>
+                <div
+                  className="border p-8 space-y-5 transition-all duration-300"
+                  style={{
+                    background: 'rgba(11,10,9,0.5)',
+                    borderColor: form.body.trim() ? 'rgba(180,140,80,0.6)' : 'rgba(180,140,80,0.2)',
+                  }}
+                >
+                  <div className="text-3xl text-gold/30 leading-none font-serif">&ldquo;</div>
+                  <p className="text-cream/75 italic leading-relaxed text-sm min-h-15" style={serif}>
+                    {form.body.trim() || (
+                      <span className="text-cream/20">Your review will appear here as you type…</span>
+                    )}
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="h-px w-6 bg-gold-border" />
+                    <p className="text-gold/70 text-[10px] uppercase tracking-[0.25em]">— {displayAuthor}</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
         {/* CTA */}
-        <section className="relative z-10 pb-20 px-6 text-center">
+        <section className="relative z-10 pb-20 px-6 text-center border-t border-gold-border/20 pt-10">
           <Link
             href="/shop"
             className="inline-block border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.25em] px-12 py-4 btn-glow transition-all duration-300 hover:bg-burgundy"

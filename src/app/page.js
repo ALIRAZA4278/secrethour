@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import { useCart } from './context/CartContext';
 
 const IMG = {
   hero:      '/assets/hero-couple-CSWWAnnc.jpg',
@@ -16,20 +17,24 @@ const IMG = {
 
 const PRODUCTS = [
   {
-    href:     '/product/bridal-box',
-    img:      IMG.bridalBox,
-    alt:      'The Secret Hour Bridal Box',
-    title:    'The Secret Hour Bridal Box',
-    subtitle: 'The wedding-night gift she will never forget.',
-    price:    'Rs. 8,999',
+    slug:         'bridal-box',
+    href:         '/product/bridal-box',
+    img:          IMG.bridalBox,
+    alt:          'The Secret Hour Bridal Box',
+    title:        'The Secret Hour Bridal Box',
+    subtitle:     'The wedding-night gift she will never forget.',
+    price:        'Rs. 8,999',
+    numericPrice: 8999,
   },
   {
-    href:     '/product/intimate-night-set',
-    img:      IMG.nightSet,
-    alt:      'The Intimate Night Set',
-    title:    'The Intimate Night Set',
-    subtitle: 'Three small luxuries. One unforgettable evening.',
-    price:    'Rs. 5,499',
+    slug:         'intimate-night-set',
+    href:         '/product/intimate-night-set',
+    img:          IMG.nightSet,
+    alt:          'The Intimate Night Set',
+    title:        'The Intimate Night Set',
+    subtitle:     'Three small luxuries. One unforgettable evening.',
+    price:        'Rs. 5,499',
+    numericPrice: 5499,
   },
 ];
 
@@ -43,6 +48,7 @@ const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, s
 
 export default function Home() {
   const [email, setEmail] = useState('');
+  const { addToCart } = useCart();
 
   return (
     <div className="bg-sh-bg text-cream min-h-screen">
@@ -50,7 +56,7 @@ export default function Home() {
       <Navbar />
 
       {/* ─── Hero ───────────────────────────────────────────── */}
-      <section className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center pt-[130px] pb-20">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={IMG.hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black" />
@@ -63,9 +69,6 @@ export default function Home() {
           <p className="text-cream/75 text-base md:text-xl italic mb-3 max-w-xl mx-auto leading-relaxed" style={serif}>
             Quietly luxurious gifts crafted for married couples — to slow down, come closer, and remember why.
           </p>
-          <p className="text-cream/55 text-sm italic mb-8 max-w-lg mx-auto" style={serif}>
-            Create moments that bring you closer — privately, comfortably, beautifully.
-          </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
             <Link
               href="/shop"
@@ -74,7 +77,7 @@ export default function Home() {
               Explore the Experience
             </Link>
             <Link
-              href="/product/secret-hour-card-experience"
+              href="/quiz"
               className="w-full sm:w-auto bg-sh-bg border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 sm:min-w-52 text-center"
             >
               Take the Quiz
@@ -101,7 +104,7 @@ export default function Home() {
             <div className="relative aspect-square">
               <Image
                 src={IMG.cardGame}
-                alt="Secret Hour – The Couple's Card Experience"
+                alt="The Midnight Deck"
                 fill
                 className="object-contain"
                 unoptimized
@@ -112,11 +115,8 @@ export default function Home() {
           <div className="space-y-5 md:space-y-6">
             <p className="text-gold/70 text-[10px] uppercase tracking-[0.35em]">Featured</p>
             <div>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl italic leading-tight text-cream" style={serif}>
-                <em>Secret Hour</em>
-              </h2>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl italic leading-tight text-cream" style={serif}>
-                <em>The Couple&apos;s Card Experience</em>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl italic leading-tight text-cream" style={serif}>
+                <em>The Midnight Deck</em>
               </h2>
             </div>
 
@@ -159,7 +159,7 @@ export default function Home() {
             <span className="text-gold text-[10px] uppercase tracking-[0.3em] block mb-4">
               Curated Bundles
             </span>
-            <h2 className="text-3xl md:text-5xl italic mb-4 text-cream" style={serif}>
+            <h2 className="text-2xl md:text-4xl italic mb-4 text-cream" style={serif}>
               For a complete experience —<br className="hidden md:block" /> not just a product
             </h2>
             <p className="text-cream/55 italic text-sm" style={serif}>
@@ -179,19 +179,27 @@ export default function Home() {
                     Best Seller
                   </span>
                 )}
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <Image
-                    src={p.img}
-                    alt={p.alt}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    unoptimized
-                  />
+                <div className="relative aspect-[4/3] overflow-hidden bg-sh-bg">
+                  <div className="absolute inset-6">
+                    <Image
+                      src={p.img}
+                      alt={p.alt}
+                      fill
+                      className="object-contain"
+                      unoptimized
+                    />
+                  </div>
                 </div>
-                <div className="p-6 md:p-8 space-y-2 md:space-y-3 bg-black/40 text-center">
-                  <h3 className="text-xl md:text-2xl italic text-cream" style={serif}>{p.title}</h3>
-                  <p className="text-cream/55 text-sm italic" style={serif}>{p.subtitle}</p>
-                  <p className="text-gold text-lg md:text-xl" style={serif}>{p.price}</p>
+                <div className="p-5 md:p-6 space-y-2 bg-black/40 text-center">
+                  <h3 className="text-base md:text-lg italic text-cream" style={serif}>{p.title}</h3>
+                  <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
+                  <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
+                  <button
+                    onClick={(e) => { e.preventDefault(); addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numericPrice, img: p.img }); }}
+                    className="mt-1 w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
+                  >
+                    Add to Cart
+                  </button>
                 </div>
               </Link>
             ))}

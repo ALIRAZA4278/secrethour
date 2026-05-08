@@ -42,24 +42,57 @@ export default function ProductPage({ params }) {
   const [upsell, setUpsell] = useState(null);
   const [activeImg, setActiveImg] = useState(0);
   const [status, setStatus] = useState('loading'); // 'loading' | 'found' | 'notfound'
+  const [reviews, setReviews] = useState([]);
+  const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, body: '' });
+  const [submitStatus, setSubmitStatus] = useState('idle');
 
   useEffect(() => {
     async function load() {
-      const [{ data: p }, { data: all }] = await Promise.all([
-        supabase.from('products').select('*').eq('slug', slug).single(),
-        supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('slug', slug),
-      ]);
-      if (!p) { setStatus('notfound'); return; }
-      setProduct(p);
-      setRelated((all || []).slice(0, 3));
-      if (p.upsell_slug) {
-        const found = (all || []).find(x => x.slug === p.upsell_slug);
-        setUpsell(found || null);
+      try {
+        const [{ data: p, error: pErr }, { data: all }] = await Promise.all([
+          supabase.from('products').select('*').eq('slug', slug).single(),
+          supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('slug', slug),
+        ]);
+        if (pErr || !p) { setStatus('notfound'); return; }
+        setProduct(p);
+        setRelated((all || []).slice(0, 3));
+        if (p.upsell_slug) {
+          const found = (all || []).find(x => x.slug === p.upsell_slug);
+          setUpsell(found || null);
+        }
+        setStatus('found');
+      } catch {
+        setStatus('notfound');
       }
-      setStatus('found');
     }
     load();
   }, [slug]);
+
+  useEffect(() => {
+    if (!slug) return;
+    supabase
+      .from('product_reviews')
+      .select('id, reviewer_name, rating, body, created_at')
+      .eq('product_slug', slug)
+      .eq('approved', true)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setReviews(data || []));
+  }, [slug]);
+
+  async function submitReview(e) {
+    e.preventDefault();
+    setSubmitStatus('submitting');
+    const { error } = await supabase.from('product_reviews').insert({
+      product_slug: slug,
+      reviewer_name: reviewForm.name,
+      rating: Number(reviewForm.rating),
+      body: reviewForm.body,
+    });
+    if (error) { setSubmitStatus('error'); } else {
+      setSubmitStatus('submitted');
+      setReviewForm({ name: '', rating: 5, body: '' });
+    }
+  }
 
   if (status === 'loading') {
     return (
@@ -85,15 +118,15 @@ export default function ProductPage({ params }) {
       <Navbar />
 
       {/* ── Main product section ── */}
-      <section className="relative py-8 md:py-12 overflow-hidden mt-[88px]">
+      <section className="relative py-8 md:py-12 mt-[88px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={SILK} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15 pointer-events-none" />
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-6">
           <div className="grid lg:grid-cols-2 gap-8 md:gap-14 items-start">
 
-            {/* Left: image + thumbnails */}
-            <div className="space-y-4">
+            {/* Left: image + thumbnails — sticky on desktop */}
+            <div className="space-y-4 lg:sticky lg:top-[110px]">
               <div className="relative aspect-square rounded overflow-hidden border border-gold-border/40 bg-sh-card">
                 <Image src={images[activeImg]} alt={product.title} fill className="object-contain" priority unoptimized />
               </div>
@@ -118,6 +151,15 @@ export default function ProductPage({ params }) {
             <div className="space-y-6">
               <div>
                 <p className="text-gold/80 text-xs uppercase tracking-[0.3em] mb-1">{product.category}</p>
+                {product.tag && (
+                  <span className={`inline-block text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 mb-2 ${
+                    product.tag === 'best-seller' ? 'bg-gold text-sh-bg' :
+                    product.tag === 'new-arrival' ? 'bg-blue-600 text-white' :
+                    'bg-burgundy text-gold border border-gold-muted'
+                  }`}>
+                    {product.tag === 'best-seller' ? 'Best Seller' : product.tag === 'new-arrival' ? 'New Arrival' : 'On Sale'}
+                  </span>
+                )}
                 {product.tagline && (
                   <p className="text-cream/50 text-xs italic mb-3" style={serif}>{product.tagline}</p>
                 )}
@@ -130,6 +172,22 @@ export default function ProductPage({ params }) {
                 {product.stock_note && (
                   <p className="text-cream/45 text-xs uppercase tracking-[0.18em] mt-1">{product.stock_note}</p>
                 )}
+              </div>
+
+              {/* Buttons — directly below price */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => addToCart({ slug: product.slug, title: product.title, price: product.price, numericPrice: product.numeric_price, img: images[0] })}
+                  className="bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 flex-1"
+                >
+                  Add to Cart
+                </button>
+                <Link
+                  href="/checkout"
+                  className="border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 flex-1 text-center hover:bg-burgundy"
+                >
+                  Buy Now
+                </Link>
               </div>
 
               <p className="text-cream/65 leading-relaxed text-sm">{product.description}</p>
@@ -145,22 +203,6 @@ export default function ProductPage({ params }) {
                   ))}
                 </ul>
               )}
-
-              {/* Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => addToCart({ slug: product.slug, title: product.title, price: product.price, numericPrice: product.numeric_price, img: images[0] })}
-                  className="bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 flex-1"
-                >
-                  Add to Cart
-                </button>
-                <Link
-                  href="/checkout"
-                  className="border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 flex-1 text-center hover:bg-burgundy"
-                >
-                  Buy Now
-                </Link>
-              </div>
 
               {/* Inline trust badges */}
               <div className="flex flex-col sm:flex-row gap-3 text-cream/45 text-[10px] uppercase tracking-[0.15em]">
@@ -319,6 +361,107 @@ export default function ProductPage({ params }) {
           </div>
         </section>
       )}
+
+      {/* ── Reviews ── */}
+      <section className="py-16 px-4 md:px-6 border-t border-gold-border/20">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-gold/60 text-[10px] uppercase tracking-[0.35em] mb-2">Customer Voices</p>
+            <h2 className="text-2xl md:text-3xl italic text-cream" style={serif}>
+              What they <span className="text-gold-light">say</span>
+            </h2>
+            {reviews.length > 0 && (() => {
+              const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+              return (
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className={`text-base ${i < Math.round(avg) ? 'text-gold' : 'text-cream/20'}`}>★</span>
+                    ))}
+                  </div>
+                  <span className="text-cream/50 text-sm">{avg.toFixed(1)} · {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</span>
+                </div>
+              );
+            })()}
+          </div>
+
+          {reviews.length > 0 ? (
+            <div className="space-y-4 mb-10">
+              {reviews.map((r) => (
+                <div key={r.id} className="border border-gold-border/40 p-5" style={{ background: 'rgba(11,10,9,0.5)' }}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="text-cream text-sm font-medium">{r.reviewer_name}</p>
+                      <div className="flex mt-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i} className={`text-sm ${i < r.rating ? 'text-gold' : 'text-cream/20'}`}>★</span>
+                        ))}
+                      </div>
+                    </div>
+                    <span className="text-cream/30 text-xs">
+                      {new Date(r.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <p className="text-cream/65 text-sm leading-relaxed italic" style={serif}>&ldquo;{r.body}&rdquo;</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-cream/40 italic text-sm text-center mb-10" style={serif}>Be the first to share your experience.</p>
+          )}
+
+          {submitStatus === 'submitted' ? (
+            <div className="border border-gold-border/40 p-6 text-center" style={{ background: 'rgba(11,10,9,0.5)' }}>
+              <p className="text-gold italic text-sm" style={serif}>Thank you — your review will appear after approval.</p>
+              <button type="button" onClick={() => setSubmitStatus('idle')} className="text-cream/40 text-[10px] uppercase tracking-[0.2em] mt-3 hover:text-gold transition-colors">Write Another</button>
+            </div>
+          ) : (
+            <form onSubmit={submitReview} className="border border-gold-border/40 p-6 space-y-4" style={{ background: 'rgba(11,10,9,0.5)' }}>
+              <h3 className="text-cream italic text-lg" style={serif}>Write a Review</h3>
+              <div>
+                <label className="block text-cream/50 text-[10px] uppercase tracking-[0.2em] mb-1.5">Your Name</label>
+                <input required value={reviewForm.name} onChange={e => setReviewForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Fatima A." className="w-full px-3.5 py-2.5 bg-black/40 border border-gold-border/40 text-cream text-sm outline-none focus:border-gold/60 transition placeholder:text-cream/25" />
+              </div>
+              <div>
+                <label className="block text-cream/50 text-[10px] uppercase tracking-[0.2em] mb-1.5">Rating</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <button key={n} type="button" onClick={() => setReviewForm(f => ({ ...f, rating: n }))} className={`text-2xl transition-colors ${n <= reviewForm.rating ? 'text-gold' : 'text-cream/20 hover:text-gold/50'}`}>★</button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-cream/50 text-[10px] uppercase tracking-[0.2em] mb-1.5">Your Review</label>
+                <textarea required rows={4} value={reviewForm.body} onChange={e => setReviewForm(f => ({ ...f, body: e.target.value }))} placeholder="Share your honest experience..." className="w-full px-3.5 py-2.5 bg-black/40 border border-gold-border/40 text-cream text-sm outline-none focus:border-gold/60 transition placeholder:text-cream/25 resize-none" />
+              </div>
+              {submitStatus === 'error' && <p className="text-red-400 text-xs">Something went wrong. Please try again.</p>}
+              <button type="submit" disabled={submitStatus === 'submitting'} className="bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.2em] px-6 py-3 btn-glow transition-all disabled:opacity-50">
+                {submitStatus === 'submitting' ? 'Submitting…' : 'Submit Review'}
+              </button>
+              <p className="text-cream/30 text-[10px]">Reviews are approved before they appear.</p>
+            </form>
+          )}
+        </div>
+      </section>
+
+      {/* Spacer for mobile sticky bar */}
+      <div className="h-20 lg:h-0" />
+
+      {/* Mobile sticky Add to Cart + Buy Now */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-sh-bg/95 backdrop-blur-sm border-t border-gold-border/40 p-3 flex gap-3">
+        <button
+          onClick={() => addToCart({ slug: product.slug, title: product.title, price: product.price, numericPrice: product.numeric_price, img: images[0] })}
+          className="flex-1 bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.18em] py-3.5 btn-glow transition-all"
+        >
+          Add to Cart
+        </button>
+        <Link
+          href="/checkout"
+          className="flex-1 border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.18em] py-3.5 transition-all text-center hover:bg-burgundy flex items-center justify-center"
+        >
+          Buy Now
+        </Link>
+      </div>
 
       <Footer />
     </div>

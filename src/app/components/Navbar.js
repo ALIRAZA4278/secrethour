@@ -9,13 +9,13 @@ import { useCart } from '../context/CartContext';
 const NAV_LINKS = [
   { label: 'Home',         href: '/' },
   { label: 'Shop',         href: '/shop' },
-  { label: 'Card Game',    href: '/product/secret-hour-card-experience' },
+  { label: 'Card Game', href: '/product/The-Midnight-Deck' },
   { label: 'Testimonials', href: '/testimonials' },
   { label: 'About',        href: '/about' },
   { label: 'Contact',      href: '/contact' },
 ];
 
-const LOGO = '/assets/logo-secret-hour-DN-hyC6c.png';
+const LOGO = '/logo.png';
 
 export default function Navbar() {
   const pathname                = usePathname();
@@ -23,6 +23,7 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { setOpen, totalItems }  = useCart();
+
 
   return (
     <>
@@ -34,7 +35,7 @@ export default function Navbar() {
     </div>
     <nav className="fixed top-8 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gold-border/40">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="relative w-36 h-10 shrink-0">
+        <Link href="/" className="relative w-48 h-14 shrink-0">
           <Image src={LOGO} alt="Secret Hour" fill className="object-contain object-left" priority unoptimized />
         </Link>
 

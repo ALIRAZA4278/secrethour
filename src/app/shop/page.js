@@ -22,7 +22,8 @@ export default async function ShopPage() {
     const supabase = getServerSupabase();
     const { data } = await supabase
       .from('products')
-      .select('slug, title, category, img, price, numeric_price')
+      .select('slug, title, category, img, price, numeric_price, tag')
+      .eq('hidden', false)
       .order('created_at');
     if (data) products = data;
   } catch {
@@ -54,7 +55,7 @@ export default async function ShopPage() {
           {products.length === 0 ? (
             <p className="text-center text-cream/40 italic py-20" style={serif}>No products available yet.</p>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 md:gap-7 max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 max-w-5xl mx-auto">
               {products.map((p) => (
                 <Link
                   key={p.slug}
@@ -62,13 +63,24 @@ export default async function ShopPage() {
                   className="rounded overflow-hidden group flex flex-col border border-gold-border/60 hover:border-gold transition-colors duration-300"
                 >
                   <div className="relative aspect-square overflow-hidden bg-sh-card">
-                    <Image
-                      src={p.img}
-                      alt={p.title}
-                      fill
-                      className="object-contain group-hover:scale-[1.03] transition-transform duration-700"
-                      unoptimized
-                    />
+                    <div className="absolute inset-4">
+                      <Image
+                        src={p.img}
+                        alt={p.title}
+                        fill
+                        className="object-contain"
+                        unoptimized
+                      />
+                    </div>
+                    {p.tag && (
+                      <span className={`absolute top-2 left-2 text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-1 ${
+                        p.tag === 'best-seller' ? 'bg-gold text-sh-bg' :
+                        p.tag === 'new-arrival' ? 'bg-blue-600 text-white' :
+                        'bg-burgundy text-gold border border-gold-muted'
+                      }`}>
+                        {p.tag === 'best-seller' ? 'Best Seller' : p.tag === 'new-arrival' ? 'New Arrival' : 'On Sale'}
+                      </span>
+                    )}
                   </div>
                   <div className="px-4 py-3 text-center space-y-2 flex-1 flex flex-col justify-between">
                     <div className="space-y-1">

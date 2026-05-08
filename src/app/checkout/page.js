@@ -21,7 +21,7 @@ export default function CheckoutPage() {
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const [form, setForm] = useState({
-    firstName: '', lastName: '', email: '', phone: '',
+    fullName: '', email: '', phone: '',
     address: '', city: '', postalCode: '', country: 'Pakistan',
   });
 
@@ -37,8 +37,8 @@ export default function CheckoutPage() {
     const { data: order, error: orderErr } = await supabase
       .from('orders')
       .insert({
-        first_name: form.firstName,
-        last_name: form.lastName,
+        first_name: form.fullName,
+        last_name: '',
         email: form.email,
         phone: form.phone,
         address: form.address,
@@ -96,7 +96,7 @@ export default function CheckoutPage() {
           <div className={`${cardCls} max-w-md w-full space-y-5`}>
             <p className="text-gold text-3xl italic" style={serif}>Order Placed</p>
             <p className="text-cream/55 text-sm italic leading-relaxed" style={serif}>
-              Thank you, {form.firstName}. Your order has been received.<br />
+              Thank you, {form.fullName}. Your order has been received.<br />
               We will be in touch at {form.email}.
             </p>
             <p className="text-cream/30 text-[10px] uppercase tracking-[0.2em]">
@@ -147,15 +147,9 @@ export default function CheckoutPage() {
                     <h2 className="italic text-lg text-cream" style={serif}>Shipping Details</h2>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className={labelCls}>First Name</label>
-                      <input type="text" required value={form.firstName} onChange={set('firstName')} className={inputCls} />
-                    </div>
-                    <div>
-                      <label className={labelCls}>Last Name</label>
-                      <input type="text" required value={form.lastName} onChange={set('lastName')} className={inputCls} />
-                    </div>
+                  <div>
+                    <label className={labelCls}>Full Name</label>
+                    <input type="text" required value={form.fullName} onChange={set('fullName')} className={inputCls} />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
@@ -163,8 +157,8 @@ export default function CheckoutPage() {
                       <input type="email" required value={form.email} onChange={set('email')} className={inputCls} />
                     </div>
                     <div>
-                      <label className={labelCls}>Phone</label>
-                      <input type="tel" required value={form.phone} onChange={set('phone')} placeholder="+92 ..." className={inputCls} />
+                      <label className={labelCls}>WhatsApp Number</label>
+                      <input type="tel" required value={form.phone} onChange={set('phone')} placeholder="+92 3xx xxxxxxx" className={inputCls} />
                     </div>
                   </div>
                   <div className="mt-4">
