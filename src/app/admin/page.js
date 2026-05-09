@@ -1018,80 +1018,75 @@ function ProductsTab() {
 /* ═══════════════════════════════════════════
    REVIEWS TAB
 ═══════════════════════════════════════════ */
-function ReviewsTab() {
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [err,     setErr]     = useState('');
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('product_reviews')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) setErr(error.message);
-    setReviews(data || []);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  async function toggleApprove(id, approved) {
-    await supabase.from('product_reviews').update({ approved: !approved }).eq('id', id);
-    setReviews(prev => prev.map(r => r.id === id ? { ...r, approved: !approved } : r));
-  }
-
-  async function deleteReview(id) {
-    if (!window.confirm('Delete this review?')) return;
-    await supabase.from('product_reviews').delete().eq('id', id);
-    setReviews(prev => prev.filter(r => r.id !== id));
-  }
-
-  if (loading) return <Spinner />;
-
+function ReviewsSection({ title, rows, onToggle, onDelete }) {
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Admin</p>
-        <h1 className="text-4xl italic text-gray-900" style={serif}>Reviews</h1>
-        <p className="text-gray-400 text-sm mt-1">{reviews.length} total · {reviews.filter(r => !r.approved).length} pending approval</p>
-      </div>
-      {err && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
-          <strong>Supabase error:</strong> {err}
-        </div>
-      )}
-      {!err && reviews.length === 0 ? (
-        <div className="text-center py-16 space-y-3">
-          <p className="text-gray-400 text-sm italic">No reviews submitted yet.</p>
-          <button onClick={load} className="text-xs uppercase tracking-[0.2em] text-gray-500 hover:text-gray-900 border border-gray-300 px-4 py-2 rounded-lg transition">
-            Refresh
-          </button>
-        </div>
-      ) : !err && (
+    <div>
+      <h2 className="text-lg font-semibold text-gray-700 mb-3">
+        {title}
+        <span className="ml-2 text-sm font-normal text-gray-400">
+          {rows.length} total · {rows.filter(r => !r.approved).length} pending
+        </span>
+      </h2>
+      {rows.length === 0 ? (
+        <p className="text-gray-400 text-sm italic py-6 text-center border border-dashed border-gray-200 rounded-xl">
+          None yet.
+        </p>
+      ) : (
         <div className="border border-gray-200 bg-white rounded-xl overflow-hidden shadow-sm">
-          {reviews.map(r => (
+          {rows.map(r => (
             <div key={r.id} className="px-5 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-gray-900 text-sm font-semibold">{r.reviewer_name}</span>
-                    <span className="text-gray-400 text-xs">{r.product_slug}</span>
-                    <div className="flex">{[...Array(5)].map((_, i) => <span key={i} className={`text-sm ${i < r.rating ? 'text-yellow-400' : 'text-gray-200'}`}>★</span>)}</div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${r.approved ? 'bg-green-50 text-green-700 border-green-300' : 'bg-yellow-50 text-yellow-700 border-yellow-300'}`}>
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="text-gray-900 text-sm font-semibold">
+                      {r.reviewer_name || r.name || 'Anonymous'}
+                    </span>
+                    {r.product_slug && (
+                      <span className="text-gray-400 text-xs bg-gray-100 px-2 py-0.5 rounded">
+                        {r.product_slug}
+                      </span>
+                    )}
+                    {r.location && (
+                      <span className="text-gray-400 text-xs">{r.location}</span>
+                    )}
+                    {r.rating != null && (
+                      <div className="flex">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i} className={`text-sm ${i < r.rating ? 'text-yellow-400' : 'text-gray-200'}`}>★</span>
+                        ))}
+                      </div>
+                    )}
+                    <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                      r.approved
+                        ? 'bg-green-50 text-green-700 border-green-300'
+                        : 'bg-yellow-50 text-yellow-700 border-yellow-300'
+                    }`}>
                       {r.approved ? 'Approved' : 'Pending'}
                     </span>
                   </div>
-                  <p className="text-gray-600 text-sm">{r.body}</p>
-                  <p className="text-gray-400 text-xs mt-1">{new Date(r.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                  <p className="text-gray-600 text-sm leading-relaxed">{r.body}</p>
+                  {r.email && (
+                    <p className="text-gray-400 text-xs mt-1">{r.email}</p>
+                  )}
+                  <p className="text-gray-400 text-xs mt-0.5">
+                    {new Date(r.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => toggleApprove(r.id, r.approved)}
-                    className={`text-xs uppercase tracking-[0.12em] font-medium px-3 py-1.5 border rounded-lg transition ${r.approved ? 'border-yellow-300 text-yellow-700 hover:bg-yellow-50' : 'border-green-300 text-green-700 hover:bg-green-50'}`}>
+                  <button
+                    onClick={() => onToggle(r.id, r.approved)}
+                    className={`text-xs uppercase tracking-[0.12em] font-medium px-3 py-1.5 border rounded-lg transition ${
+                      r.approved
+                        ? 'border-yellow-300 text-yellow-700 hover:bg-yellow-50'
+                        : 'border-green-300 text-green-700 hover:bg-green-50'
+                    }`}
+                  >
                     {r.approved ? 'Unpublish' : 'Approve'}
                   </button>
-                  <button onClick={() => deleteReview(r.id)}
-                    className="text-xs uppercase tracking-[0.12em] font-medium px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg transition">
+                  <button
+                    onClick={() => onDelete(r.id)}
+                    className="text-xs uppercase tracking-[0.12em] font-medium px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg transition"
+                  >
                     Delete
                   </button>
                 </div>
@@ -1100,6 +1095,90 @@ function ReviewsTab() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function ReviewsTab() {
+  const [testimonials,    setTestimonials]    = useState([]);
+  const [productReviews,  setProductReviews]  = useState([]);
+  const [loading,         setLoading]         = useState(true);
+  const [err,             setErr]             = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr('');
+
+    const [{ data: tData, error: tErr }, { data: pData, error: pErr }] = await Promise.all([
+      supabase.from('testimonials').select('*').order('created_at', { ascending: false }),
+      supabase.from('product_reviews').select('*').order('created_at', { ascending: false }),
+    ]);
+
+    if (tErr) { setErr(tErr.message); setLoading(false); return; }
+    if (pErr && pErr.code !== 'PGRST116') { setErr(pErr.message); setLoading(false); return; }
+
+    setTestimonials(tData || []);
+    setProductReviews(pData || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function toggleTestimonial(id, approved) {
+    await supabase.from('testimonials').update({ approved: !approved }).eq('id', id);
+    setTestimonials(prev => prev.map(r => r.id === id ? { ...r, approved: !approved } : r));
+  }
+
+  async function deleteTestimonial(id) {
+    if (!window.confirm('Delete this testimonial?')) return;
+    await supabase.from('testimonials').delete().eq('id', id);
+    setTestimonials(prev => prev.filter(r => r.id !== id));
+  }
+
+  async function toggleProductReview(id, approved) {
+    await supabase.from('product_reviews').update({ approved: !approved }).eq('id', id);
+    setProductReviews(prev => prev.map(r => r.id === id ? { ...r, approved: !approved } : r));
+  }
+
+  async function deleteProductReview(id) {
+    if (!window.confirm('Delete this review?')) return;
+    await supabase.from('product_reviews').delete().eq('id', id);
+    setProductReviews(prev => prev.filter(r => r.id !== id));
+  }
+
+  if (loading) return <Spinner />;
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Admin</p>
+          <h1 className="text-4xl italic text-gray-900" style={serif}>Reviews</h1>
+        </div>
+        <button onClick={load} className="text-xs uppercase tracking-[0.2em] text-gray-500 hover:text-gray-900 border border-gray-300 px-4 py-2 rounded-lg transition">
+          Refresh
+        </button>
+      </div>
+
+      {err && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+          <strong>Error:</strong> {err}
+        </div>
+      )}
+
+      <ReviewsSection
+        title="Testimonials"
+        rows={testimonials}
+        onToggle={toggleTestimonial}
+        onDelete={deleteTestimonial}
+      />
+
+      <ReviewsSection
+        title="Product Reviews"
+        rows={productReviews}
+        onToggle={toggleProductReview}
+        onDelete={deleteProductReview}
+      />
     </div>
   );
 }

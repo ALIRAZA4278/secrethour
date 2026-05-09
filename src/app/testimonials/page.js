@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -9,12 +9,12 @@ import { supabase } from '../../lib/supabase';
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 const SILK = '/assets/bg-silk-B9_HjwKe.jpg';
 
-const FEATURED = {
+const FALLBACK_FEATURED = {
   quote: "Our wedding night felt sacred. We will never forget the way it began.",
   author: "Ayesha & Hamza",
 };
 
-const TESTIMONIALS = [
+const FALLBACK_GRID = [
   { quote: "We laughed, we cried, we finally talked. Beautifully made.", author: "Anonymous, Lahore" },
   { quote: "It felt like a private little ritual just for us.", author: "Sara & Bilal" },
   { quote: "Discreet, elegant, and so romantic. Worth every rupee.", author: "Anonymous, Karachi" },
@@ -55,6 +55,16 @@ export default function TestimonialsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [approved, setApproved] = useState([]);
+
+  useEffect(() => {
+    supabase
+      .from('testimonials')
+      .select('id, name, location, body')
+      .eq('approved', true)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { if (data?.length) setApproved(data); });
+  }, []);
 
   const f = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
@@ -107,42 +117,53 @@ export default function TestimonialsPage() {
         </section>
 
         {/* Featured testimonial */}
-        <section className="relative z-10 px-6 pb-12">
-          <div className="max-w-2xl mx-auto border border-gold-border p-10 md:p-14 text-center space-y-6" style={{ background: 'rgba(11,10,9,0.6)' }}>
-            <div className="flex justify-center gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-gold text-xl">★</span>
-              ))}
-            </div>
-            <div className="text-5xl text-gold/30 leading-none font-serif">&ldquo;</div>
-            <p className="text-cream text-xl md:text-2xl italic leading-relaxed" style={serif}>
-              {FEATURED.quote}
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <div className="h-px w-10 bg-gold-border" />
-              <span className="text-gold text-sm italic" style={serif}>— {FEATURED.author}</span>
-              <div className="h-px w-10 bg-gold-border" />
-            </div>
-          </div>
-        </section>
-
-        {/* Grid testimonials */}
-        <section className="relative z-10 px-6 pb-16">
-          <div className="max-w-3xl mx-auto grid sm:grid-cols-2 gap-5">
-            {TESTIMONIALS.map((t, i) => (
-              <div key={i} className="border border-gold-border/60 p-8 space-y-5" style={{ background: 'rgba(11,10,9,0.5)' }}>
-                <div className="text-3xl text-gold/30 leading-none font-serif">&ldquo;</div>
-                <p className="text-cream/75 italic leading-relaxed text-sm" style={serif}>
-                  {t.quote}
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="h-px w-6 bg-gold-border" />
-                  <p className="text-gold/70 text-[10px] uppercase tracking-[0.25em]">— {t.author}</p>
+        {(() => {
+          const feat = approved[0]
+            ? { quote: approved[0].body, author: approved[0].location ? `${approved[0].name || 'Anonymous'}, ${approved[0].location}` : (approved[0].name || 'Anonymous') }
+            : FALLBACK_FEATURED;
+          return (
+            <section className="relative z-10 px-6 pb-12">
+              <div className="max-w-2xl mx-auto border border-gold-border p-10 md:p-14 text-center space-y-6" style={{ background: 'rgba(11,10,9,0.6)' }}>
+                <div className="flex justify-center gap-0.5">
+                  {[...Array(5)].map((_, i) => <span key={i} className="text-gold text-xl">★</span>)}
+                </div>
+                <div className="text-5xl text-gold/30 leading-none font-serif">&ldquo;</div>
+                <p className="text-cream text-xl md:text-2xl italic leading-relaxed" style={serif}>{feat.quote}</p>
+                <div className="flex items-center justify-center gap-4">
+                  <div className="h-px w-10 bg-gold-border" />
+                  <span className="text-gold text-sm italic" style={serif}>— {feat.author}</span>
+                  <div className="h-px w-10 bg-gold-border" />
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
+          );
+        })()}
+
+        {/* Grid testimonials */}
+        {(() => {
+          const grid = approved.length > 0
+            ? approved.map(t => ({
+                quote: t.body,
+                author: t.location ? `${t.name || 'Anonymous'}, ${t.location}` : (t.name || 'Anonymous'),
+              }))
+            : FALLBACK_GRID;
+          return (
+            <section className="relative z-10 px-6 pb-16">
+              <div className="max-w-3xl mx-auto grid sm:grid-cols-2 gap-5">
+                {grid.map((t, i) => (
+                  <div key={i} className="border border-gold-border/60 p-8 space-y-5" style={{ background: 'rgba(11,10,9,0.5)' }}>
+                    <div className="text-3xl text-gold/30 leading-none font-serif">&ldquo;</div>
+                    <p className="text-cream/75 italic leading-relaxed text-sm" style={serif}>{t.quote}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="h-px w-6 bg-gold-border" />
+                      <p className="text-gold/70 text-[10px] uppercase tracking-[0.25em]">— {t.author}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
 
         {/* Stats strip */}
         <section className="relative z-10 py-12 px-6 border-t border-gold-border/20">
