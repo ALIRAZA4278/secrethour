@@ -138,11 +138,25 @@ function Login({ onLogin }) {
    ORDER DRAWER
 ═══════════════════════════════════════════ */
 function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }) {
-  const [status,    setStatus]    = useState(order?.status || 'pending');
-  const [note,      setNote]      = useState(order?.notes  || '');
-  const [noteSaved, setNoteSaved] = useState(false);
+  const [status,      setStatus]      = useState(order?.status || 'pending');
+  const [note,        setNote]        = useState(order?.notes  || '');
+  const [noteSaved,   setNoteSaved]   = useState(false);
+  const [custOrders,  setCustOrders]  = useState([]);
+  const [custLoading, setCustLoading] = useState(false);
 
-  useEffect(() => { setStatus(order?.status || 'pending'); setNote(order?.notes || ''); setNoteSaved(false); }, [order]);
+  useEffect(() => {
+    setStatus(order?.status || 'pending');
+    setNote(order?.notes || '');
+    setNoteSaved(false);
+    if (!order) return;
+    setCustLoading(true);
+    const key = order.phone || order.email;
+    if (!key) { setCustLoading(false); return; }
+    const query = order.phone
+      ? supabase.from('orders').select('id, total, status, created_at').eq('phone', order.phone).order('created_at', { ascending: false })
+      : supabase.from('orders').select('id, total, status, created_at').eq('email', order.email).order('created_at', { ascending: false });
+    query.then(({ data }) => { setCustOrders(data || []); setCustLoading(false); });
+  }, [order]);
 
   async function changeStatus(s) {
     setStatus(s);
@@ -158,22 +172,34 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
 
   if (!order) return null;
 
-  const name    = `${order.first_name || ''} ${order.last_name || ''}`.trim();
-  const num     = orderNum(order.id);
-  const payment = order.payment_method === 'bank' ? 'Bank Transfer' : 'Cash on Delivery';
-  const custId  = `CID-${(order.email || order.phone || '').replace(/\W/g, '').slice(-6).toUpperCase()}`;
+  const name       = `${order.first_name || ''} ${order.last_name || ''}`.trim();
+  const num        = orderNum(order.id);
+  const payment    = order.payment_method === 'bank' ? 'Bank Transfer' : 'Cash on Delivery';
+  const phoneDigits = (order.phone || '').replace(/\D/g, '');
+  const emailPart   = (order.email || '').split('@')[0].replace(/\W/g, '');
+  const custId      = `CID-${(phoneDigits || emailPart).slice(-7).toUpperCase()}`;
+  const totalOrders = custOrders.length;
+  const totalSpent  = custOrders.reduce((s, o) => s + (o.total || 0), 0);
+  const isRepeat    = totalOrders > 1;
 
   return (
     <>
       <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
-      <div className="fixed right-0 top-0 bottom-0 w-full max-w-sm z-50 flex flex-col overflow-y-auto bg-white shadow-2xl border-l border-gray-200">
+      <div className="fixed right-0 top-0 bottom-0 w-full max-w-md z-50 flex flex-col overflow-y-auto bg-white shadow-2xl border-l border-gray-200">
 
         {/* Header */}
         <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-gray-200">
           <div>
             <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Order</p>
             <h2 className="text-3xl italic text-gray-900" style={serif}>{num}</h2>
-            <p className="text-gray-400 text-xs mt-1 uppercase tracking-[0.15em]">{custId}</p>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <p className="text-gray-400 text-xs uppercase tracking-[0.15em]">{custId}</p>
+              {isRepeat && (
+                <span className="text-[10px] font-bold uppercase tracking-[0.1em] px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-full">
+                  Repeat Customer
+                </span>
+              )}
+            </div>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 transition mt-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -197,6 +223,33 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
               <span className="text-gray-800 text-sm text-right">{v}</span>
             </div>
           ) : null)}
+
+          {/* Customer order history */}
+          {!custLoading && totalOrders > 0 && (
+            <div className="mt-2 pt-3 border-t border-gray-100 space-y-2">
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-400 text-xs uppercase tracking-[0.2em]">Total Orders</span>
+                <span className="text-gray-800 text-sm font-semibold">{totalOrders}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-400 text-xs uppercase tracking-[0.2em]">Total Spent</span>
+                <span className="text-gray-800 text-sm font-semibold">Rs. {totalSpent.toLocaleString()}</span>
+              </div>
+              {totalOrders > 1 && (
+                <div className="pt-1 space-y-1">
+                  <p className="text-gray-400 text-[10px] uppercase tracking-[0.2em]">Order History</p>
+                  {custOrders.map(o => (
+                    <div key={o.id} className={`flex justify-between text-xs px-2 py-1 rounded ${o.id === order.id ? 'bg-gray-100 font-medium' : ''}`}>
+                      <span className="text-gray-500">{orderNum(o.id)}</span>
+                      <span className={`capitalize ${STATUS[o.status]?.cls?.includes('yellow') ? 'text-yellow-600' : STATUS[o.status]?.cls?.includes('green') ? 'text-green-600' : 'text-gray-500'}`}>{o.status}</span>
+                      <span className="text-gray-500">Rs. {(o.total || 0).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {onCustomerFilter && (order.phone || order.email) && (
             <button
               onClick={() => { onCustomerFilter(order.phone || order.email); onClose(); }}
