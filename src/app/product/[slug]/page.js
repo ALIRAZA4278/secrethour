@@ -170,6 +170,17 @@ export default function ProductPage({ params }) {
                   <p className="text-cream/50 text-xs italic mb-3" style={serif}>{product.tagline}</p>
                 )}
                 <h1 className="text-3xl md:text-3xl italic text-gold leading-tight" style={serif}>{product.title}</h1>
+
+                {/* Star rating below title */}
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <span key={i} className="text-base text-gold">★</span>
+                    ))}
+                  </div>
+                  <span className="text-cream/70 text-xs uppercase tracking-[0.15em]">Verified Reviews</span>
+                </div>
+
                 <p className="text-cream/60 italic mt-3 text-base md:text-lg" style={serif}>{product.subtitle}</p>
               </div>
 

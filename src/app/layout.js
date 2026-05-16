@@ -2,6 +2,7 @@ import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from './context/CartContext';
 import CartDrawer from './components/CartDrawer';
+import FloatingWhatsApp from './components/FloatingWhatsApp';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -27,6 +28,7 @@ export default function RootLayout({ children }) {
         <CartProvider>
           {children}
           <CartDrawer />
+          <FloatingWhatsApp />
         </CartProvider>
       </body>
     </html>

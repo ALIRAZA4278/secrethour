@@ -136,7 +136,7 @@ export default function QuizPage() {
     >
       <Navbar />
 
-      <main className="flex-1 pt-28 pb-20 px-4 md:px-6">
+      <main className="flex-1 pt-36 pb-20 px-4 md:px-6">
         <div className="max-w-2xl mx-auto">
 
           {/* Header */}
