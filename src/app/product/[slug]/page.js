@@ -178,7 +178,7 @@ export default function ProductPage({ params }) {
                       <span key={i} className="text-base text-gold">★</span>
                     ))}
                   </div>
-                  <span className="text-cream/70 text-xs uppercase tracking-[0.15em]">Verified Reviews</span>
+                  <Link href="/testimonials" className="text-cream/70 text-xs uppercase tracking-[0.15em] hover:text-gold transition-colors">Verified Reviews</Link>
                 </div>
 
                 <p className="text-cream/60 italic mt-3 text-base md:text-lg" style={serif}>{product.subtitle}</p>
