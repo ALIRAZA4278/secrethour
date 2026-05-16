@@ -28,14 +28,14 @@ export default function Navbar() {
   return (
     <>
     {/* Announcement Bar */}
-    <div className="fixed top-0 left-0 right-0 z-[60] text-center py-2 px-4" style={{ background: 'hsl(350 80% 5%)' }}>
+    <div className="fixed top-0 left-0 right-0 z-[60] text-center py-1 px-4" style={{ background: 'hsl(350 80% 5%)' }}>
       <p className="text-gold text-[10px] md:text-xs uppercase tracking-[0.25em] font-medium">
         ✦ Get 10% Off on Online Payment ✦
       </p>
     </div>
-    <nav className="fixed top-8 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gold-border/40">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="relative w-48 h-14 shrink-0">
+    <nav className="fixed top-6 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gold-border/40">
+      <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
+        <Link href="/" className="relative w-40 h-11 shrink-0">
           <Image src={LOGO} alt="Secret Hour" fill className="object-contain object-left" priority unoptimized />
         </Link>
 

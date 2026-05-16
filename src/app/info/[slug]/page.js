@@ -121,7 +121,7 @@ export default async function PolicyPage({ params }) {
       <div className="text-cream min-h-screen flex flex-col"
         style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>
         <Navbar />
-        <main className="flex-1 pt-32 pb-24 px-6">
+        <main className="flex-1 pt-24 pb-24 px-6">
           <div className="text-center mb-12">
             <p className="text-gold text-[10px] uppercase tracking-[0.3em] mb-3">Secret Hour</p>
             <h1 className="text-5xl md:text-6xl italic text-gold" style={serif}>Frequently Asked</h1>
@@ -148,7 +148,7 @@ export default async function PolicyPage({ params }) {
       <div className="text-cream min-h-screen flex flex-col"
         style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>
         <Navbar />
-        <main className="flex-1 pt-32 pb-24 px-6">
+        <main className="flex-1 pt-24 pb-24 px-6">
           <div className="text-center mb-12">
             <p className="text-gold text-[10px] uppercase tracking-[0.3em] mb-3">Secret Hour</p>
             <h1 className="text-4xl md:text-5xl italic text-gold leading-tight" style={serif}>
@@ -231,7 +231,7 @@ export default async function PolicyPage({ params }) {
     <div className="text-cream min-h-screen flex flex-col"
       style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>
       <Navbar />
-      <main className="flex-1 pt-32 pb-24 px-6">
+      <main className="flex-1 pt-24 pb-24 px-6">
         <div className="text-center mb-12">
           <p className="text-gold text-[10px] uppercase tracking-[0.3em] mb-3">Secret Hour</p>
           <h1 className="text-5xl md:text-6xl italic text-gold" style={serif}>{policy.title}</h1>

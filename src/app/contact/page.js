@@ -59,7 +59,7 @@ export default function ContactPage() {
     <div className="text-cream min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>
       <Navbar />
 
-      <section className="flex-1 pt-32 pb-24 px-6">
+      <section className="flex-1 pt-24 pb-24 px-6">
         <div className="max-w-lg mx-auto text-center space-y-4 mb-12">
           <span className="text-gold text-[10px] uppercase tracking-[0.3em]">Reach Out</span>
           <h1 className="text-4xl md:text-5xl text-cream" style={serif}>Contact Us</h1>

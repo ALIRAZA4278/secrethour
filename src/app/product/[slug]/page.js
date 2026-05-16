@@ -35,7 +35,13 @@ function FaqItem({ q, a }) {
 export default function ProductPage({ params }) {
   const { slug } = use(params);
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addToCart, setOpen } = useCart();
+
+  function buyNow() {
+    addToCart({ slug: product?.slug, title: product?.title, price: product?.price, numericPrice: product?.numeric_price, img: images?.[0] });
+    setOpen(false);
+    router.push('/checkout');
+  }
 
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
@@ -98,7 +104,7 @@ export default function ProductPage({ params }) {
     return (
       <div className="bg-sh-bg min-h-screen flex flex-col">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center mt-[88px]">
+        <div className="flex-1 flex items-center justify-center mt-19">
           <p className="text-cream/40 italic text-lg animate-pulse" style={serif}>Loading…</p>
         </div>
         <Footer />
@@ -118,7 +124,7 @@ export default function ProductPage({ params }) {
       <Navbar />
 
       {/* ── Main product section ── */}
-      <section className="relative py-8 md:py-12 mt-[88px]">
+      <section className="relative py-8 md:py-12 mt-19">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={SILK} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15 pointer-events-none" />
 
@@ -126,7 +132,7 @@ export default function ProductPage({ params }) {
           <div className="grid lg:grid-cols-2 gap-8 md:gap-14 items-start">
 
             {/* Left: image + thumbnails — sticky on desktop */}
-            <div className="space-y-4 lg:sticky lg:top-[110px]">
+            <div className="space-y-4 lg:sticky lg:top-20">
               <div className="relative aspect-square rounded overflow-hidden border border-gold-border/40 bg-sh-card">
                 <Image src={images[activeImg]} alt={product.title} fill className="object-contain" priority unoptimized />
               </div>
@@ -182,12 +188,12 @@ export default function ProductPage({ params }) {
                 >
                   Add to Cart
                 </button>
-                <Link
-                  href="/checkout"
+                <button
+                  onClick={buyNow}
                   className="border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 flex-1 text-center hover:bg-burgundy"
                 >
                   Buy Now
-                </Link>
+                </button>
               </div>
 
               <p className="text-cream/65 leading-relaxed text-sm">{product.description}</p>
@@ -455,12 +461,12 @@ export default function ProductPage({ params }) {
         >
           Add to Cart
         </button>
-        <Link
-          href="/checkout"
+        <button
+          onClick={buyNow}
           className="flex-1 border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.18em] py-3.5 transition-all text-center hover:bg-burgundy flex items-center justify-center"
         >
           Buy Now
-        </Link>
+        </button>
       </div>
 
       <Footer />

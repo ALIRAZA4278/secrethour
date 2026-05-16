@@ -66,6 +66,7 @@ export default function CheckoutPage() {
       );
     }
     setSubmitted(true);
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   /* ── Empty cart ── */
@@ -92,17 +93,29 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26), rgb(11,10,9) 60%)' }}>
         <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center px-6 text-center pt-24">
-          <div className={`${cardCls} max-w-md w-full space-y-5`}>
-            <p className="text-gold text-3xl italic" style={serif}>Order Placed</p>
-            <p className="text-cream/55 text-sm italic leading-relaxed" style={serif}>
-              Thank you, {form.fullName}. Your order has been received.<br />
-              We will be in touch at {form.email}.
-            </p>
+        <main className="flex-1 flex flex-col items-center justify-center px-6 py-20">
+          <div className="max-w-lg w-full text-center space-y-8 border border-gold-border/30 px-8 py-14 md:px-14" style={{ background: 'rgba(11,10,9,0.6)' }}>
+            <div className="space-y-2">
+              <p className="text-gold/60 text-[10px] uppercase tracking-[0.35em]">Secret Hour</p>
+              <h1 className="text-4xl md:text-5xl italic text-gold" style={serif}>Order Placed</h1>
+            </div>
+            <div className="w-10 h-px bg-gold-border mx-auto" />
+            <div className="space-y-3">
+              <p className="text-cream italic text-base leading-relaxed" style={serif}>
+                Thank you, {form.fullName}.
+              </p>
+              <p className="text-cream/55 text-sm leading-relaxed" style={serif}>
+                Your order has been received and is being prepared.<br />
+                We will be in touch at <span className="text-cream/80">{form.email}</span>.
+              </p>
+            </div>
             <p className="text-cream/30 text-[10px] uppercase tracking-[0.2em]">
               Discreet Packaging · No Mention of Brand Outside
             </p>
-            <Link href="/shop" className="inline-block border border-gold-muted text-gold-btn-text text-[11px] uppercase tracking-[0.2em] px-8 py-3 btn-glow transition-all duration-300">
+            <Link
+              href="/shop"
+              className="inline-block bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] uppercase tracking-[0.2em] px-10 py-4 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
+            >
               Continue Shopping
             </Link>
           </div>

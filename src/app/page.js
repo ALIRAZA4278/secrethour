@@ -56,9 +56,9 @@ export default function Home() {
       <Navbar />
 
       {/* ─── Hero ───────────────────────────────────────────── */}
-      <section className="relative min-h-screen flex items-center justify-center pt-[130px] pb-20">
+      <section className="relative min-h-screen flex items-center justify-center pt-22 pb-20">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={IMG.hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={IMG.hero} alt="" className="absolute inset-0 w-full h-full object-cover object-top" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black" />
 
         <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
@@ -66,9 +66,6 @@ export default function Home() {
             The hours that{' '}
             <span className="text-gold-gradient">belong to you</span>
           </h1>
-          <p className="text-cream/75 text-base md:text-xl italic mb-3 max-w-xl mx-auto leading-relaxed" style={serif}>
-            Quietly luxurious gifts crafted for married couples — to slow down, come closer, and remember why.
-          </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
             <Link
               href="/shop"
@@ -153,13 +150,13 @@ export default function Home() {
       </section>
 
       {/* ─── Bundles ─────────────────────────────────────────── */}
-      <section className="relative min-h-screen px-4 md:px-6 flex items-center py-16 md:py-24" style={{ background: 'linear-gradient(to bottom, hsl(350 60% 12%) 0%, hsl(20 10% 4%) 100%)' }}>
-        <div className="max-w-6xl mx-auto w-full">
-          <div className="text-center mb-10 md:mb-16">
+      <section className="relative px-4 md:px-6 py-16 md:py-20" style={{ background: 'linear-gradient(to bottom, hsl(350 60% 12%) 0%, hsl(20 10% 4%) 100%)' }}>
+        <div className="max-w-3xl mx-auto w-full">
+          <div className="text-center mb-8 md:mb-12">
             <span className="text-gold text-[10px] uppercase tracking-[0.3em] block mb-4">
               Curated Bundles
             </span>
-            <h2 className="text-2xl md:text-4xl italic mb-4 text-cream" style={serif}>
+            <h2 className="text-2xl md:text-3xl italic mb-3 text-cream" style={serif}>
               For a complete experience —<br className="hidden md:block" /> not just a product
             </h2>
             <p className="text-cream/55 italic text-sm" style={serif}>
@@ -167,7 +164,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 md:gap-10">
+          <div className="grid md:grid-cols-2 gap-5 md:gap-6">
             {PRODUCTS.map((p, i) => (
               <Link
                 key={p.href}
@@ -179,19 +176,17 @@ export default function Home() {
                     Best Seller
                   </span>
                 )}
-                <div className="relative aspect-[4/3] overflow-hidden bg-sh-bg">
-                  <div className="absolute inset-6">
-                    <Image
-                      src={p.img}
-                      alt={p.alt}
-                      fill
-                      className="object-contain"
-                      unoptimized
-                    />
-                  </div>
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <Image
+                    src={p.img}
+                    alt={p.alt}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
                 </div>
-                <div className="p-5 md:p-6 space-y-2 bg-black/40 text-center">
-                  <h3 className="text-base md:text-lg italic text-cream" style={serif}>{p.title}</h3>
+                <div className="p-4 space-y-1.5 bg-black/40 text-center">
+                  <h3 className="text-sm md:text-base italic text-cream" style={serif}>{p.title}</h3>
                   <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
                   <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
                   <button

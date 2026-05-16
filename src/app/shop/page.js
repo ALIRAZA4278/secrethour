@@ -39,7 +39,7 @@ export default async function ShopPage() {
         <img src={SILK} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 rotate-180 pointer-events-none z-0" loading="lazy" />
 
         {/* Header */}
-        <section className="relative z-10 py-12 md:py-20 mt-[88px] text-center px-6">
+        <section className="relative z-10 py-12 md:py-20 mt-19 text-center px-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO} alt="Secret Hour" className="h-14 w-auto mx-auto mb-6 opacity-90 object-contain" />
           <h1 className="text-4xl md:text-5xl italic text-cream mb-3" style={serif}>
@@ -62,16 +62,14 @@ export default async function ShopPage() {
                   href={`/product/${p.slug}`}
                   className="rounded overflow-hidden group flex flex-col border border-gold-border/60 hover:border-gold transition-colors duration-300"
                 >
-                  <div className="relative aspect-square overflow-hidden bg-sh-card">
-                    <div className="absolute inset-4">
-                      <Image
-                        src={p.img}
-                        alt={p.title}
-                        fill
-                        className="object-contain"
-                        unoptimized
-                      />
-                    </div>
+                  <div className="relative aspect-square overflow-hidden">
+                    <Image
+                      src={p.img}
+                      alt={p.title}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
                     {p.tag && (
                       <span className={`absolute top-2 left-2 text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-1 ${
                         p.tag === 'best-seller' ? 'bg-gold text-sh-bg' :
