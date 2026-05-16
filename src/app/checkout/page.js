@@ -93,7 +93,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26), rgb(11,10,9) 60%)' }}>
         <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center px-6 py-20">
+        <main className="flex-1 flex flex-col items-center justify-center px-6 pt-32 pb-10">
           <div className="max-w-lg w-full text-center space-y-8 border border-gold-border/30 px-8 py-14 md:px-14" style={{ background: 'rgba(11,10,9,0.6)' }}>
             <div className="space-y-2">
               <p className="text-gold/60 text-[10px] uppercase tracking-[0.35em]">Secret Hour</p>
