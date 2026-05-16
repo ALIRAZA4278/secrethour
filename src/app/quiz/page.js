@@ -142,7 +142,7 @@ export default function QuizPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <p className="text-gold text-[10px] uppercase tracking-[0.3em] mb-3">The Connection Quiz</p>
-            <h1 className="text-4xl md:text-5xl italic text-gold" style={serif}>
+            <h1 className="text-2xl md:text-4xl italic text-gold" style={serif}>
               Discover Your Secret Hour
             </h1>
           </div>
@@ -207,7 +207,7 @@ export default function QuizPage() {
                 style={{ background: 'rgba(11,10,9,0.7)' }}
               >
                 <p className="text-[10px] uppercase tracking-[0.3em] text-gold/70 mb-4">Your Connection Readiness</p>
-                <p className="text-7xl md:text-8xl text-gold mb-4" style={serif}>{pct}%</p>
+                <p className="text-5xl md:text-6xl text-gold mb-4" style={serif}>{pct}%</p>
                 <p className="italic text-cream/70 text-sm leading-relaxed" style={serif}>{result.note}</p>
               </div>
 

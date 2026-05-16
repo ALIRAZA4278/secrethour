@@ -62,7 +62,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black" />
 
         <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl md:text-7xl italic mb-4 leading-[1.15] text-cream" style={serif}>
+          <h1 className="text-3xl sm:text-3xl md:text-5xl italic mb-4 leading-[1.15] text-cream" style={serif}>
             The hours that{' '}
             <span className="text-gold-gradient">belong to you</span>
           </h1>
@@ -206,7 +206,7 @@ export default function Home() {
       <section className="relative py-20 md:py-32 px-4 md:px-6 overflow-hidden text-center" style={{ background: 'radial-gradient(ellipse at top, hsl(350 50% 8%) 0%, hsl(20 5% 3%) 60%)' }}>
         <div className="relative z-10 max-w-2xl mx-auto space-y-14">
           <div className="space-y-5">
-            <h2 className="text-3xl md:text-5xl italic text-cream leading-tight" style={serif}>
+            <h2 className="text-2xl md:text-4xl italic text-cream leading-tight" style={serif}>
               It&apos;s not about <span className="text-gold-light">the product.</span>
             </h2>
             <p className="text-cream/50 italic text-sm md:text-base leading-relaxed" style={serif}>
@@ -215,7 +215,7 @@ export default function Home() {
           </div>
           <div className="border-t border-gold-border/20 pt-12 space-y-5">
             <span className="text-gold/70 text-[10px] uppercase tracking-[0.35em] block">The Experience Quiz</span>
-            <h3 className="text-3xl md:text-5xl italic text-cream" style={serif}>
+            <h3 className="text-2xl md:text-4xl italic text-cream" style={serif}>
               Not sure where to <span className="text-gold-light">begin?</span>
             </h3>
             <p className="text-cream/50 italic text-sm" style={serif}>
@@ -238,7 +238,7 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto">
-          <h2 className="text-3xl md:text-5xl italic text-center mb-10 md:mb-16 text-cream" style={serif}>
+          <h2 className="text-2xl md:text-4xl italic text-center mb-10 md:mb-16 text-cream" style={serif}>
             Whispered Back to Us
           </h2>
 
@@ -281,7 +281,7 @@ export default function Home() {
       {/* ─── Newsletter ──────────────────────────────────────── */}
       <section className="py-24 px-6 text-center">
         <div className="max-w-xl mx-auto space-y-4">
-          <h2 className="text-3xl md:text-4xl italic text-cream" style={serif}>
+          <h2 className="text-3xl md:text-3xl italic text-cream" style={serif}>
             Join the Secret Hour Circle
           </h2>
           <p className="text-cream/55 italic text-sm" style={serif}>

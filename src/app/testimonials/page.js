@@ -107,7 +107,7 @@ export default function TestimonialsPage() {
         {/* Header */}
         <section className="relative z-10 pt-36 pb-12 px-6 text-center">
           <div className="max-w-2xl mx-auto space-y-4">
-            <h1 className="text-4xl md:text-6xl italic text-cream" style={serif}>
+            <h1 className="text-2xl md:text-5xl italic text-cream" style={serif}>
               Loved by Couples Like You
             </h1>
             <p className="text-cream/55 italic text-base" style={serif}>

@@ -42,7 +42,7 @@ export default async function ShopPage() {
         <section className="relative z-10 py-12 md:py-20 mt-19 text-center px-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO} alt="Secret Hour" className="h-14 w-auto mx-auto mb-6 opacity-90 object-contain" />
-          <h1 className="text-4xl md:text-5xl italic text-cream mb-3" style={serif}>
+          <h1 className="text-2xl md:text-4xl italic text-cream mb-3" style={serif}>
             The <span className="text-gold">Secret Hour</span> Collection
           </h1>
           <p className="text-cream/55 italic text-sm max-w-md mx-auto" style={serif}>

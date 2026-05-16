@@ -62,7 +62,7 @@ export default function ContactPage() {
       <section className="flex-1 pt-24 pb-24 px-6">
         <div className="max-w-lg mx-auto text-center space-y-4 mb-12">
           <span className="text-gold text-[10px] uppercase tracking-[0.3em]">Reach Out</span>
-          <h1 className="text-4xl md:text-5xl text-cream" style={serif}>Contact Us</h1>
+          <h1 className="text-2xl md:text-4xl text-cream" style={serif}>Contact Us</h1>
           <a href="mailto:info@secrethour.pk" className="text-cream/55 italic text-sm hover:text-gold transition-colors" style={serif}>
             info@secrethour.pk
           </a>

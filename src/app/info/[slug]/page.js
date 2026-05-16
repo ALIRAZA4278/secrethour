@@ -124,7 +124,7 @@ export default async function PolicyPage({ params }) {
         <main className="flex-1 pt-24 pb-24 px-6">
           <div className="text-center mb-12">
             <p className="text-gold text-[10px] uppercase tracking-[0.3em] mb-3">Secret Hour</p>
-            <h1 className="text-5xl md:text-6xl italic text-gold" style={serif}>Frequently Asked</h1>
+            <h1 className="text-3xl md:text-5xl italic text-gold" style={serif}>Frequently Asked</h1>
           </div>
           <div className="max-w-2xl mx-auto border border-gold-border/50 px-8 md:px-12 py-4"
             style={{ background: 'rgba(11,10,9,0.6)' }}>
@@ -151,7 +151,7 @@ export default async function PolicyPage({ params }) {
         <main className="flex-1 pt-24 pb-24 px-6">
           <div className="text-center mb-12">
             <p className="text-gold text-[10px] uppercase tracking-[0.3em] mb-3">Secret Hour</p>
-            <h1 className="text-4xl md:text-5xl italic text-gold leading-tight" style={serif}>
+            <h1 className="text-2xl md:text-4xl italic text-gold leading-tight" style={serif}>
               Share the Experience,<br className="hidden sm:block" /> Get Rewarded
             </h1>
           </div>
@@ -234,7 +234,7 @@ export default async function PolicyPage({ params }) {
       <main className="flex-1 pt-24 pb-24 px-6">
         <div className="text-center mb-12">
           <p className="text-gold text-[10px] uppercase tracking-[0.3em] mb-3">Secret Hour</p>
-          <h1 className="text-5xl md:text-6xl italic text-gold" style={serif}>{policy.title}</h1>
+          <h1 className="text-3xl md:text-5xl italic text-gold" style={serif}>{policy.title}</h1>
         </div>
         <div className="max-w-2xl mx-auto border border-gold-border/50 p-8 md:p-12 space-y-4"
           style={{ background: 'rgba(11,10,9,0.6)' }}>

@@ -169,7 +169,7 @@ export default function ProductPage({ params }) {
                 {product.tagline && (
                   <p className="text-cream/50 text-xs italic mb-3" style={serif}>{product.tagline}</p>
                 )}
-                <h1 className="text-3xl md:text-4xl italic text-gold leading-tight" style={serif}>{product.title}</h1>
+                <h1 className="text-3xl md:text-3xl italic text-gold leading-tight" style={serif}>{product.title}</h1>
                 <p className="text-cream/60 italic mt-3 text-base md:text-lg" style={serif}>{product.subtitle}</p>
               </div>
 

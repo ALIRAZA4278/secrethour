@@ -97,7 +97,7 @@ export default function CheckoutPage() {
           <div className="max-w-lg w-full text-center space-y-8 border border-gold-border/30 px-8 py-14 md:px-14" style={{ background: 'rgba(11,10,9,0.6)' }}>
             <div className="space-y-2">
               <p className="text-gold/60 text-[10px] uppercase tracking-[0.35em]">Secret Hour</p>
-              <h1 className="text-4xl md:text-5xl italic text-gold" style={serif}>Order Placed</h1>
+              <h1 className="text-3xl md:text-4xl italic text-gold" style={serif}>Order Placed</h1>
             </div>
             <div className="w-10 h-px bg-gold-border mx-auto" />
             <div className="space-y-3">
@@ -135,7 +135,7 @@ export default function CheckoutPage() {
           {/* ── Header ── */}
           <div className="text-center mb-10">
             <p className="text-gold/70 text-[10px] uppercase tracking-[0.3em] mb-3">Secure Checkout</p>
-            <h1 className="text-4xl md:text-5xl italic text-gold" style={serif}>Almost yours</h1>
+            <h1 className="text-3xl md:text-4xl italic text-gold" style={serif}>Almost yours</h1>
             <div className="flex items-center justify-center gap-2 mt-4 text-cream/45 text-xs">
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
