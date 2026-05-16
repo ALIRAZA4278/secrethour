@@ -90,8 +90,8 @@ export default function Footer() {
               ['About Us',        '/about'],
               ['Testimonials',    '/testimonials'],
               ['Contact',         '/contact'],
-              ['FAQ',             '/contact'],
-              ['Referral Program','/contact'],
+              ['FAQ',             '/info/faq'],
+              ['Referral Program','/info/referral'],
             ].map(([label, href]) => (
               <li key={label}>
                 <Link href={href} className="text-cream/55 hover:text-gold text-sm transition-colors">
