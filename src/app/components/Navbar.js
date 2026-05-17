@@ -9,7 +9,7 @@ import { useCart } from '../context/CartContext';
 const NAV_LINKS = [
   { label: 'Home',         href: '/' },
   { label: 'Shop',         href: '/shop' },
-  { label: 'Card Game', href: '/product/The-Midnight-Deck' },
+  { label: 'Card Game', href: '/product/the-midnight-deck' },
   { label: 'Testimonials', href: '/testimonials' },
   { label: 'About',        href: '/about' },
   { label: 'Contact',      href: '/contact' },
@@ -30,7 +30,7 @@ export default function Navbar() {
     {/* Announcement Bar */}
     <div className="fixed top-0 left-0 right-0 z-[60] text-center py-1 px-4" style={{ background: 'hsl(350 80% 5%)' }}>
       <p className="text-gold text-[10px] md:text-xs uppercase tracking-[0.25em] font-medium">
-        ✦ Get 10% Off on Online Payment ✦
+        Get 10% Off on Online Payment — Pay via Bank Transfer
       </p>
     </div>
     <nav className="fixed top-6 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gold-border/40">
