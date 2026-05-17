@@ -1,123 +1,179 @@
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+function getTransporter() {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
 
-const BASE = `
-  <div style="font-family:'Georgia',serif;background:#09080700;padding:0;margin:0;">
-  <div style="max-width:560px;margin:0 auto;background:#0b0a09;border:1px solid #3a2a1a;padding:48px 40px;">
-    <div style="text-align:center;margin-bottom:32px;">
-      <p style="color:#c9a96e;font-size:10px;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">Secret Hour</p>
-    </div>
-`;
-const FOOT = `
-    <div style="border-top:1px solid #3a2a1a;margin-top:40px;padding-top:24px;text-align:center;">
-      <p style="color:#5a4a3a;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin:0;">Discreet Packaging · No Brand Name Outside</p>
-      <p style="color:#3a2a1a;font-size:10px;margin:8px 0 0;">secrethour.pk · info@secrethour.pk</p>
-    </div>
-  </div></div>
-`;
-
-export function orderConfirmationHtml({ name, orderId, items, total, payment, city, trackingNumber }) {
+export function orderConfirmationHtml({ name, orderId, items = [], total, payment, city, trackingNumber }) {
   const itemRows = items.map(i =>
     `<tr>
-      <td style="color:#c9a96e;font-size:13px;padding:8px 0;border-bottom:1px solid #2a1a0a;">${i.title}</td>
-      <td style="color:#a08060;font-size:13px;padding:8px 0;border-bottom:1px solid #2a1a0a;text-align:center;">x${i.qty}</td>
-      <td style="color:#c9a96e;font-size:13px;padding:8px 0;border-bottom:1px solid #2a1a0a;text-align:right;">Rs. ${(i.numericPrice * i.qty).toLocaleString()}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0ece4;color:#2c1a0e;font-size:14px;">${i.title}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0ece4;color:#6b4c2a;font-size:14px;text-align:center;">x${i.qty}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0ece4;color:#2c1a0e;font-size:14px;text-align:right;">Rs. ${((i.numericPrice || 0) * (i.qty || 1)).toLocaleString()}</td>
     </tr>`
   ).join('');
 
-  return `${BASE}
-    <h1 style="color:#c9a96e;font-size:26px;font-style:italic;text-align:center;margin:0 0 8px;">Order Confirmed</h1>
-    <p style="color:#6a5a4a;font-size:11px;text-align:center;letter-spacing:3px;text-transform:uppercase;margin:0 0 32px;">Thank you for your order</p>
+  const paymentLabel = payment === 'bank' ? 'Bank Transfer' : 'Cash on Delivery';
 
-    <p style="color:#d4c4a8;font-size:14px;line-height:1.7;margin:0 0 24px;">
-      Dear ${name},<br/>
-      Your order has been received and is being prepared with care. We will reach out before dispatch.
-    </p>
+  const details = [
+    ['Order ID', `#${String(orderId).slice(0, 8).toUpperCase()}`],
+    ['Customer', name],
+    ['City', city],
+    ['Payment', paymentLabel],
+    ['Total', `Rs. ${(total || 0).toLocaleString()}`],
+    trackingNumber ? ['PostEx Tracking', trackingNumber] : null,
+  ].filter(Boolean);
 
-    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-      <thead>
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f7f4ef;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7f4ef;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e8ddd0;max-width:560px;width:100%;">
+
+        <!-- Header -->
         <tr>
-          <th style="color:#6a5a4a;font-size:10px;letter-spacing:3px;text-transform:uppercase;text-align:left;padding-bottom:8px;border-bottom:1px solid #3a2a1a;">Product</th>
-          <th style="color:#6a5a4a;font-size:10px;letter-spacing:3px;text-transform:uppercase;text-align:center;padding-bottom:8px;border-bottom:1px solid #3a2a1a;">Qty</th>
-          <th style="color:#6a5a4a;font-size:10px;letter-spacing:3px;text-transform:uppercase;text-align:right;padding-bottom:8px;border-bottom:1px solid #3a2a1a;">Price</th>
+          <td style="background:#1a0a04;padding:32px 40px;text-align:center;">
+            <p style="color:#c9a96e;font-size:10px;letter-spacing:4px;text-transform:uppercase;margin:0 0 6px;">Secret Hour</p>
+            <h1 style="color:#c9a96e;font-size:24px;font-style:italic;margin:0;">Order Confirmed</h1>
+          </td>
         </tr>
-      </thead>
-      <tbody>${itemRows}</tbody>
-    </table>
 
-    <div style="background:#150e08;border:1px solid #3a2a1a;padding:16px 20px;margin-bottom:24px;">
-      ${[
-        ['Order ID', `#${String(orderId).slice(0, 8).toUpperCase()}`],
-        ['City', city],
-        ['Payment', payment === 'bank' ? 'Bank Transfer' : 'Cash on Delivery'],
-        ['Total', `Rs. ${total.toLocaleString()}`],
-        trackingNumber ? ['PostEx Tracking', trackingNumber] : null,
-      ].filter(Boolean).map(([l, v]) =>
-        `<div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-          <span style="color:#6a5a4a;font-size:11px;letter-spacing:2px;text-transform:uppercase;">${l}</span>
-          <span style="color:#c9a96e;font-size:13px;">${v}</span>
-        </div>`
-      ).join('')}
-    </div>
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px 40px;">
+            <p style="color:#2c1a0e;font-size:15px;line-height:1.7;margin:0 0 24px;">
+              Dear <strong>${name}</strong>,<br>
+              Your order has been received and is being prepared with care. We'll reach out before dispatch.
+            </p>
 
-    <p style="color:#8a7a6a;font-size:13px;font-style:italic;text-align:center;line-height:1.6;margin:0;">
-      "Every great love story starts with intention."
-    </p>
-  ${FOOT}`;
+            <!-- Items table -->
+            ${items.length > 0 ? `
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <thead>
+                <tr style="background:#f7f4ef;">
+                  <th style="padding:10px 12px;text-align:left;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b4c2a;font-weight:600;">Product</th>
+                  <th style="padding:10px 12px;text-align:center;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b4c2a;font-weight:600;">Qty</th>
+                  <th style="padding:10px 12px;text-align:right;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b4c2a;font-weight:600;">Price</th>
+                </tr>
+              </thead>
+              <tbody>${itemRows}</tbody>
+            </table>` : ''}
+
+            <!-- Order details -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf7f2;border:1px solid #e8ddd0;margin-bottom:24px;">
+              ${details.map(([l, v]) => `
+              <tr>
+                <td style="padding:10px 16px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a6a4a;width:40%;">${l}</td>
+                <td style="padding:10px 16px;font-size:14px;color:#1a0a04;text-align:right;font-weight:${l === 'Total' ? '700' : '400'};">${v}</td>
+              </tr>`).join('')}
+            </table>
+
+            <p style="color:#6b4c2a;font-size:13px;font-style:italic;text-align:center;line-height:1.6;margin:0;">
+              "Every great love story starts with intention."
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f7f4ef;padding:20px 40px;text-align:center;border-top:1px solid #e8ddd0;">
+            <p style="color:#8a6a4a;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 4px;">Discreet Packaging · No Brand Name Outside</p>
+            <p style="color:#a08060;font-size:11px;margin:0;">secrethour.pk · info@secrethour.pk</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 }
 
 export function statusUpdateHtml({ name, trackingNumber, status, orderDetail }) {
-  const statusMessages = {
-    'At Merchant Warehouse':    { msg: 'Your order is being packed at our warehouse.', color: '#8888ff' },
-    'At PostEx Warehouse':      { msg: 'Your parcel is now at PostEx warehouse and will be dispatched soon.', color: '#88aaff' },
-    'Out for Delivery':         { msg: 'Your order is on its way to you today!', color: '#88ddaa' },
-    'Delivered':                { msg: 'Your order has been delivered. We hope you love it.', color: '#c9a96e' },
-    'Returned':                 { msg: 'Your order has been returned. Please contact us if you have questions.', color: '#ff8888' },
-    'Attempt Made':             { msg: 'A delivery attempt was made. PostEx will retry shortly.', color: '#ffaa88' },
-    'Delivery Under Review':    { msg: 'Your delivery is currently under review by PostEx.', color: '#ffcc88' },
+  const statusConfig = {
+    'At Merchant Warehouse':  { emoji: '📦', msg: 'Your order is being packed at our warehouse.' },
+    'At PostEx Warehouse':    { emoji: '🏭', msg: 'Your parcel is at PostEx warehouse and will be dispatched soon.' },
+    'Out for Delivery':       { emoji: '🚚', msg: 'Great news — your order is out for delivery today!' },
+    'Delivered':              { emoji: '✅', msg: 'Your order has been delivered. We hope you love every moment.' },
+    'Returned':               { emoji: '↩️', msg: 'Your order has been returned. Please contact us if you have any questions.' },
+    'Attempt Made':           { emoji: '🔔', msg: 'A delivery attempt was made. PostEx will retry shortly.' },
+    'Delivery Under Review':  { emoji: '🔍', msg: 'Your delivery is currently under review by PostEx.' },
   };
 
-  const { msg, color } = statusMessages[status] || { msg: `Your order status has been updated to: ${status}`, color: '#c9a96e' };
+  const { emoji = '📬', msg = `Your order status: ${status}` } = statusConfig[status] || {};
 
-  return `${BASE}
-    <h1 style="color:${color};font-size:24px;font-style:italic;text-align:center;margin:0 0 8px;">Delivery Update</h1>
-    <p style="color:#6a5a4a;font-size:11px;text-align:center;letter-spacing:3px;text-transform:uppercase;margin:0 0 32px;">${status}</p>
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f7f4ef;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7f4ef;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e8ddd0;max-width:560px;width:100%;">
 
-    <p style="color:#d4c4a8;font-size:14px;line-height:1.7;margin:0 0 24px;">
-      Dear ${name},<br/>${msg}
-    </p>
+        <!-- Header -->
+        <tr>
+          <td style="background:#1a0a04;padding:32px 40px;text-align:center;">
+            <p style="color:#c9a96e;font-size:10px;letter-spacing:4px;text-transform:uppercase;margin:0 0 6px;">Secret Hour</p>
+            <h1 style="color:#c9a96e;font-size:22px;font-style:italic;margin:0;">Delivery Update</h1>
+            <p style="color:#c9a96e;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:8px 0 0;opacity:0.8;">${status}</p>
+          </td>
+        </tr>
 
-    <div style="background:#150e08;border:1px solid #3a2a1a;padding:16px 20px;margin-bottom:24px;">
-      ${trackingNumber ? `
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-        <span style="color:#6a5a4a;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Tracking</span>
-        <span style="color:#c9a96e;font-size:13px;">${trackingNumber}</span>
-      </div>` : ''}
-      ${orderDetail ? `
-      <div style="display:flex;justify-content:space-between;">
-        <span style="color:#6a5a4a;font-size:11px;letter-spacing:2px;text-transform:uppercase;">Order</span>
-        <span style="color:#a08060;font-size:12px;">${orderDetail}</span>
-      </div>` : ''}
-    </div>
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px 40px;text-align:center;">
+            <p style="font-size:40px;margin:0 0 16px;">${emoji}</p>
+            <p style="color:#2c1a0e;font-size:15px;line-height:1.7;margin:0 0 24px;text-align:left;">
+              Dear <strong>${name}</strong>,<br>${msg}
+            </p>
 
-    <p style="color:#8a7a6a;font-size:13px;font-style:italic;text-align:center;line-height:1.6;margin:0;">
-      Questions? Reach us on WhatsApp or at info@secrethour.pk
-    </p>
-  ${FOOT}`;
+            ${trackingNumber ? `
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf7f2;border:1px solid #e8ddd0;margin-bottom:24px;">
+              <tr>
+                <td style="padding:12px 16px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a6a4a;">Tracking Number</td>
+                <td style="padding:12px 16px;font-size:15px;color:#1a0a04;text-align:right;font-family:monospace;font-weight:700;">${trackingNumber}</td>
+              </tr>
+              ${orderDetail ? `<tr>
+                <td style="padding:12px 16px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a6a4a;">Order</td>
+                <td style="padding:12px 16px;font-size:13px;color:#4a3020;text-align:right;">${orderDetail}</td>
+              </tr>` : ''}
+            </table>` : ''}
+
+            <p style="color:#6b4c2a;font-size:13px;font-style:italic;text-align:center;line-height:1.6;margin:0;">
+              Questions? Reach us on WhatsApp or at info@secrethour.pk
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f7f4ef;padding:20px 40px;text-align:center;border-top:1px solid #e8ddd0;">
+            <p style="color:#8a6a4a;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 4px;">Discreet Packaging · No Brand Name Outside</p>
+            <p style="color:#a08060;font-size:11px;margin:0;">secrethour.pk · info@secrethour.pk</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 }
 
 export async function sendEmail({ to, subject, html }) {
+  const transporter = getTransporter();
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM || 'Secret Hour <info@secrethour.pk>',
+    from: process.env.EMAIL_FROM || 'Secret Hour <secrethour.pk@gmail.com>',
     to,
     subject,
     html,

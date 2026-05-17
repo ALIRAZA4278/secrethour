@@ -17,6 +17,8 @@ const cardCls = 'rounded-lg p-6 md:p-7 border border-gold-border/20 bg-gradient-
 export default function CheckoutPage() {
   const { items, totalPrice, totalItems, setOpen } = useCart();
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [payment, setPayment] = useState('cod');
   const [promoCode, setPromoCode] = useState('');
@@ -35,26 +37,33 @@ export default function CheckoutPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const { data: order, error: orderErr } = await supabase
-      .from('orders')
-      .insert({
-        first_name: form.fullName,
-        last_name: '',
-        email: form.email,
-        phone: form.phone,
-        address: form.address,
-        city: form.city,
-        postal_code: form.postalCode,
-        country: form.country,
-        payment_method: payment,
-        subtotal: totalPrice,
-        discount,
-        total,
-      })
-      .select('id')
-      .single();
+    setSubmitting(true);
+    setSubmitError('');
 
-    if (!orderErr && order) {
+    try {
+      const { data: order, error: orderErr } = await supabase
+        .from('orders')
+        .insert({
+          first_name: form.fullName,
+          last_name: '',
+          email: form.email,
+          phone: form.phone,
+          address: form.address,
+          city: form.city,
+          postal_code: form.postalCode,
+          country: form.country,
+          payment_method: payment,
+          subtotal: totalPrice,
+          discount,
+          total,
+        })
+        .select('id')
+        .single();
+
+      if (orderErr || !order) {
+        throw new Error(orderErr?.message || 'Failed to place order. Please try again.');
+      }
+
       await supabase.from('order_items').insert(
         items.map((item) => ({
           order_id: order.id,
@@ -115,9 +124,14 @@ export default function CheckoutPage() {
       } catch {
         // Email failure shouldn't block order confirmation
       }
+
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } catch (err) {
+      setSubmitError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitted(true);
-    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   /* ── Empty cart ── */
@@ -426,11 +440,17 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Place order */}
+                {submitError && (
+                  <p className="mt-4 text-xs text-red-400 text-center bg-red-950/30 border border-red-900/40 rounded px-4 py-2">
+                    {submitError}
+                  </p>
+                )}
                 <button
                   type="submit"
-                  className="w-full mt-6 bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] py-4 btn-glow transition-all duration-300"
+                  disabled={submitting}
+                  className="w-full mt-4 bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] py-4 btn-glow transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Place Order
+                  {submitting ? 'Placing Order...' : 'Place Order'}
                 </button>
 
                 <p className="text-center text-cream/25 text-[9px] uppercase tracking-[0.2em] mt-4">

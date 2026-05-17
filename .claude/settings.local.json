@@ -44,7 +44,8 @@
       "Bash(node fix-images.mjs)",
       "Bash(node add-postex-column.mjs)",
       "Bash(node test-postex.mjs)",
-      "Bash(node get-pickup-address.mjs)"
+      "Bash(node get-pickup-address.mjs)",
+      "Bash(node test-email2.mjs)"
     ]
   }
 }
