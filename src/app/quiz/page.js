@@ -73,12 +73,12 @@ function getResult(pct) {
     return {
       note: 'Every great love story starts with intention. Begin gently — let curiosity lead. There is no rush tonight.',
       product: {
-        slug: 'The-Midnight-Deck',
+        slug: 'the-midnight-deck',
         name: "The Midnight Deck",
         desc: 'Gentle prompts designed to open conversations and deepen connection — one card at a time.',
         price: 'Rs. 3,499',
         numericPrice: 3499,
-        img: '/assets/sh-card-game-Cw972EQC.png',
+        img: '/Products/back of card with bg.jpg',
       },
     };
   }
@@ -91,7 +91,7 @@ function getResult(pct) {
         desc: 'Three small luxuries to set the scene for a night that belongs only to you.',
         price: 'Rs. 5,499',
         numericPrice: 5499,
-        img: '/assets/sh-night-set-DlV1-dhc.jpg',
+        img: '/Products/box with candle and card.jpeg',
       },
     };
   }
@@ -103,7 +103,7 @@ function getResult(pct) {
       desc: 'A complete experience for couples ready to celebrate their bond in the most beautiful way.',
       price: 'Rs. 8,999',
       numericPrice: 8999,
-      img: '/assets/sh-bridal-box-Bmv6nl8o.jpg',
+      img: '/Products/box with candle card and red envelope.jpeg',
     },
   };
 }
@@ -255,7 +255,7 @@ export default function QuizPage() {
                 style={{ background: 'rgba(11,10,9,0.7)' }}
               >
                 <div className="relative w-16 h-16 shrink-0 bg-burgundy/40">
-                  <Image src="/assets/sh-bridal-box-Bmv6nl8o.jpg" alt="Midnight Glow Candle" fill className="object-cover" unoptimized />
+                  <Image src="/Products/box with candle card and red envelope.jpeg" alt="Midnight Glow Candle" fill className="object-cover" unoptimized />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[9px] uppercase tracking-[0.25em] text-gold/60 mb-0.5">Add the Mood</p>

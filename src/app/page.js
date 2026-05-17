@@ -10,9 +10,9 @@ import { useCart } from './context/CartContext';
 const IMG = {
   hero:      '/assets/hero-couple-CSWWAnnc.jpg',
   silk:      '/assets/bg-silk-B9_HjwKe.jpg',
-  cardGame:  '/assets/sh-card-game-Cw972EQC.png',
-  bridalBox: '/assets/sh-bridal-box-Bmv6nl8o.jpg',
-  nightSet:  '/assets/sh-night-set-DlV1-dhc.jpg',
+  cardGame:  '/Products/back of card with bg.jpg',
+  bridalBox: '/Products/box with candle card and red envelope.jpeg',
+  nightSet:  '/Products/box with candle and card.jpeg',
 };
 
 const PRODUCTS = [
@@ -140,7 +140,7 @@ export default function Home() {
             </div>
 
             <Link
-              href="/product/secret-hour-card-experience"
+              href="/product/the-midnight-deck"
               className="inline-block w-full sm:w-auto text-center bg-sh-bg border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-10 py-4 btn-glow transition-all duration-300 hover:bg-burgundy"
             >
               Open the Box

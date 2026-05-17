@@ -37,7 +37,11 @@
       "Bash(node -e \"const {createClient} = require\\('@supabase/supabase-js'\\); const c = createClient\\('https://bazyygvvewedhnyxetrx.supabase.co', 'sb_publishable_P_8yZhdNPziu-k27j1_RXg_ZR6VBLrH'\\); console.log\\('client created:', !!c\\);\")",
       "Bash(node -e \"console.log\\(require\\('@supabase/supabase-js/package.json'\\).version\\)\")",
       "Bash(node -e \"console.log\\(require\\('next/package.json'\\).version\\)\")",
-      "Bash(Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue)"
+      "Bash(Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue)",
+      "Bash(node update-product-images.mjs)",
+      "Bash(del *)",
+      "Bash(node check-products.mjs)",
+      "Bash(node fix-images.mjs)"
     ]
   }
 }
