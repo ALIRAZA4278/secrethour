@@ -143,6 +143,8 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
   const [noteSaved,   setNoteSaved]   = useState(false);
   const [custOrders,  setCustOrders]  = useState([]);
   const [custLoading, setCustLoading] = useState(false);
+  const [postexInfo,  setPostexInfo]  = useState(null);
+  const [postexLoading, setPostexLoading] = useState('');
 
   useEffect(() => {
     setStatus(order?.status || 'pending');
@@ -168,6 +170,53 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
     await supabase.from('orders').update({ notes: note }).eq('id', order.id);
     setNoteSaved(true);
     setTimeout(() => setNoteSaved(false), 2000);
+  }
+
+  async function trackOrder() {
+    if (!order.postex_tracking) return;
+    setPostexLoading('track');
+    setPostexInfo(null);
+    try {
+      const res = await fetch(`/api/postex/track?tracking=${order.postex_tracking}`);
+      const data = await res.json();
+      setPostexInfo({ type: 'track', data });
+    } catch (err) {
+      setPostexInfo({ type: 'track', error: err.message });
+    }
+    setPostexLoading('');
+  }
+
+  async function cancelOrder() {
+    if (!order.postex_tracking) return;
+    if (!window.confirm(`Cancel PostEx shipment ${order.postex_tracking}?`)) return;
+    setPostexLoading('cancel');
+    setPostexInfo(null);
+    try {
+      const res = await fetch('/api/postex/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackingNumber: order.postex_tracking }),
+      });
+      const data = await res.json();
+      setPostexInfo({ type: 'cancel', data });
+    } catch (err) {
+      setPostexInfo({ type: 'cancel', error: err.message });
+    }
+    setPostexLoading('');
+  }
+
+  async function fetchPaymentStatus() {
+    if (!order.postex_tracking) return;
+    setPostexLoading('payment');
+    setPostexInfo(null);
+    try {
+      const res = await fetch(`/api/postex/payment-status?tracking=${order.postex_tracking}`);
+      const data = await res.json();
+      setPostexInfo({ type: 'payment', data });
+    } catch (err) {
+      setPostexInfo({ type: 'payment', error: err.message });
+    }
+    setPostexLoading('');
   }
 
   if (!order) return null;
@@ -217,6 +266,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
             ['CITY',     order.city],
             ['PAYMENT',  payment],
             ['DATE',     new Date(order.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })],
+            ['POSTEX TRACKING', order.postex_tracking],
           ].map(([l, v]) => v ? (
             <div key={l} className="flex justify-between gap-4">
               <span className="text-gray-400 text-xs uppercase tracking-[0.2em] shrink-0">{l}</span>
@@ -315,6 +365,52 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
             {noteSaved ? '✓ Saved' : 'Save Note'}
           </button>
         </div>
+
+        {/* PostEx Actions */}
+        {order.postex_tracking && (
+          <div className="px-6 py-5 border-b border-gray-200">
+            <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-4">POSTEX ACTIONS</p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              <button onClick={trackOrder} disabled={postexLoading === 'track'}
+                className="text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:border-gray-500 bg-white transition disabled:opacity-50">
+                {postexLoading === 'track' ? 'Tracking…' : 'Track'}
+              </button>
+              <button
+                onClick={() => window.open(`/api/postex/airway-bill?tracking=${order.postex_tracking}`, '_blank')}
+                className="text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:border-gray-500 bg-white transition">
+                Airway Bill
+              </button>
+              <button onClick={cancelOrder} disabled={postexLoading === 'cancel'}
+                className="text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border border-red-300 rounded-lg text-red-600 hover:text-red-800 hover:border-red-500 bg-white transition disabled:opacity-50">
+                {postexLoading === 'cancel' ? 'Cancelling…' : 'Cancel'}
+              </button>
+              <button onClick={fetchPaymentStatus} disabled={postexLoading === 'payment'}
+                className="text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:border-gray-500 bg-white transition disabled:opacity-50">
+                {postexLoading === 'payment' ? 'Loading…' : 'Payment Status'}
+              </button>
+            </div>
+            {postexInfo && (
+              <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 space-y-1">
+                {postexInfo.error ? (
+                  <p className="text-red-600">Error: {postexInfo.error}</p>
+                ) : postexInfo.type === 'track' ? (
+                  <>
+                    <p><span className="text-gray-400 uppercase tracking-[0.15em]">Status:</span> {postexInfo.data?.orderStatus || postexInfo.data?.transactionStatusMessage || JSON.stringify(postexInfo.data)}</p>
+                    {postexInfo.data?.orderStatusCode && <p><span className="text-gray-400 uppercase tracking-[0.15em]">Code:</span> {postexInfo.data.orderStatusCode}</p>}
+                    {postexInfo.data?.updatedDate && <p><span className="text-gray-400 uppercase tracking-[0.15em]">Updated:</span> {postexInfo.data.updatedDate}</p>}
+                  </>
+                ) : postexInfo.type === 'payment' ? (
+                  <>
+                    <p><span className="text-gray-400 uppercase tracking-[0.15em]">Settled:</span> <span className={postexInfo.data?.settle === true ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>{postexInfo.data?.settle === true ? 'Yes' : 'No'}</span></p>
+                    {postexInfo.data?.paymentDate && <p><span className="text-gray-400 uppercase tracking-[0.15em]">Date:</span> {postexInfo.data.paymentDate}</p>}
+                  </>
+                ) : (
+                  <p>{postexInfo.data?.statusMessage || JSON.stringify(postexInfo.data)}</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* WhatsApp send */}
         <div className="px-6 py-5">
@@ -433,14 +529,15 @@ function Dashboard() {
    ORDERS TAB
 ═══════════════════════════════════════════ */
 function OrdersTab() {
-  const [orders,        setOrders]        = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [filter,        setFilter]        = useState('all');
-  const [search,        setSearch]        = useState('');
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [itemsMap,      setItemsMap]      = useState({});
-  const [selected,      setSelected]      = useState(new Set());
-  const [bulkStatus,    setBulkStatus]    = useState('');
+  const [orders,           setOrders]           = useState([]);
+  const [loading,          setLoading]          = useState(true);
+  const [filter,           setFilter]           = useState('all');
+  const [search,           setSearch]           = useState('');
+  const [selectedOrder,    setSelectedOrder]    = useState(null);
+  const [itemsMap,         setItemsMap]         = useState({});
+  const [selected,         setSelected]         = useState(new Set());
+  const [bulkStatus,       setBulkStatus]       = useState('');
+  const [sheetLoading,     setSheetLoading]     = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -496,6 +593,36 @@ function OrdersTab() {
     setBulkStatus('');
   }
 
+  async function generateLoadSheet() {
+    const trackingNumbers = visible
+      .filter(o => o.postex_tracking)
+      .map(o => o.postex_tracking);
+    if (trackingNumbers.length === 0) {
+      alert('No orders with PostEx tracking numbers in current view.');
+      return;
+    }
+    setSheetLoading(true);
+    try {
+      const res = await fetch('/api/postex/load-sheet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackingNumbers }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert('Load sheet error: ' + (err.error || 'Unknown error'));
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (err) {
+      alert('Load sheet error: ' + err.message);
+    }
+    setSheetLoading(false);
+  }
+
   if (loading) return <Spinner />;
 
   return (
@@ -512,6 +639,13 @@ function OrdersTab() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
               Export {selected.size > 0 ? `(${selected.size})` : 'All'}
+            </button>
+            <button onClick={generateLoadSheet} disabled={sheetLoading}
+              className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-xs uppercase tracking-[0.2em] border border-gray-300 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition disabled:opacity-50">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+              </svg>
+              {sheetLoading ? 'Generating…' : 'Load Sheet'}
             </button>
             <button onClick={load}
               className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-xs uppercase tracking-[0.2em] border border-gray-300 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition">

@@ -41,7 +41,10 @@
       "Bash(node update-product-images.mjs)",
       "Bash(del *)",
       "Bash(node check-products.mjs)",
-      "Bash(node fix-images.mjs)"
+      "Bash(node fix-images.mjs)",
+      "Bash(node add-postex-column.mjs)",
+      "Bash(node test-postex.mjs)",
+      "Bash(node get-pickup-address.mjs)"
     ]
   }
 }
