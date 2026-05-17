@@ -267,6 +267,8 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
             ['PAYMENT',  payment],
             ['DATE',     new Date(order.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })],
             ['POSTEX TRACKING', order.postex_tracking],
+            ['POSTEX STATUS',   order.postex_status],
+            ['POSTEX UPDATED',  order.postex_updated_at ? new Date(order.postex_updated_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null],
           ].map(([l, v]) => v ? (
             <div key={l} className="flex justify-between gap-4">
               <span className="text-gray-400 text-xs uppercase tracking-[0.2em] shrink-0">{l}</span>
@@ -724,7 +726,15 @@ function OrdersTab() {
               <input type="checkbox" checked={selected.has(o.id)} onChange={() => toggleOne(o.id)}
                 onClick={e => e.stopPropagation()}
                 className="accent-gray-800 mt-0.5 cursor-pointer" />
-              <span className="text-gray-900 text-sm font-bold">{orderNum(o.id)}</span>
+              <div className="min-w-0">
+                <span className="text-gray-900 text-sm font-bold">{orderNum(o.id)}</span>
+                {o.postex_tracking && (
+                  <p className="text-[10px] text-indigo-500 font-mono truncate mt-0.5">{o.postex_tracking}</p>
+                )}
+                {o.postex_status && (
+                  <p className="text-[10px] text-purple-500 uppercase tracking-wide truncate">{o.postex_status}</p>
+                )}
+              </div>
               <div className="min-w-0">
                 <p className="text-gray-800 text-sm truncate font-medium">{o.first_name} {o.last_name}</p>
                 <p className="text-gray-400 text-xs truncate">{o.city}</p>
