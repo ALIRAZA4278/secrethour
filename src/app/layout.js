@@ -19,6 +19,10 @@ export const metadata = {
   title: 'Secret Hour — Quiet Luxuries for Married Couples',
   description:
     'Quietly luxurious gifts crafted for married couples — to slow down, come closer, and remember why.',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({ children }) {
