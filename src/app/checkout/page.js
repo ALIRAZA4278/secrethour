@@ -23,6 +23,9 @@ export default function CheckoutPage() {
   const [payment, setPayment] = useState('cod');
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoError, setPromoError] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
   const [form, setForm] = useState({
     fullName: '', email: '', phone: '',
     address: '', city: '', postalCode: '', country: 'Pakistan',
@@ -32,7 +35,9 @@ export default function CheckoutPage() {
     return (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
   }
 
-  const discount = promoApplied && payment === 'bank' ? Math.round(totalPrice * 0.10) : 0;
+  const bankDiscount = payment === 'bank' ? Math.round(totalPrice * 0.10) : 0;
+  const promoDiscountAmt = promoApplied ? Math.round(totalPrice * promoDiscount / 100) : 0;
+  const discount = Math.max(bankDiscount, promoDiscountAmt);
   const total = totalPrice - discount;
 
   async function handleSubmit(e) {
@@ -400,21 +405,31 @@ export default function CheckoutPage() {
                     <input
                       type="text"
                       value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(''); setPromoApplied(false); }}
                       placeholder="Enter promo code"
                       className={`${inputCls} flex-1`}
                     />
                     <button
                       type="button"
-                      onClick={() => setPromoApplied(promoCode.length > 0)}
-                      className="btn-dark px-5 text-xs"
+                      disabled={promoLoading || !promoCode}
+                      onClick={async () => {
+                        setPromoLoading(true);
+                        setPromoError('');
+                        try {
+                          const res = await fetch(`/api/promo?code=${encodeURIComponent(promoCode)}`);
+                          const data = await res.json();
+                          if (!res.ok) { setPromoError(data.error || 'Invalid code'); }
+                          else { setPromoApplied(true); setPromoDiscount(data.discount); }
+                        } catch { setPromoError('Could not verify code'); }
+                        setPromoLoading(false);
+                      }}
+                      className="btn-dark px-5 text-xs disabled:opacity-50"
                     >
-                      Apply
+                      {promoLoading ? '...' : 'Apply'}
                     </button>
                   </div>
-                  {promoApplied && payment === 'bank' && (
-                    <p className="text-gold/70 text-xs mt-1.5">10% discount applied!</p>
-                  )}
+                  {promoError && <p className="text-red-400 text-xs mt-1.5">{promoError}</p>}
+                  {promoApplied && <p className="text-gold/70 text-xs mt-1.5">{promoDiscount}% discount applied!</p>}
                 </div>
 
                 {/* Totals */}
@@ -425,7 +440,7 @@ export default function CheckoutPage() {
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-gold/70">
-                      <span>Discount (10%)</span>
+                      <span>Discount ({promoApplied ? `${promoDiscount}% promo` : '10% bank'})</span>
                       <span>− Rs. {discount.toLocaleString()}</span>
                     </div>
                   )}

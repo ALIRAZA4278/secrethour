@@ -134,7 +134,7 @@ export default function ProductPage({ params }) {
             {/* Left: image + thumbnails — sticky on desktop */}
             <div className="space-y-4 lg:sticky lg:top-20">
               <div className="relative aspect-square rounded overflow-hidden border border-gold-border/40 bg-sh-card">
-                <Image src={images[activeImg]} alt={product.title} fill className="object-contain" priority unoptimized />
+                <Image src={images[activeImg]} alt={product.title} fill className="object-cover" priority unoptimized />
               </div>
               {images.length > 1 && (
                 <div className="grid grid-cols-3 gap-3">
@@ -146,7 +146,7 @@ export default function ProductPage({ params }) {
                         activeImg === i ? 'border-gold' : 'border-gold-border/40 hover:border-gold-muted'
                       }`}
                     >
-                      <Image src={img} alt="" fill className="object-contain" unoptimized />
+                      <Image src={img} alt="" fill className="object-cover" unoptimized />
                     </button>
                   ))}
                 </div>

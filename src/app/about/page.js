@@ -17,7 +17,7 @@ const VALUES = [
 
 export default function AboutPage() {
   return (
-    <div className="bg-sh-bg text-cream min-h-screen flex flex-col">
+    <div className="text-cream min-h-screen flex flex-col" style={{ background: 'radial-gradient(ellipse at top, rgb(57,19,26) 0%, rgb(11,10,9) 50%, rgb(20,8,8) 100%)' }}>
       <Navbar />
 
       {/* Header — pt-[160px] matches original */}

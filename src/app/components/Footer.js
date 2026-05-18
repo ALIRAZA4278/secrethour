@@ -57,7 +57,7 @@ export default function Footer() {
       <div className="pt-16 pb-8 px-4 md:px-6">
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 mb-12">
         <div className="col-span-2 md:col-span-1 space-y-5">
-          <div className="relative w-36 h-10">
+          <div className="relative w-52 h-14">
             <Image src={LOGO} alt="Secret Hour" fill className="object-contain object-left" unoptimized />
           </div>
           <p className="text-cream/45 text-sm leading-relaxed max-w-[200px]">

@@ -642,13 +642,7 @@ function OrdersTab() {
               </svg>
               Export {selected.size > 0 ? `(${selected.size})` : 'All'}
             </button>
-            <button onClick={generateLoadSheet} disabled={sheetLoading}
-              className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-xs uppercase tracking-[0.2em] border border-gray-300 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition disabled:opacity-50">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-              </svg>
-              {sheetLoading ? 'Generating…' : 'Load Sheet'}
-            </button>
+
             <button onClick={load}
               className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-xs uppercase tracking-[0.2em] border border-gray-300 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition">
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1491,6 +1485,101 @@ function SettingsTab() {
 }
 
 /* ═══════════════════════════════════════════
+   PROMO CODES TAB
+═══════════════════════════════════════════ */
+function PromoCodesTab() {
+  const [codes,   setCodes]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [code,    setCode]    = useState('');
+  const [pct,     setPct]     = useState(10);
+  const [saving,  setSaving]  = useState(false);
+
+  async function load() {
+    setLoading(true);
+    const { data } = await supabase.from('promo_codes').select('*').order('created_at', { ascending: false });
+    setCodes(data || []);
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function add(e) {
+    e.preventDefault();
+    if (!code.trim()) return;
+    setSaving(true);
+    await supabase.from('promo_codes').insert({ code: code.trim().toUpperCase(), discount_percent: Number(pct), active: true });
+    setCode(''); setPct(10);
+    await load();
+    setSaving(false);
+  }
+
+  async function toggle(id, active) {
+    await supabase.from('promo_codes').update({ active: !active }).eq('id', id);
+    setCodes(prev => prev.map(c => c.id === id ? { ...c, active: !active } : c));
+  }
+
+  async function remove(id) {
+    if (!window.confirm('Delete this promo code?')) return;
+    await supabase.from('promo_codes').delete().eq('id', id);
+    setCodes(prev => prev.filter(c => c.id !== id));
+  }
+
+  return (
+    <div className="space-y-8 max-w-2xl">
+      <div>
+        <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Admin</p>
+        <h1 className="text-4xl italic text-gray-900" style={serif}>Promo Codes</h1>
+      </div>
+
+      <form onSubmit={add} className="border border-gray-200 bg-white rounded-xl p-6 shadow-sm space-y-4">
+        <p className="text-sm font-medium text-gray-700 uppercase tracking-[0.15em]">Create New Code</p>
+        <div className="flex gap-3 items-end">
+          <div className="flex-1">
+            <label className={LBL}>Promo Code</label>
+            <input value={code} onChange={e => setCode(e.target.value.toUpperCase())} required placeholder="e.g. SAVE10" className={INP} />
+          </div>
+          <div className="w-28">
+            <label className={LBL}>Discount %</label>
+            <input type="number" min={1} max={100} value={pct} onChange={e => setPct(e.target.value)} required className={INP} />
+          </div>
+          <button type="submit" disabled={saving}
+            className="bg-gray-900 text-white text-xs uppercase tracking-[0.15em] px-5 py-2.5 rounded-lg hover:bg-black transition disabled:opacity-50 shrink-0">
+            {saving ? 'Adding…' : 'Add Code'}
+          </button>
+        </div>
+      </form>
+
+      <div className="border border-gray-200 bg-white rounded-xl overflow-hidden shadow-sm">
+        <div className="grid grid-cols-[1fr_80px_80px_80px] gap-3 px-5 py-3 bg-gray-50 border-b border-gray-200">
+          {['CODE', 'DISCOUNT', 'STATUS', 'ACTION'].map(h => (
+            <span key={h} className="text-xs text-gray-500 uppercase tracking-[0.2em] font-semibold">{h}</span>
+          ))}
+        </div>
+        {loading
+          ? <Spinner />
+          : codes.length === 0
+            ? <p className="text-gray-400 text-sm italic text-center py-10">No promo codes yet.</p>
+            : codes.map(c => (
+              <div key={c.id} className="grid grid-cols-[1fr_80px_80px_80px] gap-3 items-center px-5 py-3.5 border-b border-gray-100 last:border-0">
+                <span className="text-gray-900 font-mono font-bold text-sm">{c.code}</span>
+                <span className="text-gray-700 text-sm">{c.discount_percent}%</span>
+                <button onClick={() => toggle(c.id, c.active)}
+                  className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition ${c.active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200'}`}>
+                  {c.active ? 'Active' : 'Off'}
+                </button>
+                <button onClick={() => remove(c.id)}
+                  className="text-red-400 hover:text-red-600 text-xs uppercase tracking-[0.15em] transition font-medium">
+                  Delete
+                </button>
+              </div>
+            ))
+        }
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
    SHARED
 ═══════════════════════════════════════════ */
 function Spinner() {
@@ -1518,6 +1607,7 @@ export default function AdminPage() {
     { id: 'orders',    label: 'Orders' },
     { id: 'products',  label: 'Products' },
     { id: 'reviews',   label: 'Reviews' },
+    { id: 'promos',    label: 'Promo Codes' },
     { id: 'settings',  label: 'Settings' },
     { id: 'dashboard', label: 'Dashboard' },
   ];
@@ -1556,6 +1646,7 @@ export default function AdminPage() {
         {tab === 'orders'    && <OrdersTab />}
         {tab === 'products'  && <ProductsTab />}
         {tab === 'reviews'   && <ReviewsTab />}
+        {tab === 'promos'    && <PromoCodesTab />}
         {tab === 'settings'  && <SettingsTab />}
         {tab === 'dashboard' && <Dashboard />}
       </main>
