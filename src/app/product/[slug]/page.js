@@ -133,7 +133,7 @@ export default function ProductPage({ params }) {
 
             {/* Left: image + thumbnails — sticky on desktop */}
             <div className="space-y-4 lg:sticky lg:top-20">
-              <div className="relative aspect-square rounded overflow-hidden border border-gold-border/40 bg-sh-card">
+              <div className="relative aspect-square rounded overflow-hidden border border-gold-border/40">
                 <Image src={images[activeImg]} alt={product.title} fill className="object-cover" priority unoptimized />
               </div>
               {images.length > 1 && (
@@ -142,7 +142,7 @@ export default function ProductPage({ params }) {
                     <button
                       key={i}
                       onClick={() => setActiveImg(i)}
-                      className={`relative aspect-square rounded overflow-hidden border-2 transition-colors bg-sh-card ${
+                      className={`relative aspect-square rounded overflow-hidden border-2 transition-colors ${
                         activeImg === i ? 'border-gold' : 'border-gold-border/40 hover:border-gold-muted'
                       }`}
                     >
