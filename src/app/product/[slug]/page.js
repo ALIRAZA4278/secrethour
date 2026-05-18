@@ -359,7 +359,7 @@ export default function ProductPage({ params }) {
                 <div key={p.slug} className="group flex flex-col border border-gold-border/40 hover:border-gold transition-colors duration-300">
                   <Link href={`/product/${p.slug}`} className="block">
                     <div className="relative aspect-square overflow-hidden bg-sh-card">
-                      <Image src={p.img} alt={p.title} fill className="object-contain group-hover:scale-[1.03] transition-transform duration-500" unoptimized />
+                      <Image src={p.img} alt={p.title} fill className="object-cover group-hover:scale-[1.03] transition-transform duration-500" unoptimized />
                     </div>
                   </Link>
                   <div className="p-4 text-center space-y-2 flex-1 flex flex-col">
