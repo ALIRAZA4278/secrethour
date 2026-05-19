@@ -5,8 +5,8 @@ export const PRODUCTS = [
     tagline:      'Designed for meaningful connection',
     title:        'The Midnight Deck',
     subtitle:     'A private invitation to rediscover each other.',
-    price:        'Rs. 3,499',
-    numericPrice: 3499,
+    price:        'Rs. 2,999',
+    numericPrice: 2999,
     stockNote:    'Limited stock available',
     img:      '/assets/sh-card-game-Cw972EQC.png',
     images: [

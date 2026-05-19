@@ -2,41 +2,17 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { useCart } from './context/CartContext';
+import { supabase } from '../lib/supabase';
 
 const IMG = {
-  hero:      '/assets/hero-couple-CSWWAnnc.jpg',
-  silk:      '/assets/bg-silk-B9_HjwKe.jpg',
-  cardGame:  '/Products/back of card with bg.jpg',
-  bridalBox: '/Products/box with candle card and red envelope.jpeg',
-  nightSet:  '/Products/box with candle and card.jpeg',
+  hero:     '/assets/hero-couple-CSWWAnnc.jpg',
+  silk:     '/assets/bg-silk-B9_HjwKe.jpg',
+  cardGame: '/Products/back of card with bg.jpg',
 };
-
-const PRODUCTS = [
-  {
-    slug:         'bridal-box',
-    href:         '/product/bridal-box',
-    img:          IMG.bridalBox,
-    alt:          'The Secret Hour Bridal Box',
-    title:        'The Secret Hour Bridal Box',
-    subtitle:     'The wedding-night gift she will never forget.',
-    price:        'Rs. 8,999',
-    numericPrice: 8999,
-  },
-  {
-    slug:         'intimate-night-set',
-    href:         '/product/intimate-night-set',
-    img:          IMG.nightSet,
-    alt:          'The Intimate Night Set',
-    title:        'The Intimate Night Set',
-    subtitle:     'Three small luxuries. One unforgettable evening.',
-    price:        'Rs. 5,499',
-    numericPrice: 5499,
-  },
-];
 
 const TESTIMONIALS = [
   { quote: "Our wedding night felt like a film. The bridal box made it unforgettable." },
@@ -49,6 +25,21 @@ const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, s
 export default function Home() {
   const [email, setEmail] = useState('');
   const { addToCart } = useCart();
+  const [products, setProducts] = useState({});
+
+  useEffect(() => {
+    supabase
+      .from('products')
+      .select('slug, title, subtitle, price, numeric_price, img')
+      .in('slug', ['bridal-box', 'intimate-night-set', 'the-midnight-deck'])
+      .then(({ data }) => {
+        if (data) {
+          const map = {};
+          data.forEach(p => { map[p.slug] = p; });
+          setProducts(map);
+        }
+      });
+  }, []);
 
   return (
     <div className="bg-sh-bg text-cream min-h-screen">
@@ -135,7 +126,7 @@ export default function Home() {
             </ul>
 
             <div>
-              <p className="text-3xl md:text-4xl text-gold" style={serif}>Rs. 3,499</p>
+              <p className="text-3xl md:text-4xl text-gold" style={serif}>{products['the-midnight-deck']?.price || 'Rs. 2,999'}</p>
               <p className="text-cream/30 text-[9px] uppercase tracking-[0.2em] mt-1">Including all taxes · Available in small batches</p>
             </div>
 
@@ -165,39 +156,37 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-5 md:gap-6">
-            {PRODUCTS.map((p, i) => (
-              <Link
-                key={p.href}
-                href={p.href}
-                className="group block border border-gold-border hover:border-gold transition-colors duration-300 relative"
-              >
-                {i === 0 && (
-                  <span className="absolute top-3 left-3 z-10 bg-gold text-sh-bg text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1">
-                    Best Seller
-                  </span>
-                )}
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <Image
-                    src={p.img}
-                    alt={p.alt}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-                <div className="p-4 space-y-1.5 bg-black/40 text-center">
-                  <h3 className="text-sm md:text-base italic text-cream" style={serif}>{p.title}</h3>
-                  <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
-                  <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
-                  <button
-                    onClick={(e) => { e.preventDefault(); addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numericPrice, img: p.img }); }}
-                    className="mt-1 w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
-                  >
-                    Add to Cart
-                  </button>
-                </div>
-              </Link>
-            ))}
+            {[
+              { slug: 'bridal-box',       href: '/product/bridal-box',       img: '/Products/box with candle card and red envelope.jpeg', bestSeller: true },
+              { slug: 'intimate-night-set', href: '/product/intimate-night-set', img: '/Products/box with candle and card.jpeg' },
+            ].map((meta) => {
+              const p = products[meta.slug];
+              if (!p) return null;
+              return (
+                <Link key={meta.slug} href={meta.href}
+                  className="group block border border-gold-border hover:border-gold transition-colors duration-300 relative">
+                  {meta.bestSeller && (
+                    <span className="absolute top-3 left-3 z-10 bg-gold text-sh-bg text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1">
+                      Best Seller
+                    </span>
+                  )}
+                  <div className="relative aspect-4/3 overflow-hidden">
+                    <Image src={p.img || meta.img} alt={p.title} fill className="object-cover" unoptimized />
+                  </div>
+                  <div className="p-4 space-y-1.5 bg-black/40 text-center">
+                    <h3 className="text-sm md:text-base italic text-cream" style={serif}>{p.title}</h3>
+                    <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
+                    <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
+                    <button
+                      onClick={(e) => { e.preventDefault(); addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numeric_price, img: p.img || meta.img }); }}
+                      className="mt-1 w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

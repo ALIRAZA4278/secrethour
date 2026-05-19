@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
 import Navbar from '../components/Navbar';
@@ -76,8 +77,8 @@ function getResult(pct) {
         slug: 'the-midnight-deck',
         name: "The Midnight Deck",
         desc: 'Gentle prompts designed to open conversations and deepen connection — one card at a time.',
-        price: 'Rs. 3,499',
-        numericPrice: 3499,
+        price: 'Rs. 2,999',
+        numericPrice: 2999,
         img: '/Products/back of card with bg.jpg',
       },
     };
@@ -112,10 +113,35 @@ export default function QuizPage() {
   const { addToCart } = useCart();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState([]);
+  const [dbProducts, setDbProducts] = useState({});
+
+  useEffect(() => {
+    supabase
+      .from('products')
+      .select('slug, title, price, numeric_price, img')
+      .in('slug', ['the-midnight-deck', 'intimate-night-set', 'bridal-box'])
+      .then(({ data }) => {
+        if (data) {
+          const map = {};
+          data.forEach(p => { map[p.slug] = p; });
+          setDbProducts(map);
+        }
+      });
+  }, []);
 
   const totalScore = answers.reduce((sum, s) => sum + s, 0);
   const pct = Math.round((totalScore / MAX_SCORE) * 100);
-  const result = step === 6 ? getResult(pct) : null;
+  const baseResult = step === 6 ? getResult(pct) : null;
+  const result = baseResult && dbProducts[baseResult.product.slug]
+    ? {
+        ...baseResult,
+        product: {
+          ...baseResult.product,
+          price: dbProducts[baseResult.product.slug].price,
+          numericPrice: dbProducts[baseResult.product.slug].numeric_price,
+        },
+      }
+    : baseResult;
   const progressPct = step === 6 ? 100 : Math.round((step / 6) * 100);
 
   function select(score) {
