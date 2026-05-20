@@ -102,8 +102,8 @@ export default function Home() {
           </div>
         ))}
 
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/45 z-10" />
+        {/* Dark overlay — gradient: darker at bottom where text is */}
+        <div className="absolute inset-0 z-10" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.75) 100%)' }} />
 
         {/* Centred text + CTA */}
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
