@@ -2,17 +2,23 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { useCart } from './context/CartContext';
 import { supabase } from '../lib/supabase';
 
 const IMG = {
-  hero:     '/assets/hero-couple-CSWWAnnc.jpg',
   silk:     '/assets/bg-silk-B9_HjwKe.jpg',
   cardGame: '/Products/back of card with bg.jpg',
 };
+
+const SLIDES = [
+  { desk: '/Banners/1.jpg.jpeg',       mob: '/Banners/1 mob.jpg.jpeg' },
+  { desk: '/Banners/2.jpg.jpeg',       mob: '/Banners/2 mob.jpg.jpeg' },
+  { desk: '/Banners/3.jpg.jpeg',       mob: '/Banners/3 mob.jpg.jpeg' },
+  { desk: '/Banners/4.jpg.jpeg',       mob: '/Banners/4 mob.jpg.jpeg' },
+];
 
 const TESTIMONIALS = [
   { quote: "Our wedding night felt like a film. The bridal box made it unforgettable." },
@@ -26,6 +32,36 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const { addToCart } = useCart();
   const [products, setProducts] = useState({});
+
+  // Hero slider
+  const [current, setCurrent] = useState(0);
+  const touchStartX = useRef(null);
+  const timerRef = useRef(null);
+
+  const next = useCallback(() => setCurrent(c => (c + 1) % SLIDES.length), []);
+  const prev = useCallback(() => setCurrent(c => (c - 1 + SLIDES.length) % SLIDES.length), []);
+
+  useEffect(() => {
+    timerRef.current = setInterval(next, 4500);
+    return () => clearInterval(timerRef.current);
+  }, [next]);
+
+  function resetTimer() {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(next, 4500);
+  }
+
+  function goTo(i) { setCurrent(i); resetTimer(); }
+  function handlePrev() { prev(); resetTimer(); }
+  function handleNext() { next(); resetTimer(); }
+
+  function onTouchStart(e) { touchStartX.current = e.touches[0].clientX; }
+  function onTouchEnd(e) {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) { diff > 0 ? handleNext() : handlePrev(); }
+    touchStartX.current = null;
+  }
 
   useEffect(() => {
     supabase
@@ -46,18 +82,36 @@ export default function Home() {
 
       <Navbar />
 
-      {/* ─── Hero ───────────────────────────────────────────── */}
-      <section className="relative min-h-screen flex items-center justify-center pt-22 pb-20">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={IMG.hero} alt="" className="absolute inset-0 w-full h-full object-cover object-top" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black" />
+      {/* ─── Hero Slider ─────────────────────────────────────── */}
+      <section
+        className="relative w-full overflow-hidden"
+        style={{ height: '100svh' }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        {/* Slides */}
+        {SLIDES.map((slide, i) => (
+          <div
+            key={i}
+            className={`absolute inset-0 transition-opacity duration-700 ${i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={slide.mob} alt="" className="absolute inset-0 w-full h-full object-cover object-top md:hidden" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={slide.desk} alt="" className="absolute inset-0 w-full h-full object-cover object-top hidden md:block" />
+          </div>
+        ))}
 
-        <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
-          <h1 className="text-3xl sm:text-3xl md:text-5xl italic mb-4 leading-[1.15] text-cream" style={serif}>
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/45 z-10" />
+
+        {/* Centred text + CTA */}
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl italic mb-6 leading-[1.15] text-cream drop-shadow-lg" style={serif}>
             The hours that{' '}
             <span className="text-gold-gradient">belong to you</span>
           </h1>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-7">
             <Link
               href="/shop"
               className="w-full sm:w-auto bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 sm:min-w-52 text-center"
@@ -66,18 +120,56 @@ export default function Home() {
             </Link>
             <Link
               href="/quiz"
-              className="w-full sm:w-auto bg-sh-bg border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 sm:min-w-52 text-center"
+              className="w-full sm:w-auto bg-sh-bg/80 border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 sm:min-w-52 text-center"
             >
               Take the Quiz
             </Link>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-cream/40 text-[9px] uppercase tracking-[0.2em]">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-cream/50 text-[9px] uppercase tracking-[0.2em]">
             <span>Discreet Packaging</span>
             <span className="hidden sm:inline">•</span>
             <span>Trusted by Couples</span>
             <span className="hidden sm:inline">•</span>
             <span>Designed for Comfort</span>
           </div>
+        </div>
+
+        {/* Prev arrow */}
+        <button
+          onClick={handlePrev}
+          aria-label="Previous"
+          className="absolute left-3 md:left-5 top-1/2 -translate-y-1/2 z-30 w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-black/30 hover:bg-black/60 border border-white/20 text-white transition-all duration-200 rounded-full"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15.75 19.5 8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+
+        {/* Next arrow */}
+        <button
+          onClick={handleNext}
+          aria-label="Next"
+          className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 z-30 w-9 h-9 md:w-11 md:h-11 flex items-center justify-center bg-black/30 hover:bg-black/60 border border-white/20 text-white transition-all duration-200 rounded-full"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
+
+        {/* Dot indicators */}
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+          {SLIDES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              className={`transition-all duration-300 rounded-full ${
+                i === current
+                  ? 'w-6 h-1.5 bg-white'
+                  : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
+              }`}
+            />
+          ))}
         </div>
       </section>
 
@@ -88,16 +180,14 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent pointer-events-none" />
 
         <div className="relative z-10 max-w-6xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center py-16 md:py-20">
-          <div className="relative p-3 md:p-5 border border-gold-border/40 bg-black">
-            <div className="relative aspect-square">
-              <Image
-                src={IMG.cardGame}
-                alt="The Midnight Deck"
-                fill
-                className="object-contain"
-                unoptimized
-              />
-            </div>
+          <div className="relative aspect-square w-full overflow-hidden border border-gold-border/40">
+            <Image
+              src={IMG.cardGame}
+              alt="The Midnight Deck"
+              fill
+              className="object-cover"
+              unoptimized
+            />
           </div>
 
           <div className="space-y-5 md:space-y-6">

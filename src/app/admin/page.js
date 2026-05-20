@@ -65,9 +65,10 @@ const STATUS = {
   shipped:   { label: 'Shipped',   cls: 'bg-purple-50 text-purple-700 border-purple-300' },
   delivered: { label: 'Delivered', cls: 'bg-green-50  text-green-700  border-green-300'  },
   cancelled: { label: 'Cancelled', cls: 'bg-red-50    text-red-700    border-red-300'    },
+  returned:  { label: 'Returned',  cls: 'bg-orange-50 text-orange-700 border-orange-300' },
 };
 
-const STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+const STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'returned'];
 
 const INP = 'w-full px-3.5 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-100 transition placeholder:text-gray-400';
 const LBL = 'block text-xs uppercase tracking-[0.18em] text-gray-500 font-medium mb-1.5';
@@ -434,11 +435,104 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
 }
 
 /* ═══════════════════════════════════════════
+   ORDERS CHART
+═══════════════════════════════════════════ */
+function OrdersChart({ orders }) {
+  const [mode, setMode] = useState('orders'); // 'orders' | 'revenue'
+  const DAYS = 14;
+  const W = 560, H = 160, PAD = { t: 12, r: 8, b: 36, l: 44 };
+  const iW = W - PAD.l - PAD.r;
+  const iH = H - PAD.t - PAD.b;
+
+  const days = Array.from({ length: DAYS }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (DAYS - 1 - i));
+    return d.toISOString().slice(0, 10);
+  });
+
+  const byDay = {};
+  for (const d of days) byDay[d] = { orders: 0, revenue: 0 };
+  for (const o of orders) {
+    const d = o.created_at?.slice(0, 10);
+    if (byDay[d]) { byDay[d].orders += 1; byDay[d].revenue += o.total || 0; }
+  }
+
+  const values = days.map(d => byDay[d][mode]);
+  const maxVal = Math.max(...values, 1);
+  const barW   = iW / DAYS;
+  const barGap = barW * 0.25;
+
+  return (
+    <div className="border border-gray-200 bg-white rounded-xl shadow-sm p-5 md:p-6 space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="text-xl italic text-gray-800" style={serif}>Last 14 Days</h2>
+        <div className="flex gap-1">
+          {[['orders', 'Orders'], ['revenue', 'Revenue']].map(([v, l]) => (
+            <button key={v} onClick={() => setMode(v)}
+              className={`text-xs uppercase tracking-[0.15em] px-3 py-1.5 rounded-lg border font-medium transition ${mode === v ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-500 border-gray-300 hover:border-gray-500'}`}>
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ minWidth: 320 }}>
+          {/* Y gridlines */}
+          {[0, 0.25, 0.5, 0.75, 1].map(f => {
+            const y = PAD.t + iH * (1 - f);
+            const val = Math.round(maxVal * f);
+            return (
+              <g key={f}>
+                <line x1={PAD.l} y1={y} x2={PAD.l + iW} y2={y} stroke="#e5e7eb" strokeWidth="1" />
+                <text x={PAD.l - 6} y={y + 4} textAnchor="end" fontSize="9" fill="#9ca3af">
+                  {mode === 'revenue' && val >= 1000 ? `${Math.round(val / 1000)}k` : val}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Bars */}
+          {days.map((d, i) => {
+            const val = values[i];
+            const bH  = iH * (val / maxVal);
+            const x   = PAD.l + i * barW + barGap / 2;
+            const y   = PAD.t + iH - bH;
+            const label = d.slice(5); // MM-DD
+            return (
+              <g key={d}>
+                <rect x={x} y={y} width={barW - barGap} height={bH} fill={val > 0 ? '#1f2937' : '#e5e7eb'} rx="2" />
+                {/* X-axis label — show every 2nd */}
+                {i % 2 === 1 && (
+                  <text x={x + (barW - barGap) / 2} y={H - PAD.b + 14} textAnchor="middle" fontSize="8.5" fill="#9ca3af">{label}</text>
+                )}
+                {/* Value tooltip on hover — SVG title */}
+                <title>{d}: {mode === 'revenue' ? `Rs. ${val.toLocaleString()}` : `${val} orders`}</title>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      <div className="flex gap-6 text-sm">
+        <div>
+          <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-0.5">Period Orders</p>
+          <p className="text-gray-900 font-bold">{values.reduce((s, v) => s + (mode === 'orders' ? v : 0), 0) || days.reduce((s, d) => s + byDay[d].orders, 0)}</p>
+        </div>
+        <div>
+          <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-0.5">Period Revenue</p>
+          <p className="text-gray-900 font-bold">Rs. {days.reduce((s, d) => s + byDay[d].revenue, 0).toLocaleString()}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
    DASHBOARD
 ═══════════════════════════════════════════ */
 function Dashboard() {
   const [stats,         setStats]         = useState({ total: 0, revenue: 0, pending: 0, deliveryRate: 0 });
   const [recent,        setRecent]        = useState([]);
+  const [allOrders,     setAllOrders]     = useState([]);
   const [loading,       setLoading]       = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [itemsMap,      setItemsMap]      = useState({});
@@ -454,6 +548,7 @@ function Dashboard() {
           pending:      orders.filter(o => o.status === 'pending').length,
           deliveryRate: orders.length ? Math.round((delivered / orders.length) * 100) : 0,
         });
+        setAllOrders(orders);
         setRecent(orders.slice(0, 8));
       }
       setLoading(false);
@@ -489,6 +584,9 @@ function Dashboard() {
           </div>
         ))}
       </div>
+
+      <OrdersChart orders={allOrders} />
+
       <div>
         <h2 className="text-xl italic text-gray-800 mb-4" style={serif}>Recent Orders</h2>
         {recent.length === 0
@@ -1507,7 +1605,7 @@ function PromoCodesTab() {
     e.preventDefault();
     if (!code.trim()) return;
     setSaving(true);
-    await supabase.from('promo_codes').insert({ code: code.trim().toUpperCase(), discount_percent: Number(pct), active: true });
+    await supabase.from('promo_codes').insert({ code: code.trim().toUpperCase(), discount_pct: Number(pct), active: true });
     setCode(''); setPct(10);
     await load();
     setSaving(false);
@@ -1562,7 +1660,7 @@ function PromoCodesTab() {
             : codes.map(c => (
               <div key={c.id} className="grid grid-cols-[1fr_80px_80px_80px] gap-3 items-center px-5 py-3.5 border-b border-gray-100 last:border-0">
                 <span className="text-gray-900 font-mono font-bold text-sm">{c.code}</span>
-                <span className="text-gray-700 text-sm">{c.discount_percent}%</span>
+                <span className="text-gray-700 text-sm">{c.discount_pct}%</span>
                 <button onClick={() => toggle(c.id, c.active)}
                   className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition ${c.active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200'}`}>
                   {c.active ? 'Active' : 'Off'}

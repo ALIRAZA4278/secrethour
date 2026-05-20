@@ -40,9 +40,15 @@ export async function POST(req) {
     }
 
     // Update order in Supabase + fetch customer details
+    const isReturned = statusMessage === 'Returned';
+    const updatePayload = {
+      postex_status: statusMessage,
+      postex_updated_at: new Date().toISOString(),
+      ...(isReturned && { status: 'returned' }),
+    };
     const { data: orders } = await supabase
       .from('orders')
-      .update({ postex_status: statusMessage, postex_updated_at: new Date().toISOString() })
+      .update(updatePayload)
       .eq('postex_tracking', trackingNumber)
       .select('id, first_name, email, postex_tracking');
 

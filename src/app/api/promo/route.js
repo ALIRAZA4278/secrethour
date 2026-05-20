@@ -16,7 +16,7 @@ export async function GET(req) {
 
   const { data, error } = await supabase
     .from('promo_codes')
-    .select('code, discount_percent, active')
+    .select('code, discount_pct, active')
     .eq('code', code)
     .single();
 
@@ -28,5 +28,5 @@ export async function GET(req) {
     return NextResponse.json({ error: 'This promo code is no longer active' }, { status: 400 });
   }
 
-  return NextResponse.json({ discount: data.discount_percent });
+  return NextResponse.json({ discount: data.discount_pct });
 }
