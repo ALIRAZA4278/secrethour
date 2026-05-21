@@ -59,16 +59,34 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <head>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-E08ZDX9KFY"
-          strategy="afterInteractive"
-        />
-        <Script id="gtag-init" strategy="afterInteractive">{`
+        {/* Google Tag Manager */}
+        <Script id="gtm" strategy="afterInteractive">{`
+          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+          })(window,document,'script','dataLayer','GTM-KDWZNSR8');
+        `}</Script>
+
+        {/* Google Analytics — G-E08ZDX9KFY */}
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-E08ZDX9KFY" strategy="afterInteractive" />
+        <Script id="gtag-1" strategy="afterInteractive">{`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', 'G-E08ZDX9KFY');
         `}</Script>
+
+        {/* Google Analytics — G-E52568V4BP */}
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-E52568V4BP" strategy="afterInteractive" />
+        <Script id="gtag-2" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-E52568V4BP');
+        `}</Script>
+
+        {/* Meta Pixel */}
         <Script id="meta-pixel" strategy="afterInteractive">{`
           !function(f,b,e,v,n,t,s)
           {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -84,6 +102,8 @@ export default function RootLayout({ children }) {
         <noscript dangerouslySetInnerHTML={{ __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2181372859353301&ev=PageView&noscript=1" />` }} />
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        {/* GTM noscript fallback */}
+        <noscript dangerouslySetInnerHTML={{ __html: `<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KDWZNSR8" height="0" width="0" style="display:none;visibility:hidden"></iframe>` }} />
         <CartProvider>
           {children}
           <CartDrawer />
