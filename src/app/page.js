@@ -16,8 +16,6 @@ const IMG = {
 const SLIDES = [
   { desk: '/Banners/1.jpg.jpeg',       mob: '/Banners/1 mob.jpg.jpeg' },
   { desk: '/Banners/2.jpg.jpeg',       mob: '/Banners/2 mob.jpg.jpeg' },
-  { desk: '/Banners/3.jpg.jpeg',       mob: '/Banners/3 mob.jpg.jpeg' },
-  { desk: '/Banners/4.jpg.jpeg',       mob: '/Banners/4 mob.jpg.jpeg' },
 ];
 
 const TESTIMONIALS = [
