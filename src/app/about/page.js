@@ -20,8 +20,7 @@ export default function AboutPage() {
     <div className="text-cream min-h-screen flex flex-col" style={{ background: 'radial-gradient(ellipse at top, rgb(57,19,26) 0%, rgb(11,10,9) 50%, rgb(20,8,8) 100%)' }}>
       <Navbar />
 
-      {/* Header — pt-[160px] matches original */}
-      <section className="pt-[160px] pb-20 px-6 text-center">
+      <section className="pt-10 pb-20 px-6 text-center">
         <div className="max-w-xl mx-auto">
           <p className="text-gold text-sm uppercase tracking-[0.3em] mb-2">The Brand</p>
           <h1 className="text-[48px] font-light text-cream" style={serif}>Secret Hour</h1>

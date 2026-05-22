@@ -9,17 +9,22 @@ const supabase = createClient(
 
 const WEBHOOK_SECRET = process.env.POSTEX_WEBHOOK_SECRET;
 
+// transactionStatusHistory message codes (3.8 / 3.9)
 const STATUS_MAP = {
   '0001': 'At Merchant Warehouse',
   '0002': 'Returned',
   '0003': 'At PostEx Warehouse',
-  '0004': 'Out for Delivery',
+  '0004': 'Package on Root',
   '0005': 'Delivered',
   '0006': 'Returned',
   '0007': 'Returned',
   '0008': 'Delivery Under Review',
   '0013': 'Attempt Made',
 };
+
+// transactionStatus text values (3.15)
+const DELIVERED_STATUSES = ['delivered'];
+const RETURNED_STATUSES  = ['returned', 'out for return'];
 
 export async function POST(req) {
   try {
@@ -33,18 +38,21 @@ export async function POST(req) {
     const body = await req.json();
     const trackingNumber = body?.trackingNumber || body?.dist?.trackingNumber;
     const statusCode     = body?.transactionStatusMessageCode || body?.statusCode;
-    const statusMessage  = body?.transactionStatusMessage || STATUS_MAP[statusCode] || 'Updated';
+    const statusMessage  = body?.transactionStatus || body?.transactionStatusMessage || STATUS_MAP[statusCode] || 'Updated';
 
     if (!trackingNumber) {
       return NextResponse.json({ error: 'No tracking number' }, { status: 400 });
     }
 
-    // Update order in Supabase + fetch customer details
-    const isReturned = statusMessage === 'Returned';
+    const statusLower   = statusMessage.toLowerCase();
+    const isDelivered   = DELIVERED_STATUSES.some(s => statusLower.includes(s));
+    const isReturned    = RETURNED_STATUSES.some(s => statusLower.includes(s));
+
     const updatePayload = {
       postex_status: statusMessage,
       postex_updated_at: new Date().toISOString(),
-      ...(isReturned && { status: 'returned' }),
+      ...(isDelivered && { status: 'delivered' }),
+      ...(isReturned  && { status: 'returned'  }),
     };
     const { data: orders } = await supabase
       .from('orders')

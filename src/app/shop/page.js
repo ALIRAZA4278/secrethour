@@ -39,7 +39,7 @@ export default async function ShopPage() {
         <img src={SILK} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 rotate-180 pointer-events-none z-0" loading="lazy" />
 
         {/* Header */}
-        <section className="relative z-10 py-12 md:py-20 mt-24 text-center px-6">
+        <section className="relative z-10 py-12 md:py-20 text-center px-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO} alt="Secret Hour" className="h-20 w-auto mx-auto mb-6 opacity-90 object-contain" />
           <h1 className="text-2xl md:text-4xl italic text-cream mb-3" style={serif}>

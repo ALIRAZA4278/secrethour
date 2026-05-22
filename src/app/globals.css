@@ -49,6 +49,16 @@
   box-shadow: 0 0 16px hsla(43, 72%, 52%, 0.45);
 }
 
+/* Marquee animation for announcement bar */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+  width: max-content;
+}
+
 body {
   background-color: hsl(20 10% 4%);
   color: hsl(38 30% 85%);

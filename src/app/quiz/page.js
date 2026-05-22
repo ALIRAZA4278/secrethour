@@ -118,12 +118,12 @@ export default function QuizPage() {
   useEffect(() => {
     supabase
       .from('products')
-      .select('slug, title, price, numeric_price, img')
+      .select('slug, title, price, numeric_price, img, hidden')
       .in('slug', ['the-midnight-deck', 'intimate-night-set', 'bridal-box'])
       .then(({ data }) => {
         if (data) {
           const map = {};
-          data.forEach(p => { map[p.slug] = p; });
+          data.forEach(p => { if (!p.hidden) map[p.slug] = p; });
           setDbProducts(map);
         }
       });
@@ -162,7 +162,7 @@ export default function QuizPage() {
     >
       <Navbar />
 
-      <main className="flex-1 pt-36 pb-20 px-4 md:px-6">
+      <main className="flex-1 pt-10 pb-20 px-4 md:px-6">
         <div className="max-w-2xl mx-auto">
 
           {/* Header */}

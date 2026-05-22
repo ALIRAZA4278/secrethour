@@ -72,7 +72,7 @@ export default function TrackPage() {
     <div className="min-h-screen flex flex-col text-cream" style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>
       <Navbar />
 
-      <main className="flex-1 pt-36 pb-20 px-4">
+      <main className="flex-1 pt-10 pb-20 px-4">
         <div className="max-w-xl mx-auto">
 
           {/* Header */}

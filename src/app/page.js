@@ -10,12 +10,13 @@ import { supabase } from '../lib/supabase';
 
 const IMG = {
   silk:     '/assets/bg-silk-B9_HjwKe.jpg',
-  cardGame: '/Products/back of card with bg.jpg',
+  cardGame: '/assets/sh-card-game-Cw972EQC.png',
 };
 
 const SLIDES = [
-  { desk: '/Banners/1.jpg.jpeg',       mob: '/Banners/1 mob.jpg.jpeg' },
-  { desk: '/Banners/2.jpg.jpeg',       mob: '/Banners/2 mob.jpg.jpeg' },
+  { desk: '/assets/hero-couple-CSWWAnnc.jpg', mob: '/assets/hero-couple-CSWWAnnc.jpg' },
+  { desk: '/Banners/1.jpg.jpeg',              mob: '/Banners/1 mob.jpg.jpeg' },
+  { desk: '/Banners/2.jpg.jpeg',              mob: '/Banners/2 mob.jpg.jpeg' },
 ];
 
 const TESTIMONIALS = [
@@ -30,6 +31,8 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const { addToCart } = useCart();
   const [products, setProducts] = useState({});
+  const [bundles, setBundles] = useState([]);
+  const [featImg, setFeatImg] = useState(0);
 
   // Hero slider
   const [current, setCurrent] = useState(0);
@@ -64,14 +67,17 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from('products')
-      .select('slug, title, subtitle, price, numeric_price, img')
-      .in('slug', ['bridal-box', 'intimate-night-set', 'the-midnight-deck'])
+      .select('slug, title, subtitle, price, numeric_price, img, images, tag, hidden')
       .then(({ data }) => {
-        if (data) {
-          const map = {};
-          data.forEach(p => { map[p.slug] = p; });
-          setProducts(map);
-        }
+        if (!data) return;
+        const visible = data.filter(p => !p.hidden);
+
+        // Midnight deck for featured section
+        const deck = visible.find(p => p.slug.toLowerCase() === 'the-midnight-deck');
+        if (deck) setProducts({ 'the-midnight-deck': deck });
+
+        // First 2 visible products that are NOT the midnight deck
+        setBundles(visible.filter(p => p.slug.toLowerCase() !== 'the-midnight-deck').slice(0, 2));
       });
   }, []);
 
@@ -104,7 +110,7 @@ export default function Home() {
         <div className="absolute inset-0 z-10" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.75) 100%)' }} />
 
         {/* Centred text + CTA */}
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pt-20 md:pt-28 text-center px-6">
           <h1 className="text-3xl sm:text-4xl md:text-5xl italic mb-6 leading-[1.15] text-cream drop-shadow-lg" style={serif}>
             The hours that{' '}
             <span className="text-gold-gradient">belong to you</span>
@@ -178,15 +184,49 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent pointer-events-none" />
 
         <div className="relative z-10 max-w-6xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center py-16 md:py-20">
-          <div className="relative aspect-square w-full overflow-hidden border border-gold-border/40">
-            <Image
-              src={IMG.cardGame}
-              alt="The Midnight Deck"
-              fill
-              className="object-cover"
-              unoptimized
-            />
-          </div>
+
+          {/* Image slider — manual arrows only */}
+          {(() => {
+            const deck = products['the-midnight-deck'];
+            const imgs = deck?.images?.length ? deck.images : [deck?.img || IMG.cardGame];
+            return (
+              <div className="relative aspect-square w-full overflow-hidden border border-gold-border/40 group">
+                <Image
+                  src={imgs[featImg] || IMG.cardGame}
+                  alt="The Midnight Deck"
+                  fill
+                  className="object-cover transition-opacity duration-500"
+                  unoptimized
+                />
+                {imgs.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setFeatImg(i => (i - 1 + imgs.length) % imgs.length)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/50 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 19.5 8.25 12l7.5-7.5" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setFeatImg(i => (i + 1) % imgs.length)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/50 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </button>
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                      {imgs.map((_, i) => (
+                        <button key={i} onClick={() => setFeatImg(i)}
+                          className={`rounded-full transition-all duration-300 ${i === featImg ? 'w-5 h-1.5 bg-gold' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'}`} />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })()}
 
           <div className="space-y-5 md:space-y-6">
             <p className="text-gold/70 text-[10px] uppercase tracking-[0.35em]">Featured</p>
@@ -216,6 +256,7 @@ export default function Home() {
             <div>
               <p className="text-3xl md:text-4xl text-gold" style={serif}>{products['the-midnight-deck']?.price || 'Rs. 2,999'}</p>
               <p className="text-cream/30 text-[9px] uppercase tracking-[0.2em] mt-1">Including all taxes · Available in small batches</p>
+              <p className="text-gold/60 text-[9px] uppercase tracking-[0.2em] mt-1">🚚 Free Delivery across Pakistan</p>
             </div>
 
             <Link
@@ -244,37 +285,30 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-5 md:gap-6">
-            {[
-              { slug: 'bridal-box',       href: '/product/bridal-box',       img: '/Products/box with candle card and red envelope.jpeg', bestSeller: true },
-              { slug: 'intimate-night-set', href: '/product/intimate-night-set', img: '/Products/box with candle and card.jpeg' },
-            ].map((meta) => {
-              const p = products[meta.slug];
-              if (!p) return null;
-              return (
-                <Link key={meta.slug} href={meta.href}
-                  className="group block border border-gold-border hover:border-gold transition-colors duration-300 relative">
-                  {meta.bestSeller && (
-                    <span className="absolute top-3 left-3 z-10 bg-gold text-sh-bg text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1">
-                      Best Seller
-                    </span>
-                  )}
-                  <div className="relative aspect-4/3 overflow-hidden">
-                    <Image src={p.img || meta.img} alt={p.title} fill className="object-cover" unoptimized />
-                  </div>
-                  <div className="p-4 space-y-1.5 bg-black/40 text-center">
-                    <h3 className="text-sm md:text-base italic text-cream" style={serif}>{p.title}</h3>
-                    <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
-                    <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
-                    <button
-                      onClick={(e) => { e.preventDefault(); addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numeric_price, img: p.img || meta.img }); }}
-                      className="mt-1 w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
-                </Link>
-              );
-            })}
+            {bundles.map((p) => (
+              <Link key={p.slug} href={`/product/${p.slug}`}
+                className="group block border border-gold-border hover:border-gold transition-colors duration-300 relative">
+                {p.tag === 'best-seller' && (
+                  <span className="absolute top-3 left-3 z-10 bg-gold text-sh-bg text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1">
+                    Best Seller
+                  </span>
+                )}
+                <div className="relative aspect-4/3 overflow-hidden">
+                  <Image src={p.img} alt={p.title} fill className="object-cover" unoptimized />
+                </div>
+                <div className="p-4 space-y-1.5 bg-black/40 text-center">
+                  <h3 className="text-sm md:text-base italic text-cream" style={serif}>{p.title}</h3>
+                  <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
+                  <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
+                  <button
+                    onClick={(e) => { e.preventDefault(); addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numeric_price, img: p.img }); }}
+                    className="mt-1 w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>

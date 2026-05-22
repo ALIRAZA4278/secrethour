@@ -19,7 +19,10 @@ export async function GET(req) {
     );
 
     const data = await res.json();
-    return NextResponse.json(data.dist || data);
+    const dist = data.dist || data;
+    // Normalise history — PostEx may nest it differently
+    const history = dist.transactionStatusHistory || dist.statusHistory || [];
+    return NextResponse.json({ ...dist, transactionStatusHistory: history });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

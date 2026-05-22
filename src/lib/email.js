@@ -170,6 +170,78 @@ export function statusUpdateHtml({ name, trackingNumber, status, orderDetail }) 
 </html>`;
 }
 
+export function adminOrderNotificationHtml({ name, phone, city, address, orderId, items = [], total, payment }) {
+  const paymentLabel = payment === 'bank' ? 'Bank Transfer' : 'Cash on Delivery';
+  const itemRows = items.map(i =>
+    `<tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8ddd0;font-size:13px;color:#2c1a0e;">
+        ${i.title}${i.variation ? ` <span style="color:#8a6a4a;font-size:11px;">(${i.variation})</span>` : ''}
+      </td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8ddd0;font-size:13px;color:#6b4c2a;text-align:center;">x${i.qty}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8ddd0;font-size:13px;color:#2c1a0e;text-align:right;">Rs. ${((i.numericPrice || 0) * (i.qty || 1)).toLocaleString()}</td>
+    </tr>`
+  ).join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f7f4ef;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7f4ef;padding:24px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e8ddd0;max-width:560px;width:100%;">
+
+        <tr>
+          <td style="background:#1a0a04;padding:24px 32px;text-align:center;">
+            <p style="color:#c9a96e;font-size:10px;letter-spacing:4px;text-transform:uppercase;margin:0 0 4px;">Secret Hour — Admin</p>
+            <h1 style="color:#ffffff;font-size:20px;font-style:italic;margin:0;">🛒 New Order Received</h1>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:24px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf7f2;border:1px solid #e8ddd0;margin-bottom:20px;">
+              ${[
+                ['Order ID', `#${String(orderId).slice(0, 8).toUpperCase()}`],
+                ['Customer', name],
+                ['Phone', phone],
+                ['City', city],
+                ['Address', address],
+                ['Payment', paymentLabel],
+                ['Total', `Rs. ${(total || 0).toLocaleString()}`],
+              ].map(([l, v]) => `
+              <tr>
+                <td style="padding:9px 14px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a6a4a;width:35%;border-bottom:1px solid #e8ddd0;">${l}</td>
+                <td style="padding:9px 14px;font-size:13px;color:#1a0a04;text-align:right;border-bottom:1px solid #e8ddd0;font-weight:${l === 'Total' ? '700' : '400'};">${v}</td>
+              </tr>`).join('')}
+            </table>
+
+            ${items.length > 0 ? `
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <thead>
+                <tr style="background:#f7f4ef;">
+                  <th style="padding:8px 12px;text-align:left;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b4c2a;">Product</th>
+                  <th style="padding:8px 12px;text-align:center;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b4c2a;">Qty</th>
+                  <th style="padding:8px 12px;text-align:right;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b4c2a;">Price</th>
+                </tr>
+              </thead>
+              <tbody>${itemRows}</tbody>
+            </table>` : ''}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="background:#f7f4ef;padding:16px 32px;text-align:center;border-top:1px solid #e8ddd0;">
+            <p style="color:#8a6a4a;font-size:11px;margin:0;">secrethour.pk admin notification</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export async function sendEmail({ to, subject, html }) {
   const transporter = getTransporter();
   await transporter.sendMail({

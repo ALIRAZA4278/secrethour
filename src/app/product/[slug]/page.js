@@ -38,7 +38,7 @@ export default function ProductPage({ params }) {
   const { addToCart, setOpen } = useCart();
 
   function buyNow() {
-    addToCart({ slug: product?.slug, title: product?.title, price: product?.price, numericPrice: product?.numeric_price, img: images?.[0] });
+    addToCart({ slug: product?.slug, title: product?.title, price: product?.price, numericPrice: product?.numeric_price, img: images?.[0], variation: selectedVariation });
     setOpen(false);
     router.push('/checkout');
   }
@@ -47,6 +47,7 @@ export default function ProductPage({ params }) {
   const [related, setRelated] = useState([]);
   const [upsell, setUpsell] = useState(null);
   const [activeImg, setActiveImg] = useState(0);
+  const [selectedVariation, setSelectedVariation] = useState(null);
   const [status, setStatus] = useState('loading'); // 'loading' | 'found' | 'notfound'
   const [reviews, setReviews] = useState([]);
   const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, body: '' });
@@ -104,7 +105,7 @@ export default function ProductPage({ params }) {
     return (
       <div className="bg-sh-bg min-h-screen flex flex-col">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center mt-19">
+        <div className="flex-1 flex items-center justify-center">
           <p className="text-cream/40 italic text-lg animate-pulse" style={serif}>Loading…</p>
         </div>
         <Footer />
@@ -124,7 +125,7 @@ export default function ProductPage({ params }) {
       <Navbar />
 
       {/* ── Main product section ── */}
-      <section className="relative py-8 md:py-12 mt-19">
+      <section className="relative py-8 md:py-12">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={SILK} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15 pointer-events-none" />
 
@@ -191,10 +192,33 @@ export default function ProductPage({ params }) {
                 )}
               </div>
 
+              {/* Variations */}
+              {product.variations?.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-cream/50 text-[10px] uppercase tracking-[0.25em]">Select Option</p>
+                  <div className="flex flex-wrap gap-2">
+                    {product.variations.map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setSelectedVariation(v === selectedVariation ? null : v)}
+                        className={`px-4 py-2 text-[11px] uppercase tracking-[0.15em] border transition-all duration-200 ${
+                          selectedVariation === v
+                            ? 'border-gold bg-gold/10 text-gold'
+                            : 'border-gold-border/50 text-cream/65 hover:border-gold/60 hover:text-cream'
+                        }`}
+                      >
+                        {/^\d+(\.\d+)?$/.test(v) ? `${v}ml` : v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Buttons — directly below price */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => addToCart({ slug: product.slug, title: product.title, price: product.price, numericPrice: product.numeric_price, img: images[0] })}
+                  onClick={() => addToCart({ slug: product.slug, title: product.title, price: product.price, numericPrice: product.numeric_price, img: images[0], variation: selectedVariation })}
                   className="bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 flex-1"
                 >
                   Add to Cart
@@ -268,11 +292,12 @@ export default function ProductPage({ params }) {
               )}
 
               {/* Feature badges */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: 'Discreet Packaging', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /> },
                   { label: 'Private Experience', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /> },
                   { label: 'Made for Couples', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" /> },
+                  { label: 'Free Delivery', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 1-.987-1.106v-.828" /> },
                 ].map(({ icon, label }) => (
                   <div key={label} className="border border-gold-border p-3 md:p-4 flex flex-col items-center gap-2 text-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gold">{icon}</svg>

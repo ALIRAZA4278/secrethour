@@ -77,6 +77,7 @@ export default function CheckoutPage() {
           product_img: item.img,
           quantity: item.qty,
           price: item.numericPrice,
+          variation: item.variation || null,
         }))
       );
 
@@ -89,7 +90,7 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             orderRefNumber: order.id,
             invoicePayment: total,
-            orderDetail: items.map((i) => `${i.title} x${i.qty}`).join(', '),
+            orderDetail: items.map((i) => `${i.title}${i.variation ? ` (${i.variation})` : ''} x${i.qty}`).join(', '),
             customerName: form.fullName,
             customerPhone: form.phone,
             deliveryAddress: form.address,
@@ -118,8 +119,10 @@ export default function CheckoutPage() {
           body: JSON.stringify({
             to: form.email,
             name: form.fullName,
+            phone: form.phone,
+            address: form.address,
             orderId: order.id,
-            items: items.map((i) => ({ title: i.title, qty: i.qty, numericPrice: i.numericPrice })),
+            items: items.map((i) => ({ title: i.title, qty: i.qty, numericPrice: i.numericPrice, variation: i.variation || null })),
             total,
             payment,
             city: form.city,
@@ -144,7 +147,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26), rgb(11,10,9) 60%)' }}>
         <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center gap-6 px-6 pt-24">
+        <main className="flex-1 flex flex-col items-center justify-center gap-6 px-6 pt-10">
           <p className="text-3xl italic text-cream/70" style={serif}>Your cart is empty</p>
           <Link
             href="/shop"
@@ -163,7 +166,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26), rgb(11,10,9) 60%)' }}>
         <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center px-6 pt-32 pb-10">
+        <main className="flex-1 flex flex-col items-center justify-center px-6 pt-10 pb-10">
           <div className="max-w-lg w-full text-center space-y-8 border border-gold-border/30 px-8 py-14 md:px-14" style={{ background: 'rgba(11,10,9,0.6)' }}>
             <div className="space-y-2">
               <p className="text-gold/60 text-[10px] uppercase tracking-[0.35em]">Secret Hour</p>
@@ -208,7 +211,7 @@ export default function CheckoutPage() {
     <div className="min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26), rgb(11,10,9) 60%)' }}>
       <Navbar />
 
-      <main className="pt-36 md:pt-40 pb-20">
+      <main className="pt-10 pb-20">
         <div className="max-w-6xl mx-auto px-4 md:px-6">
 
           {/* ── Header ── */}
@@ -385,6 +388,7 @@ export default function CheckoutPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-cream text-sm leading-snug" style={serif}>{item.title}</p>
+                        {item.variation && <p className="text-gold/60 text-[10px] uppercase tracking-[0.15em]">{item.variation}</p>}
                         <p className="text-cream/40 text-xs mt-0.5">Qty {item.qty}</p>
                       </div>
                       <p className="text-gold text-sm shrink-0">Rs. {(item.numericPrice * item.qty).toLocaleString()}</p>

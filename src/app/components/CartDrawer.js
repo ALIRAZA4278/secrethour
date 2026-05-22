@@ -76,6 +76,7 @@ export default function CartDrawer() {
                   <div className="flex-1 min-w-0">
                     <h3 className="text-cream text-sm leading-snug" style={serif}>{item.title}</h3>
                     <p className="text-gold text-sm mt-0.5">{item.price}</p>
+                    {item.variation && <p className="text-cream/45 text-[10px] uppercase tracking-[0.15em] mt-0.5">{item.variation}</p>}
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={() => updateQty(item.slug, item.qty - 1)}

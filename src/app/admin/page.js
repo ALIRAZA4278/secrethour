@@ -30,7 +30,7 @@ function exportCSV(orders) {
       o.payment_method || 'cod',
       o.total || 0,
       o.status || 'pending',
-      new Date(o.created_at).toLocaleDateString('en-PK'),
+      new Date(o.created_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
       o.notes || '',
     ]),
   ];
@@ -43,11 +43,11 @@ function exportCSV(orders) {
 }
 
 const WA_MSG = {
-  pending:   (name, num) => `Assalamualaikum ${name}! 🌙\n\nAapka Secret Hour order *${num}* receive ho gaya hai. Hum jald hi confirm karenge.\n\nShukriya! 🖤\nSecretHour.pk`,
-  confirmed: (name, num) => `Assalamualaikum ${name}! 🌙\n\nKhushi ki khabar! Aapka Secret Hour order *${num}* confirm ho gaya hai. Hum packaging shuru kar rahe hain.\n\nShukriya! 🖤\nSecretHour.pk`,
-  shipped:   (name, num) => `Assalamualaikum ${name}! 🌙\n\nAapka Secret Hour order *${num}* ship ho gaya hai! 2-3 din mein aap receive kar lenge.\n\nTrack karne ke liye humse contact karein.\n\nShukriya! 🖤\nSecretHour.pk`,
-  delivered: (name, num) => `Assalamualaikum ${name}! 🌙\n\nAapka Secret Hour order *${num}* deliver ho gaya! Umeed hai aapko pasand aaya hoga. 💕\n\nApna review zaroor share karein!\n\nShukriya! 🖤\nSecretHour.pk`,
-  cancelled: (name, num) => `Assalamualaikum ${name}!\n\nAfsos ke saath, aapka Secret Hour order *${num}* cancel ho gaya hai. Kisi bhi sawaal ke liye humse rabta karein.\n\nShukriya!\nSecretHour.pk`,
+  pending:   (name, num) => `Assalam o Alaikum ${name}!\n\nWe have received your Secret Hour order *${num}*. We will confirm it shortly.\n\nThank you!\nSecretHour.pk`,
+  confirmed: (name, num) => `Assalam o Alaikum ${name}!\n\nGreat news! Your Secret Hour order *${num}* has been confirmed. We are preparing your package.\n\nThank you!\nSecretHour.pk`,
+  shipped:   (name, num) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been shipped! You will receive it within 2-3 business days.\n\nFor tracking, feel free to contact us.\n\nThank you!\nSecretHour.pk`,
+  delivered: (name, num) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been delivered! We hope you love it.\n\nWe would love to hear your feedback!\n\nThank you!\nSecretHour.pk`,
+  cancelled: (name, num) => `Assalam o Alaikum ${name}!\n\nUnfortunately, your Secret Hour order *${num}* has been cancelled. Please contact us if you have any questions.\n\nThank you!\nSecretHour.pk`,
 };
 
 function sendWhatsApp(order, status) {
@@ -181,6 +181,21 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
       const res = await fetch(`/api/postex/track?tracking=${order.postex_tracking}`);
       const data = await res.json();
       setPostexInfo({ type: 'track', data });
+
+      // Save live status back to DB — API returns transactionStatus (3.8 spec)
+      const liveStatus = data?.transactionStatus || data?.transactionStatusMessage || data?.orderStatus;
+      if (liveStatus) {
+        const isDelivered = liveStatus.toLowerCase().includes('delivered');
+        const isReturned  = liveStatus.toLowerCase().includes('returned');
+        const updatePatch = {
+          postex_status:     liveStatus,
+          postex_updated_at: new Date().toISOString(),
+          ...(isDelivered && { status: 'delivered' }),
+          ...(isReturned  && { status: 'returned'  }),
+        };
+        await supabase.from('orders').update(updatePatch).eq('id', order.id);
+        onStatusChange && onStatusChange(order.id, updatePatch);
+      }
     } catch (err) {
       setPostexInfo({ type: 'track', error: err.message });
     }
@@ -202,6 +217,25 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
       setPostexInfo({ type: 'cancel', data });
     } catch (err) {
       setPostexInfo({ type: 'cancel', error: err.message });
+    }
+    setPostexLoading('');
+  }
+
+  async function shipperAdvice(statusId) {
+    if (!order.postex_tracking) return;
+    const key = statusId === 1 ? 'advice-return' : 'advice-retry';
+    setPostexLoading(key);
+    setPostexInfo(null);
+    try {
+      const res = await fetch('/api/postex/shipper-advice', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackingNumber: order.postex_tracking, statusId, remarks: statusId === 1 ? 'Return requested by merchant' : 'Retry delivery requested by merchant' }),
+      });
+      const data = await res.json();
+      setPostexInfo({ type: 'advice', data });
+    } catch (err) {
+      setPostexInfo({ type: 'advice', error: err.message });
     }
     setPostexLoading('');
   }
@@ -264,9 +298,9 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
             ['CUSTOMER', name],
             ['WHATSAPP', order.phone],
             ['EMAIL',    order.email],
-            ['CITY',     order.city],
+            ['ADDRESS',  [order.address, order.city].filter(Boolean).join(', ')],
             ['PAYMENT',  payment],
-            ['DATE',     new Date(order.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })],
+            ['DATE',     new Date(order.created_at).toLocaleString('en-PK', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })],
             ['POSTEX TRACKING', order.postex_tracking],
             ['POSTEX STATUS',   order.postex_status],
             ['POSTEX UPDATED',  order.postex_updated_at ? new Date(order.postex_updated_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null],
@@ -325,7 +359,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
                         <Image src={item.product_img} alt="" fill className="object-contain" unoptimized />
                       </div>
                     )}
-                    <span className="text-gray-700 text-sm">{item.product_title} <span className="text-gray-400">× {item.quantity}</span></span>
+                    <span className="text-gray-700 text-sm">{item.product_title}{item.variation ? <span className="text-orange-500 text-xs ml-1">({item.variation})</span> : ''} <span className="text-gray-400">× {item.quantity}</span></span>
                   </div>
                   <span className="text-gray-800 text-sm shrink-0 font-medium">Rs. {(item.price * item.quantity).toLocaleString()}</span>
                 </div>
@@ -387,6 +421,14 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
                 className="text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border border-red-300 rounded-lg text-red-600 hover:text-red-800 hover:border-red-500 bg-white transition disabled:opacity-50">
                 {postexLoading === 'cancel' ? 'Cancelling…' : 'Cancel'}
               </button>
+              <button onClick={() => shipperAdvice(1)} disabled={postexLoading === 'advice-return'}
+                className="text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border border-orange-300 rounded-lg text-orange-600 hover:text-orange-800 hover:border-orange-500 bg-white transition disabled:opacity-50">
+                {postexLoading === 'advice-return' ? 'Marking…' : 'Mark Return'}
+              </button>
+              <button onClick={() => shipperAdvice(2)} disabled={postexLoading === 'advice-retry'}
+                className="text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border border-blue-300 rounded-lg text-blue-600 hover:text-blue-800 hover:border-blue-500 bg-white transition disabled:opacity-50">
+                {postexLoading === 'advice-retry' ? 'Marking…' : 'Retry Delivery'}
+              </button>
               <button onClick={fetchPaymentStatus} disabled={postexLoading === 'payment'}
                 className="text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:border-gray-500 bg-white transition disabled:opacity-50">
                 {postexLoading === 'payment' ? 'Loading…' : 'Payment Status'}
@@ -398,14 +440,38 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
                   <p className="text-red-600">Error: {postexInfo.error}</p>
                 ) : postexInfo.type === 'track' ? (
                   <>
-                    <p><span className="text-gray-400 uppercase tracking-[0.15em]">Status:</span> {postexInfo.data?.orderStatus || postexInfo.data?.transactionStatusMessage || JSON.stringify(postexInfo.data)}</p>
-                    {postexInfo.data?.orderStatusCode && <p><span className="text-gray-400 uppercase tracking-[0.15em]">Code:</span> {postexInfo.data.orderStatusCode}</p>}
-                    {postexInfo.data?.updatedDate && <p><span className="text-gray-400 uppercase tracking-[0.15em]">Updated:</span> {postexInfo.data.updatedDate}</p>}
+                    {/* Current status */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-gray-400 uppercase tracking-[0.15em]">Current:</span>
+                      <span className="font-semibold text-gray-900">{postexInfo.data?.transactionStatus || postexInfo.data?.transactionStatusMessage || postexInfo.data?.orderStatus || '—'}</span>
+                    </div>
+                    {postexInfo.data?.updatedDate && (
+                      <p className="text-gray-400 text-[10px] mb-2">Updated: {postexInfo.data.updatedDate}</p>
+                    )}
+                    {/* Status history timeline */}
+                    {postexInfo.data?.transactionStatusHistory?.length > 0 && (
+                      <div className="mt-2 border-t border-gray-200 pt-2 space-y-1.5">
+                        <p className="text-gray-400 text-[10px] uppercase tracking-[0.15em] mb-1">Status History</p>
+                        {postexInfo.data.transactionStatusHistory.map((h, i) => (
+                          <div key={i} className="flex items-start gap-2">
+                            <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${i === 0 ? 'bg-green-500' : 'bg-gray-300'}`} />
+                            <div>
+                              <p className="text-gray-800 text-xs font-medium">{h.transactionStatusMessage || h.status}</p>
+                              <p className="text-gray-400 text-[10px]">{h.updatedDate || h.date || ''}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </>
                 ) : postexInfo.type === 'payment' ? (
                   <>
                     <p><span className="text-gray-400 uppercase tracking-[0.15em]">Settled:</span> <span className={postexInfo.data?.settle === true ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>{postexInfo.data?.settle === true ? 'Yes' : 'No'}</span></p>
-                    {postexInfo.data?.paymentDate && <p><span className="text-gray-400 uppercase tracking-[0.15em]">Date:</span> {postexInfo.data.paymentDate}</p>}
+                    {postexInfo.data?.settlementDate && <p><span className="text-gray-400 uppercase tracking-[0.15em]">Settlement Date:</span> {postexInfo.data.settlementDate}</p>}
+                    {postexInfo.data?.upfrontPaymentDate && <p><span className="text-gray-400 uppercase tracking-[0.15em]">Upfront Payment:</span> {postexInfo.data.upfrontPaymentDate}</p>}
+                    {postexInfo.data?.cprNumber_1 && <p><span className="text-gray-400 uppercase tracking-[0.15em]">CPR #1:</span> {postexInfo.data.cprNumber_1}</p>}
+                    {postexInfo.data?.reservePaymentDate && <p><span className="text-gray-400 uppercase tracking-[0.15em]">Reserve Payment:</span> {postexInfo.data.reservePaymentDate}</p>}
+                    {postexInfo.data?.cprNumber_2 && <p><span className="text-gray-400 uppercase tracking-[0.15em]">CPR #2:</span> {postexInfo.data.cprNumber_2}</p>}
                   </>
                 ) : (
                   <p>{postexInfo.data?.statusMessage || JSON.stringify(postexInfo.data)}</p>
@@ -597,7 +663,7 @@ function Dashboard() {
                 <div key={o.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition">
                   <span className="text-gray-900 text-sm font-bold w-20 shrink-0">{orderNum(o.id)}</span>
                   <span className="text-gray-700 text-sm">{o.first_name} {o.last_name}</span>
-                  <span className="text-gray-400 text-sm">{o.city}</span>
+                  <span className="text-gray-400 text-sm">{[o.address, o.city].filter(Boolean).join(', ')}</span>
                   <span className="text-xs text-gray-500 border border-gray-200 px-2 py-0.5 rounded ml-1">{o.payment_method === 'bank' ? 'Bank' : 'COD'}</span>
                   <span className="text-gray-900 text-sm font-semibold ml-auto">Rs. {o.total?.toLocaleString()}</span>
                   <span className={`text-xs uppercase tracking-[0.12em] px-2.5 py-1 border rounded-lg ${STATUS[o.status]?.cls || STATUS.pending.cls}`}>
@@ -638,6 +704,7 @@ function OrdersTab() {
   const [selected,         setSelected]         = useState(new Set());
   const [bulkStatus,       setBulkStatus]       = useState('');
   const [sheetLoading,     setSheetLoading]     = useState(false);
+  const [syncingPostex,    setSyncingPostex]    = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -649,6 +716,39 @@ function OrdersTab() {
 
   useEffect(() => { load(); }, [load]);
 
+  async function syncAllPostex() {
+    const withTracking = orders.filter(o => o.postex_tracking);
+    if (!withTracking.length) return;
+    setSyncingPostex(true);
+    try {
+      // Use Bulk Track API (3.9) — more efficient than individual calls
+      const res = await fetch('/api/postex/track-bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackingNumbers: withTracking.map(o => o.postex_tracking) }),
+      });
+      const results = await res.json(); // array of { trackingNumber, transactionStatus, ... }
+      for (const item of (results || [])) {
+        const trackNum = item.trackingNumber;
+        const liveStatus = item.trackingResponse?.transactionStatus || item.transactionStatus;
+        if (!liveStatus || !trackNum) continue;
+        const order = withTracking.find(o => o.postex_tracking === trackNum);
+        if (!order) continue;
+        const isDelivered = liveStatus.toLowerCase().includes('delivered');
+        const isReturned  = liveStatus.toLowerCase().includes('returned');
+        const patch = {
+          postex_status:     liveStatus,
+          postex_updated_at: new Date().toISOString(),
+          ...(isDelivered && { status: 'delivered' }),
+          ...(isReturned  && { status: 'returned'  }),
+        };
+        await supabase.from('orders').update(patch).eq('id', order.id);
+        setOrders(prev => prev.map(x => x.id === order.id ? { ...x, ...patch } : x));
+      }
+    } catch { /* silent */ }
+    setSyncingPostex(false);
+  }
+
   async function viewOrder(order) {
     setSelectedOrder(order);
     if (!itemsMap[order.id]) {
@@ -658,8 +758,9 @@ function OrdersTab() {
   }
 
   function handleStatusChange(id, s) {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: s } : o));
-    if (selectedOrder?.id === id) setSelectedOrder(o => ({ ...o, status: s }));
+    const patch = typeof s === 'object' ? s : { status: s };
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch } : o));
+    if (selectedOrder?.id === id) setSelectedOrder(o => ({ ...o, ...patch }));
   }
 
   const visible = orders.filter(o => {
@@ -741,6 +842,13 @@ function OrdersTab() {
               Export {selected.size > 0 ? `(${selected.size})` : 'All'}
             </button>
 
+            <button onClick={syncAllPostex} disabled={syncingPostex}
+              className="flex items-center gap-1.5 text-purple-600 hover:text-purple-900 text-xs uppercase tracking-[0.2em] border border-purple-300 px-3.5 py-2 rounded-lg hover:bg-purple-50 transition disabled:opacity-50">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 1-.987-1.106v-.828" />
+              </svg>
+              {syncingPostex ? 'Syncing PostEx…' : 'Sync PostEx'}
+            </button>
             <button onClick={load}
               className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-xs uppercase tracking-[0.2em] border border-gray-300 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition">
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -823,14 +931,14 @@ function OrdersTab() {
                 {o.postex_tracking && (
                   <p className="text-[10px] text-indigo-500 font-mono truncate mt-0.5">{o.postex_tracking}</p>
                 )}
-                {o.postex_status && (
-                  <p className="text-[10px] text-purple-500 uppercase tracking-wide truncate">{o.postex_status}</p>
-                )}
               </div>
               <div className="min-w-0">
                 <p className="text-gray-800 text-sm truncate font-medium">{o.first_name} {o.last_name}</p>
-                <p className="text-gray-400 text-xs truncate">{o.city}</p>
-                {o.notes && <p className="text-blue-500 text-xs truncate">📝 {o.notes}</p>}
+                <p className="text-gray-400 text-xs truncate">{[o.address, o.city].filter(Boolean).join(', ')}</p>
+                {o.postex_status && (
+                  <p className="text-[10px] text-purple-600 font-semibold uppercase tracking-wide mt-0.5">🚚 PostEx: {o.postex_status}</p>
+                )}
+                {o.notes && <p className="text-blue-500 text-xs break-words whitespace-normal mt-0.5">📝 {o.notes}</p>}
               </div>
               <span className="text-gray-500 text-sm">{o.phone}</span>
               <span className={`text-xs px-2 py-1 rounded border font-medium ${o.payment_method === 'bank' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
@@ -838,7 +946,7 @@ function OrdersTab() {
               </span>
               <span className="text-gray-900 text-sm font-semibold">Rs. {o.total?.toLocaleString()}</span>
               <span className="text-gray-500 text-sm">
-                {new Date(o.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: '2-digit' })}
+                {new Date(o.created_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
               </span>
               <span className={`text-xs uppercase tracking-[0.12em] px-2 py-1 border rounded-lg text-center ${STATUS[o.status]?.cls || STATUS.pending.cls}`}>
                 {STATUS[o.status]?.label || o.status}
@@ -875,6 +983,8 @@ const EMPTY = {
   quote: '', quote_label: '', upsell_slug: '', tag: '',
   in_stock: true, hidden: false,
 };
+
+const EMPTY_VARIATIONS = [];
 
 async function uploadImg(file, slug) {
   const ext  = file.name.split('.').pop();
@@ -921,6 +1031,8 @@ function ProductsTab() {
   const [extraFiles,    setExtraFiles]    = useState([null, null, null]);
   const [extraPreviews, setExtraPreviews] = useState(['', '', '']);
   const [faq,           setFaq]           = useState([]);
+  const [variations,    setVariations]    = useState([]);
+  const [varInput,      setVarInput]      = useState('');
   const [saving,        setSaving]        = useState(false);
   const [editId,        setEditId]        = useState(null);
   const [search,        setSearch]        = useState('');
@@ -972,6 +1084,8 @@ function ProductsTab() {
     setExtraFiles([null, null, null]);
     setImgFile(null);
     setFaq(p.faq?.length ? p.faq : []);
+    setVariations(p.variations?.length ? p.variations : []);
+    setVarInput('');
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -980,7 +1094,7 @@ function ProductsTab() {
     setShowForm(false); setEditId(null);
     setForm(EMPTY); setImgFile(null); setPreview('');
     setExtraFiles([null, null, null]); setExtraPreviews(['', '', '']);
-    setFaq([]);
+    setFaq([]); setVariations([]); setVarInput('');
   }
 
   async function save(e) {
@@ -1017,6 +1131,7 @@ function ProductsTab() {
         in_stock:      form.in_stock,
         hidden:        form.hidden,
         faq:           faq.filter(r => r.q.trim()),
+        variations:    variations.filter(Boolean),
       };
       const { error } = editId
         ? await supabase.from('products').update(payload).eq('id', editId)
@@ -1205,6 +1320,53 @@ function ProductsTab() {
                   ))}
                 </select>
               </div>
+            </section>
+
+            {/* ─ Variations ─ */}
+            <section className="space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+                <h4 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold">Variations (optional)</h4>
+              </div>
+              <p className="text-gray-400 text-sm">e.g. 20ml, 50ml, Small, Large — leave empty if this product has no variations.</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={varInput}
+                  onChange={e => setVarInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const v = varInput.trim();
+                      if (v && !variations.includes(v)) setVariations(prev => [...prev, v]);
+                      setVarInput('');
+                    }
+                  }}
+                  placeholder="Type a variation and press Enter…"
+                  className={INP + ' flex-1'}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = varInput.trim();
+                    if (v && !variations.includes(v)) setVariations(prev => [...prev, v]);
+                    setVarInput('');
+                  }}
+                  className="bg-gray-900 text-white text-xs uppercase tracking-[0.15em] px-4 py-2 rounded-lg hover:bg-black transition"
+                >
+                  Add
+                </button>
+              </div>
+              {variations.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {variations.map((v, i) => (
+                    <span key={i} className="flex items-center gap-1.5 bg-gray-100 border border-gray-300 text-gray-700 text-xs px-3 py-1.5 rounded-full">
+                      {v}
+                      <button type="button" onClick={() => setVariations(prev => prev.filter((_, j) => j !== i))}
+                        className="text-gray-400 hover:text-red-500 transition leading-none font-bold">×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* ─ FAQ ─ */}

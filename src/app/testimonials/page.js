@@ -105,7 +105,7 @@ export default function TestimonialsPage() {
         <img src={SILK} alt="" className="absolute inset-0 w-full h-full object-cover opacity-8 rotate-180 pointer-events-none" />
 
         {/* Header */}
-        <section className="relative z-10 pt-40 pb-12 px-6 text-center">
+        <section className="relative z-10 pt-10 pb-12 px-6 text-center">
           <div className="max-w-2xl mx-auto space-y-4">
             <h1 className="text-2xl md:text-5xl italic text-cream" style={serif}>
               Loved by Couples Like You

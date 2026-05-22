@@ -17,7 +17,7 @@ export async function POST(req) {
 
     const payload = {
       orderRefNumber: body.orderRefNumber,
-      invoicePayment: body.invoicePayment,
+      invoicePayment: String(body.invoicePayment),
       orderDetail: body.orderDetail || '',
       customerName: body.customerName,
       customerPhone: normalizePhone(body.customerPhone),
