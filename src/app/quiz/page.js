@@ -69,43 +69,24 @@ const QUESTIONS = [
 
 const MAX_SCORE = 18;
 
-function getResult(pct) {
-  if (pct <= 35) {
-    return {
-      note: 'Every great love story starts with intention. Begin gently — let curiosity lead. There is no rush tonight.',
-      product: {
-        slug: 'the-midnight-deck',
-        name: "The Midnight Deck",
-        desc: 'Gentle prompts designed to open conversations and deepen connection — one card at a time.',
-        price: 'Rs. 2,999',
-        numericPrice: 2999,
-        img: '/Products/back of card with bg.jpg',
-      },
-    };
-  }
-  if (pct <= 65) {
-    return {
-      note: 'Something beautiful is waiting to be deepened between you. Let this evening be a quiet beginning.',
-      product: {
-        slug: 'intimate-night-set',
-        name: 'The Intimate Night Set',
-        desc: 'Three small luxuries to set the scene for a night that belongs only to you.',
-        price: 'Rs. 5,499',
-        numericPrice: 5499,
-        img: '/Products/box with candle and card.jpeg',
-      },
-    };
-  }
+const RESULT_SLUGS = ['the-midnight-deck', 'intimate-night-set', 'bridal-box'];
+const UPSELL_SLUG  = 'midnight-glow-candle';
+
+function getResultMeta(pct) {
+  if (pct <= 35) return {
+    note: 'Every great love story starts with intention. Begin gently — let curiosity lead. There is no rush tonight.',
+    slug: 'the-midnight-deck',
+    desc: 'Gentle prompts designed to open conversations and deepen connection — one card at a time.',
+  };
+  if (pct <= 65) return {
+    note: 'Something beautiful is waiting to be deepened between you. Let this evening be a quiet beginning.',
+    slug: 'intimate-night-set',
+    desc: 'Three small luxuries to set the scene for a night that belongs only to you.',
+  };
   return {
     note: "You're already connected — now it's time to explore deeper. This is your secret hour.",
-    product: {
-      slug: 'bridal-box',
-      name: 'The Secret Hour Bridal Box',
-      desc: 'A complete experience for couples ready to celebrate their bond in the most beautiful way.',
-      price: 'Rs. 8,999',
-      numericPrice: 8999,
-      img: '/Products/box with candle card and red envelope.jpeg',
-    },
+    slug: 'bridal-box',
+    desc: 'A complete experience for couples ready to celebrate their bond in the most beautiful way.',
   };
 }
 
@@ -118,12 +99,13 @@ export default function QuizPage() {
   useEffect(() => {
     supabase
       .from('products')
-      .select('slug, title, price, numeric_price, img, hidden')
-      .in('slug', ['the-midnight-deck', 'intimate-night-set', 'bridal-box'])
+      .select('slug, title, price, numeric_price, img')
+      .in('slug', [...RESULT_SLUGS, UPSELL_SLUG])
+      .neq('hidden', true)
       .then(({ data }) => {
         if (data) {
           const map = {};
-          data.forEach(p => { if (!p.hidden) map[p.slug] = p; });
+          data.forEach(p => { map[p.slug] = p; });
           setDbProducts(map);
         }
       });
@@ -131,17 +113,20 @@ export default function QuizPage() {
 
   const totalScore = answers.reduce((sum, s) => sum + s, 0);
   const pct = Math.round((totalScore / MAX_SCORE) * 100);
-  const baseResult = step === 6 ? getResult(pct) : null;
-  const result = baseResult && dbProducts[baseResult.product.slug]
-    ? {
-        ...baseResult,
-        product: {
-          ...baseResult.product,
-          price: dbProducts[baseResult.product.slug].price,
-          numericPrice: dbProducts[baseResult.product.slug].numeric_price,
-        },
-      }
-    : baseResult;
+  const meta = step === 6 ? getResultMeta(pct) : null;
+  const dbP  = meta ? dbProducts[meta.slug] : null;
+  const result = meta && dbP ? {
+    note: meta.note,
+    product: {
+      slug:         meta.slug,
+      name:         dbP.title,
+      desc:         meta.desc,
+      price:        dbP.price,
+      numericPrice: dbP.numeric_price,
+      img:          dbP.img || '',
+    },
+  } : meta ? { note: meta.note, product: null } : null;
+  const upsell = dbProducts[UPSELL_SLUG] || null;
   const progressPct = step === 6 ? 100 : Math.round((step / 6) * 100);
 
   function select(score) {
@@ -238,63 +223,73 @@ export default function QuizPage() {
               </div>
 
               {/* Recommended product */}
-              <div
-                className="border border-gold-border/50 p-6"
-                style={{ background: 'rgba(11,10,9,0.7)' }}
-              >
-                <p className="text-[10px] uppercase tracking-[0.3em] text-gold/70 mb-5 text-center">Recommended for You</p>
-                <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center">
-                  <div className="relative w-28 h-28 shrink-0 bg-sh-bg mx-auto sm:mx-0">
-                    <Image src={result.product.img} alt={result.product.name} fill className="object-contain" unoptimized />
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <h2 className="text-lg italic text-cream leading-snug" style={serif}>{result.product.name}</h2>
-                    <p className="text-cream/55 text-xs leading-relaxed">{result.product.desc}</p>
-                    <p className="text-gold text-base" style={serif}>{result.product.price}</p>
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      <button
-                        onClick={() => addToCart({
-                          slug: result.product.slug,
-                          title: result.product.name,
-                          price: result.product.price,
-                          numericPrice: result.product.numericPrice,
-                          img: result.product.img,
-                        })}
-                        className="bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.15em] px-4 py-2.5 btn-glow transition-all"
-                      >
-                        Begin Your Experience
-                      </button>
-                      <Link
-                        href={`/product/${result.product.slug}`}
-                        className="border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.15em] px-4 py-2.5 hover:bg-burgundy transition-all"
-                      >
-                        View Product
-                      </Link>
+              {result.product && (
+                <div
+                  className="border border-gold-border/50 p-6"
+                  style={{ background: 'rgba(11,10,9,0.7)' }}
+                >
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-gold/70 mb-5 text-center">Recommended for You</p>
+                  <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center">
+                    <div className="relative w-28 h-28 shrink-0 bg-sh-bg mx-auto sm:mx-0">
+                      {result.product.img && <Image src={result.product.img} alt={result.product.name} fill className="object-contain" unoptimized />}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <h2 className="text-lg italic text-cream leading-snug" style={serif}>{result.product.name}</h2>
+                      <p className="text-cream/55 text-xs leading-relaxed">{result.product.desc}</p>
+                      <p className="text-gold text-base" style={serif}>{result.product.price}</p>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <button
+                          onClick={() => addToCart({
+                            slug: result.product.slug,
+                            title: result.product.name,
+                            price: result.product.price,
+                            numericPrice: result.product.numericPrice,
+                            img: result.product.img,
+                          })}
+                          className="bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.15em] px-4 py-2.5 btn-glow transition-all"
+                        >
+                          Begin Your Experience
+                        </button>
+                        <Link
+                          href={`/product/${result.product.slug}`}
+                          className="border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.15em] px-4 py-2.5 hover:bg-burgundy transition-all"
+                        >
+                          View Product
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Upsell */}
-              <div
-                className="border border-gold-border/50 p-5 flex items-center gap-4"
-                style={{ background: 'rgba(11,10,9,0.7)' }}
-              >
-                <div className="relative w-16 h-16 shrink-0 bg-burgundy/40">
-                  <Image src="/Products/box with candle card and red envelope.jpeg" alt="Midnight Glow Candle" fill className="object-cover" unoptimized />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[9px] uppercase tracking-[0.25em] text-gold/60 mb-0.5">Add the Mood</p>
-                  <p className="italic text-cream text-sm" style={serif}>Midnight Glow Candle</p>
-                  <p className="text-gold/80 text-xs">Rs. 1,499</p>
-                </div>
-                <Link
-                  href="/shop"
-                  className="shrink-0 border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.15em] px-4 py-2 hover:bg-burgundy transition-all"
+              {upsell && (
+                <div
+                  className="border border-gold-border/50 p-5 flex items-center gap-4"
+                  style={{ background: 'rgba(11,10,9,0.7)' }}
                 >
-                  Add
-                </Link>
-              </div>
+                  <div className="relative w-16 h-16 shrink-0 bg-burgundy/40">
+                    {upsell.img && <Image src={upsell.img} alt={upsell.title} fill className="object-cover" unoptimized />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] uppercase tracking-[0.25em] text-gold/60 mb-0.5">Add the Mood</p>
+                    <p className="italic text-cream text-sm" style={serif}>{upsell.title}</p>
+                    <p className="text-gold/80 text-xs">{upsell.price}</p>
+                  </div>
+                  <button
+                    onClick={() => addToCart({
+                      slug: upsell.slug,
+                      title: upsell.title,
+                      price: upsell.price,
+                      numericPrice: upsell.numeric_price,
+                      img: upsell.img || '',
+                    })}
+                    className="shrink-0 border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.15em] px-4 py-2 hover:bg-burgundy transition-all"
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
 
               {/* Retake */}
               <div className="text-center pt-2">
