@@ -2,36 +2,36 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { useCart } from '../context/CartContext';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 
-const UPSELLS = [
-  {
-    slug: 'midnight-glow-candle',
-    title: 'Midnight Glow Candle',
-    price: 'Rs. 1,499',
-    numericPrice: 1499,
-    img: '/assets/sh-bridal-box-Bmv6nl8o.jpg',
-  },
-  {
-    slug: 'sweet-moments-collection',
-    title: 'Sweet Moments Collection',
-    price: 'Rs. 1,200',
-    numericPrice: 1200,
-    img: '/assets/sh-night-set-DlV1-dhc.jpg',
-  },
-  {
-    slug: 'velvet-bond',
-    title: 'Velvet Bond',
-    price: 'Rs. 2,499',
-    numericPrice: 2499,
-    img: '/assets/sh-card-game-Cw972EQC.png',
-  },
-];
-
 export default function CartDrawer() {
   const { items, open, setOpen, removeFromCart, updateQty, totalPrice, addToCart } = useCart();
+  const [suggestions, setSuggestions] = useState([]);
+
+  useEffect(() => {
+    if (!open || items.length === 0) return;
+
+    const cartSlugs = new Set(items.map((i) => i.slug));
+
+    supabase
+      .from('products')
+      .select('slug, title, price, numeric_price, images, img')
+      .then(({ data }) => {
+        if (!data?.length) return;
+        const filtered = data.filter((p) => !cartSlugs.has(p.slug));
+        const shuffled = filtered.sort(() => Math.random() - 0.5).slice(0, 2);
+        setSuggestions(shuffled);
+      });
+  }, [open, items]);
 
   if (!open) return null;
 
@@ -112,25 +112,30 @@ export default function CartDrawer() {
               ))}
 
               {/* People Also Like */}
-              {(() => {
-                const cartSlugs = new Set(items.map((i) => i.slug));
-                const suggestions = UPSELLS.filter((u) => !cartSlugs.has(u.slug));
-                if (suggestions.length === 0) return null;
-                return (
-                  <div className="pt-2">
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-gold/60 mb-3">People Also Like</p>
-                    <div className="space-y-3">
-                      {suggestions.map((u) => (
+              {suggestions.length > 0 && (
+                <div className="pt-2">
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-gold/60 mb-3">People Also Like</p>
+                  <div className="space-y-3">
+                    {suggestions.map((u) => {
+                      const img = (Array.isArray(u.images) ? u.images[0] : u.images) || u.img;
+                      const numericPrice = u.numeric_price || 0;
+                      return (
                         <div key={u.slug} className="flex items-center gap-3 border border-gold-border/30 p-3" style={{ background: 'rgba(11,10,9,0.5)' }}>
                           <div className="relative w-14 h-14 shrink-0 bg-burgundy/30">
-                            <Image src={u.img} alt={u.title} fill className="object-cover" unoptimized />
+                            {img && <Image src={img} alt={u.title} fill className="object-cover" unoptimized />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-cream text-sm leading-snug" style={serif}>{u.title}</p>
-                            <p className="text-gold text-xs mt-0.5">{u.price}</p>
+                            <p className="text-gold text-xs mt-0.5">Rs. {numericPrice.toLocaleString()}</p>
                           </div>
                           <button
-                            onClick={() => addToCart(u)}
+                            onClick={() => addToCart({
+                              slug: u.slug,
+                              title: u.title,
+                              price: `Rs. ${numericPrice.toLocaleString()}`,
+                              numericPrice,
+                              img: img || '',
+                            })}
                             aria-label={`Add ${u.title} to cart`}
                             className="w-8 h-8 shrink-0 rounded-full border border-gold/50 text-gold hover:bg-gold/10 transition-colors flex items-center justify-center"
                           >
@@ -139,11 +144,11 @@ export default function CartDrawer() {
                             </svg>
                           </button>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
-                );
-              })()}
+                </div>
+              )}
             </>
           )}
         </div>

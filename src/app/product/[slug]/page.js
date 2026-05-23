@@ -37,8 +37,20 @@ export default function ProductPage({ params }) {
   const router = useRouter();
   const { addToCart, setOpen } = useCart();
 
+  function cartItem() {
+    const varPrice = selectedVariation?.price;
+    return {
+      slug: product?.slug,
+      title: product?.title,
+      price: varPrice ? `Rs. ${varPrice.toLocaleString()}` : product?.price,
+      numericPrice: varPrice ?? product?.numeric_price,
+      img: images?.[0],
+      variation: selectedVariation?.name || null,
+    };
+  }
+
   function buyNow() {
-    addToCart({ slug: product?.slug, title: product?.title, price: product?.price, numericPrice: product?.numeric_price, img: images?.[0], variation: selectedVariation });
+    addToCart(cartItem());
     setOpen(false);
     router.push('/checkout');
   }
@@ -186,7 +198,9 @@ export default function ProductPage({ params }) {
               </div>
 
               <div>
-                <p className="text-3xl text-gold" style={serif}>{product.price}</p>
+                <p className="text-3xl text-gold" style={serif}>
+                  {selectedVariation?.price ? `Rs. ${selectedVariation.price.toLocaleString()}` : product.price}
+                </p>
                 {product.stock_note && (
                   <p className="text-cream/45 text-xs uppercase tracking-[0.18em] mt-1">{product.stock_note}</p>
                 )}
@@ -197,20 +211,24 @@ export default function ProductPage({ params }) {
                 <div className="space-y-2">
                   <p className="text-cream/50 text-[10px] uppercase tracking-[0.25em]">Select Option</p>
                   <div className="flex flex-wrap gap-2">
-                    {product.variations.map((v) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setSelectedVariation(v === selectedVariation ? null : v)}
-                        className={`px-4 py-2 text-[11px] uppercase tracking-[0.15em] border transition-all duration-200 ${
-                          selectedVariation === v
-                            ? 'border-gold bg-gold/10 text-gold'
-                            : 'border-gold-border/50 text-cream/65 hover:border-gold/60 hover:text-cream'
-                        }`}
-                      >
-                        {/^\d+(\.\d+)?$/.test(v) ? `${v}ml` : v}
-                      </button>
-                    ))}
+                    {product.variations.map((v) => {
+                      const label = v?.name ?? v;
+                      const isSelected = selectedVariation?.name === label || selectedVariation === label;
+                      return (
+                        <button
+                          key={label}
+                          type="button"
+                          onClick={() => setSelectedVariation(isSelected ? null : (v?.name ? v : { name: v, price: null }))}
+                          className={`px-4 py-2 text-[11px] uppercase tracking-[0.15em] border transition-all duration-200 ${
+                            isSelected
+                              ? 'border-gold bg-gold/10 text-gold'
+                              : 'border-gold-border/50 text-cream/65 hover:border-gold/60 hover:text-cream'
+                          }`}
+                        >
+                          {/^\d+(\.\d+)?$/.test(label) ? `${label}ml` : label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -218,7 +236,7 @@ export default function ProductPage({ params }) {
               {/* Buttons — directly below price */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => addToCart({ slug: product.slug, title: product.title, price: product.price, numericPrice: product.numeric_price, img: images[0], variation: selectedVariation })}
+                  onClick={() => addToCart(cartItem())}
                   className="bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 flex-1"
                 >
                   Add to Cart

@@ -1033,6 +1033,7 @@ function ProductsTab() {
   const [faq,           setFaq]           = useState([]);
   const [variations,    setVariations]    = useState([]);
   const [varInput,      setVarInput]      = useState('');
+  const [varPrice,      setVarPrice]      = useState('');
   const [saving,        setSaving]        = useState(false);
   const [editId,        setEditId]        = useState(null);
   const [search,        setSearch]        = useState('');
@@ -1086,6 +1087,7 @@ function ProductsTab() {
     setFaq(p.faq?.length ? p.faq : []);
     setVariations(p.variations?.length ? p.variations : []);
     setVarInput('');
+    setVarPrice('');
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -1131,7 +1133,7 @@ function ProductsTab() {
         in_stock:      form.in_stock,
         hidden:        form.hidden,
         faq:           faq.filter(r => r.q.trim()),
-        variations:    variations.filter(Boolean),
+        variations:    variations.filter(v => v?.name?.trim()),
       };
       const { error } = editId
         ? await supabase.from('products').update(payload).eq('id', editId)
@@ -1327,7 +1329,7 @@ function ProductsTab() {
               <div className="flex items-center justify-between border-b border-gray-200 pb-2">
                 <h4 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold">Variations (optional)</h4>
               </div>
-              <p className="text-gray-400 text-sm">e.g. 20ml, 50ml, Small, Large — leave empty if this product has no variations.</p>
+              <p className="text-gray-400 text-sm">e.g. 20ml / Small — enter name and price for each variation.</p>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -1336,20 +1338,33 @@ function ProductsTab() {
                   onKeyDown={e => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      const v = varInput.trim();
-                      if (v && !variations.includes(v)) setVariations(prev => [...prev, v]);
-                      setVarInput('');
+                      const name = varInput.trim();
+                      const price = parseInt(varPrice) || 0;
+                      if (name && !variations.find(x => x.name === name)) {
+                        setVariations(prev => [...prev, { name, price }]);
+                        setVarInput(''); setVarPrice('');
+                      }
                     }
                   }}
-                  placeholder="Type a variation and press Enter…"
+                  placeholder="Name (e.g. 50ml, Small)"
                   className={INP + ' flex-1'}
+                />
+                <input
+                  type="number"
+                  value={varPrice}
+                  onChange={e => setVarPrice(e.target.value)}
+                  placeholder="Price"
+                  className={INP + ' w-28'}
                 />
                 <button
                   type="button"
                   onClick={() => {
-                    const v = varInput.trim();
-                    if (v && !variations.includes(v)) setVariations(prev => [...prev, v]);
-                    setVarInput('');
+                    const name = varInput.trim();
+                    const price = parseInt(varPrice) || 0;
+                    if (name && !variations.find(x => x.name === name)) {
+                      setVariations(prev => [...prev, { name, price }]);
+                      setVarInput(''); setVarPrice('');
+                    }
                   }}
                   className="bg-gray-900 text-white text-xs uppercase tracking-[0.15em] px-4 py-2 rounded-lg hover:bg-black transition"
                 >
@@ -1360,7 +1375,7 @@ function ProductsTab() {
                 <div className="flex flex-wrap gap-2">
                   {variations.map((v, i) => (
                     <span key={i} className="flex items-center gap-1.5 bg-gray-100 border border-gray-300 text-gray-700 text-xs px-3 py-1.5 rounded-full">
-                      {v}
+                      {v?.name ?? v}{v?.price ? ` — Rs. ${Number(v.price).toLocaleString()}` : ''}
                       <button type="button" onClick={() => setVariations(prev => prev.filter((_, j) => j !== i))}
                         className="text-gray-400 hover:text-red-500 transition leading-none font-bold">×</button>
                     </span>
