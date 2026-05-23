@@ -1,13 +1,24 @@
 import { NextResponse } from 'next/server';
-import { sendEmail, orderConfirmationHtml, adminOrderNotificationHtml } from '../../../lib/email';
+import { sendEmail, orderConfirmationHtml, adminOrderNotificationHtml, orderStatusHtml } from '../../../lib/email';
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { to, name, phone, orderId, items, total, payment, city, address, trackingNumber } = body;
+    const { type, to, name, phone, orderId, items, total, payment, city, address, trackingNumber, status } = body;
 
     if (!to || !orderId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (type === 'status_update') {
+      const statusLabels = { confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', cancelled: 'Cancelled', returned: 'Returned', pending: 'Received' };
+      const label = statusLabels[status] || status;
+      await sendEmail({
+        to,
+        subject: `Your Secret Hour Order has been ${label}`,
+        html: orderStatusHtml({ name, orderId, status, items, total }),
+      });
+      return NextResponse.json({ ok: true });
     }
 
     // Customer confirmation email
