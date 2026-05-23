@@ -25,6 +25,7 @@ export default function CartDrawer() {
     supabase
       .from('products')
       .select('slug, title, price, numeric_price, images, img')
+      .neq('hidden', true)
       .then(({ data }) => {
         if (!data?.length) return;
         const filtered = data.filter((p) => !cartSlugs.has(p.slug));

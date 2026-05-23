@@ -1034,6 +1034,8 @@ function ProductsTab() {
   const [variations,    setVariations]    = useState([]);
   const [varInput,      setVarInput]      = useState('');
   const [varPrice,      setVarPrice]      = useState('');
+  const [varDesc,       setVarDesc]       = useState('');
+  const [varTagline,    setVarTagline]    = useState('');
   const [saving,        setSaving]        = useState(false);
   const [editId,        setEditId]        = useState(null);
   const [search,        setSearch]        = useState('');
@@ -1088,6 +1090,8 @@ function ProductsTab() {
     setVariations(p.variations?.length ? p.variations : []);
     setVarInput('');
     setVarPrice('');
+    setVarDesc('');
+    setVarTagline('');
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -1096,7 +1100,7 @@ function ProductsTab() {
     setShowForm(false); setEditId(null);
     setForm(EMPTY); setImgFile(null); setPreview('');
     setExtraFiles([null, null, null]); setExtraPreviews(['', '', '']);
-    setFaq([]); setVariations([]); setVarInput('');
+    setFaq([]); setVariations([]); setVarInput(''); setVarPrice(''); setVarDesc(''); setVarTagline('');
   }
 
   async function save(e) {
@@ -1329,56 +1333,68 @@ function ProductsTab() {
               <div className="flex items-center justify-between border-b border-gray-200 pb-2">
                 <h4 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold">Variations (optional)</h4>
               </div>
-              <p className="text-gray-400 text-sm">e.g. 20ml / Small — enter name and price for each variation.</p>
-              <div className="flex gap-2">
+              <p className="text-gray-400 text-sm">Enter name, combination, tagline, and price for each variation.</p>
+              <div className="grid grid-cols-2 gap-2">
                 <input
                   type="text"
                   value={varInput}
                   onChange={e => setVarInput(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const name = varInput.trim();
-                      const price = parseInt(varPrice) || 0;
-                      if (name && !variations.find(x => x.name === name)) {
-                        setVariations(prev => [...prev, { name, price }]);
-                        setVarInput(''); setVarPrice('');
-                      }
-                    }
-                  }}
-                  placeholder="Name (e.g. 50ml, Small)"
-                  className={INP + ' flex-1'}
+                  placeholder="Name (e.g. Midnight Oud)"
+                  className={INP}
                 />
                 <input
-                  type="number"
-                  value={varPrice}
-                  onChange={e => setVarPrice(e.target.value)}
-                  placeholder="Price"
-                  className={INP + ' w-28'}
+                  type="text"
+                  value={varDesc}
+                  onChange={e => setVarDesc(e.target.value)}
+                  placeholder="Combination (e.g. Oud + Vanilla)"
+                  className={INP}
                 />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const name = varInput.trim();
-                    const price = parseInt(varPrice) || 0;
-                    if (name && !variations.find(x => x.name === name)) {
-                      setVariations(prev => [...prev, { name, price }]);
-                      setVarInput(''); setVarPrice('');
-                    }
-                  }}
-                  className="bg-gray-900 text-white text-xs uppercase tracking-[0.15em] px-4 py-2 rounded-lg hover:bg-black transition"
-                >
-                  Add
-                </button>
+                <input
+                  type="text"
+                  value={varTagline}
+                  onChange={e => setVarTagline(e.target.value)}
+                  placeholder="Tagline (e.g. A rich blend of oud and soft vanilla…)"
+                  className={INP}
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={varPrice}
+                    onChange={e => setVarPrice(e.target.value)}
+                    placeholder="Price"
+                    className={INP + ' flex-1'}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const name = varInput.trim();
+                      const price = parseInt(varPrice) || 0;
+                      const description = varDesc.trim();
+                      const tagline = varTagline.trim();
+                      if (name && !variations.find(x => x.name === name)) {
+                        setVariations(prev => [...prev, { name, price, description, tagline }]);
+                        setVarInput(''); setVarPrice(''); setVarDesc(''); setVarTagline('');
+                      }
+                    }}
+                    className="bg-gray-900 text-white text-xs uppercase tracking-[0.15em] px-4 py-2 rounded-lg hover:bg-black transition whitespace-nowrap"
+                  >
+                    Add
+                  </button>
+                </div>
               </div>
               {variations.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="space-y-2">
                   {variations.map((v, i) => (
-                    <span key={i} className="flex items-center gap-1.5 bg-gray-100 border border-gray-300 text-gray-700 text-xs px-3 py-1.5 rounded-full">
-                      {v?.name ?? v}{v?.price ? ` — Rs. ${Number(v.price).toLocaleString()}` : ''}
+                    <div key={i} className="flex items-start justify-between gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                      <div className="text-xs text-gray-700 leading-relaxed">
+                        <span className="font-semibold">{v?.name ?? v}</span>
+                        {v?.description ? <span className="text-gray-400"> · {v.description}</span> : ''}
+                        {v?.price ? <span className="text-gray-500"> · Rs. {Number(v.price).toLocaleString()}</span> : ''}
+                        {v?.tagline ? <p className="text-gray-400 mt-0.5 italic">{v.tagline}</p> : ''}
+                      </div>
                       <button type="button" onClick={() => setVariations(prev => prev.filter((_, j) => j !== i))}
-                        className="text-gray-400 hover:text-red-500 transition leading-none font-bold">×</button>
-                    </span>
+                        className="text-gray-300 hover:text-red-500 transition leading-none font-bold shrink-0 mt-0.5">×</button>
+                    </div>
                   ))}
                 </div>
               )}

@@ -69,8 +69,8 @@ export default function ProductPage({ params }) {
     async function load() {
       try {
         const [{ data: p, error: pErr }, { data: all }] = await Promise.all([
-          supabase.from('products').select('*').eq('slug', slug).single(),
-          supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('slug', slug),
+          supabase.from('products').select('*').eq('slug', slug).neq('hidden', true).single(),
+          supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('slug', slug).neq('hidden', true),
         ]);
         if (pErr || !p) { setStatus('notfound'); return; }
         setProduct(p);
@@ -208,7 +208,7 @@ export default function ProductPage({ params }) {
 
               {/* Variations */}
               {product.variations?.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <p className="text-cream/50 text-[10px] uppercase tracking-[0.25em]">Select Option</p>
                   <div className="flex flex-wrap gap-2">
                     {product.variations.map((v) => {
@@ -230,6 +230,16 @@ export default function ProductPage({ params }) {
                       );
                     })}
                   </div>
+                  {selectedVariation && (selectedVariation.description || selectedVariation.tagline) && (
+                    <div className="border border-gold-border/30 p-3 space-y-1" style={{ background: 'rgba(11,10,9,0.5)' }}>
+                      {selectedVariation.description && (
+                        <p className="text-gold/70 text-[10px] uppercase tracking-[0.2em]">{selectedVariation.description}</p>
+                      )}
+                      {selectedVariation.tagline && (
+                        <p className="text-cream/60 text-xs italic leading-relaxed">{selectedVariation.tagline}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 

@@ -67,10 +67,11 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from('products')
-      .select('slug, title, subtitle, price, numeric_price, img, images, tag, hidden')
+      .select('slug, title, subtitle, price, numeric_price, img, images, tag')
+      .neq('hidden', true)
       .then(({ data }) => {
         if (!data) return;
-        const visible = data.filter(p => !p.hidden);
+        const visible = data;
 
         // Midnight deck for featured section
         const deck = visible.find(p => p.slug.toLowerCase() === 'the-midnight-deck');
