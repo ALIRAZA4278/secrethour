@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { useCart } from '../context/CartContext';
+import { useCart, itemEffectivePrice } from '../context/CartContext';
 import { supabase } from '../../lib/supabase';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
@@ -76,7 +76,7 @@ export default function CheckoutPage() {
           product_title: item.title,
           product_img: item.img,
           quantity: item.qty,
-          price: item.numericPrice,
+          price: itemEffectivePrice(item),
           variation: item.variation || null,
         }))
       );
@@ -122,7 +122,7 @@ export default function CheckoutPage() {
             phone: form.phone,
             address: form.address,
             orderId: order.id,
-            items: items.map((i) => ({ title: i.title, qty: i.qty, numericPrice: i.numericPrice, variation: i.variation || null })),
+            items: items.map((i) => ({ title: i.title, qty: i.qty, numericPrice: itemEffectivePrice(i), variation: i.variation || null })),
             total,
             payment,
             city: form.city,
@@ -391,7 +391,7 @@ export default function CheckoutPage() {
                         {item.variation && <p className="text-gold/60 text-[10px] uppercase tracking-[0.15em]">{item.variation}</p>}
                         <p className="text-cream/40 text-xs mt-0.5">Qty {item.qty}</p>
                       </div>
-                      <p className="text-gold text-sm shrink-0">Rs. {(item.numericPrice * item.qty).toLocaleString()}</p>
+                      <p className="text-gold text-sm shrink-0">Rs. {(itemEffectivePrice(item) * item.qty).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>

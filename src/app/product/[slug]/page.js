@@ -35,7 +35,7 @@ function FaqItem({ q, a }) {
 export default function ProductPage({ params }) {
   const { slug } = use(params);
   const router = useRouter();
-  const { addToCart, setOpen } = useCart();
+  const { addToCart, setOpen, updateQty } = useCart();
 
   function cartItem() {
     const varPrice = selectedVariation?.price;
@@ -46,11 +46,21 @@ export default function ProductPage({ params }) {
       numericPrice: varPrice ?? product?.numeric_price,
       img: images?.[0],
       variation: selectedVariation?.name || null,
+      bulkDiscountQty: product?.bulk_discount_qty || null,
+      bulkDiscountPct: product?.bulk_discount_pct || null,
     };
   }
 
+  function handleAddToCart() {
+    const item = cartItem();
+    addToCart(item);
+    if (qty > 1) updateQty(item.slug, qty);
+  }
+
   function buyNow() {
-    addToCart(cartItem());
+    const item = cartItem();
+    addToCart(item);
+    if (qty > 1) updateQty(item.slug, qty);
     setOpen(false);
     router.push('/checkout');
   }
@@ -60,6 +70,7 @@ export default function ProductPage({ params }) {
   const [upsell, setUpsell] = useState(null);
   const [activeImg, setActiveImg] = useState(0);
   const [selectedVariation, setSelectedVariation] = useState(null);
+  const [qty, setQty] = useState(1);
   const [status, setStatus] = useState('loading'); // 'loading' | 'found' | 'notfound'
   const [reviews, setReviews] = useState([]);
   const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, body: '' });
@@ -204,6 +215,11 @@ export default function ProductPage({ params }) {
                 {product.stock_note && (
                   <p className="text-cream/45 text-xs uppercase tracking-[0.18em] mt-1">{product.stock_note}</p>
                 )}
+                {product.bulk_discount_qty && product.bulk_discount_pct && (
+                  <p className="text-green-400/90 text-xs uppercase tracking-[0.15em] mt-1.5 font-medium">
+                    Buy {product.bulk_discount_qty}+ and save {product.bulk_discount_pct}%
+                  </p>
+                )}
               </div>
 
               {/* Variations */}
@@ -243,10 +259,33 @@ export default function ProductPage({ params }) {
                 </div>
               )}
 
+              {/* Qty selector */}
+              <div className="flex items-center gap-3">
+                <p className="text-cream/50 text-[10px] uppercase tracking-[0.25em]">Qty</p>
+                <div className="flex items-center border border-gold-border/50">
+                  <button type="button" onClick={() => setQty(q => Math.max(1, q - 1))}
+                    className="w-9 h-9 flex items-center justify-center text-cream/60 hover:text-cream transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
+                    </svg>
+                  </button>
+                  <span className="w-10 text-center text-cream text-sm">{qty}</span>
+                  <button type="button" onClick={() => setQty(q => q + 1)}
+                    className="w-9 h-9 flex items-center justify-center text-cream/60 hover:text-cream transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14M5 12h14" />
+                    </svg>
+                  </button>
+                </div>
+                {product.bulk_discount_qty && product.bulk_discount_pct && qty >= product.bulk_discount_qty && (
+                  <span className="text-green-400 text-[10px] font-bold uppercase tracking-wide">{product.bulk_discount_pct}% off unlocked!</span>
+                )}
+              </div>
+
               {/* Buttons — directly below price */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => addToCart(cartItem())}
+                  onClick={handleAddToCart}
                   className="bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-4 btn-glow transition-all duration-300 flex-1"
                 >
                   Add to Cart

@@ -139,19 +139,29 @@ function Login({ onLogin }) {
    ORDER DRAWER
 ═══════════════════════════════════════════ */
 function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }) {
-  const [status,      setStatus]      = useState(order?.status || 'pending');
-  const [note,        setNote]        = useState(order?.notes  || '');
-  const [noteSaved,   setNoteSaved]   = useState(false);
-  const [custOrders,  setCustOrders]  = useState([]);
-  const [custLoading, setCustLoading] = useState(false);
-  const [postexInfo,  setPostexInfo]  = useState(null);
+  const [status,        setStatus]        = useState(order?.status || 'pending');
+  const [custOrders,    setCustOrders]    = useState([]);
+  const [custLoading,   setCustLoading]   = useState(false);
+  const [postexInfo,    setPostexInfo]    = useState(null);
   const [postexLoading, setPostexLoading] = useState('');
+  const [events,        setEvents]        = useState([]);
+  const [newComment,    setNewComment]    = useState('');
+  const [addingComment, setAddingComment] = useState(false);
+
+  async function loadEvents() {
+    const { data } = await supabase
+      .from('order_events')
+      .select('*')
+      .eq('order_id', order.id)
+      .order('created_at', { ascending: true });
+    setEvents(data || []);
+  }
 
   useEffect(() => {
     setStatus(order?.status || 'pending');
-    setNote(order?.notes || '');
-    setNoteSaved(false);
+    setNewComment('');
     if (!order) return;
+    loadEvents();
     setCustLoading(true);
     const key = order.phone || order.email;
     if (!key) { setCustLoading(false); return; }
@@ -164,13 +174,27 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
   async function changeStatus(s) {
     setStatus(s);
     await supabase.from('orders').update({ status: s }).eq('id', order.id);
+    await supabase.from('order_events').insert({
+      order_id: order.id,
+      type: 'status_change',
+      content: `Status changed to ${STATUS[s]?.label || s}`,
+    });
     onStatusChange(order.id, s);
+    loadEvents();
   }
 
-  async function saveNote() {
-    await supabase.from('orders').update({ notes: note }).eq('id', order.id);
-    setNoteSaved(true);
-    setTimeout(() => setNoteSaved(false), 2000);
+  async function addComment() {
+    const text = newComment.trim();
+    if (!text) return;
+    setAddingComment(true);
+    await supabase.from('order_events').insert({
+      order_id: order.id,
+      type: 'comment',
+      content: text,
+    });
+    setNewComment('');
+    setAddingComment(false);
+    loadEvents();
   }
 
   async function trackOrder() {
@@ -195,6 +219,12 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
         };
         await supabase.from('orders').update(updatePatch).eq('id', order.id);
         onStatusChange && onStatusChange(order.id, updatePatch);
+        await supabase.from('order_events').insert({
+          order_id: order.id,
+          type: 'status_change',
+          content: `PostEx: ${liveStatus}`,
+        });
+        loadEvents();
       }
     } catch (err) {
       setPostexInfo({ type: 'track', error: err.message });
@@ -387,20 +417,49 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
           </div>
         </div>
 
-        {/* Admin Notes */}
+        {/* Timeline */}
         <div className="px-6 py-5 border-b border-gray-200">
-          <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-3">ADMIN NOTES</p>
-          <textarea
-            value={note}
-            onChange={e => { setNote(e.target.value); setNoteSaved(false); }}
-            rows={3}
-            placeholder="Internal note (not visible to customer)…"
-            className="w-full px-3 py-2.5 bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg outline-none focus:border-gray-500 transition placeholder:text-gray-400 resize-none"
-          />
-          <button onClick={saveNote}
-            className="mt-2 text-xs uppercase tracking-[0.15em] font-medium px-4 py-2 border border-gray-300 rounded-lg hover:border-gray-500 text-gray-600 hover:text-gray-900 transition">
-            {noteSaved ? '✓ Saved' : 'Save Note'}
-          </button>
+          <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-4">ACTIVITY TIMELINE</p>
+
+          {/* Order placed event always first */}
+          <div className="relative pl-6 pb-4">
+            <div className="absolute left-0 top-1.5 w-3 h-3 rounded-full bg-gray-300 border-2 border-white ring-1 ring-gray-300" />
+            {events.length > 0 && <div className="absolute left-[5px] top-4 bottom-0 w-px bg-gray-200" />}
+            <p className="text-gray-700 text-xs font-medium">Order placed</p>
+            <p className="text-gray-400 text-[10px] mt-0.5">
+              {new Date(order.created_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </div>
+
+          {events.map((ev, i) => {
+            const isLast = i === events.length - 1;
+            const isStatus = ev.type === 'status_change';
+            const date = new Date(ev.created_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            return (
+              <div key={ev.id} className="relative pl-6 pb-4">
+                {!isLast && <div className="absolute left-[5px] top-4 bottom-0 w-px bg-gray-200" />}
+                <div className={`absolute left-0 top-1.5 w-3 h-3 rounded-full border-2 border-white ring-1 ${isStatus ? 'bg-gray-800 ring-gray-700' : 'bg-blue-400 ring-blue-300'}`} />
+                <p className={`text-xs font-medium ${isStatus ? 'text-gray-800' : 'text-blue-700'}`}>{ev.content}</p>
+                <p className="text-gray-400 text-[10px] mt-0.5">{date}</p>
+              </div>
+            );
+          })}
+
+          {/* Add comment */}
+          <div className="mt-2 space-y-2">
+            <textarea
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+              rows={2}
+              placeholder="Add a note (e.g. Called customer, confirmed address)…"
+              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg outline-none focus:border-gray-500 transition placeholder:text-gray-400 resize-none"
+              onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) addComment(); }}
+            />
+            <button onClick={addComment} disabled={addingComment || !newComment.trim()}
+              className="text-xs uppercase tracking-[0.15em] font-medium px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-black transition disabled:opacity-40">
+              {addingComment ? 'Adding…' : '+ Add Note'}
+            </button>
+          </div>
         </div>
 
         {/* PostEx Actions */}
@@ -833,7 +892,7 @@ function OrdersTab() {
         <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Admin</p>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="text-4xl italic text-gray-900" style={serif}>Order Management</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button onClick={() => exportCSV(selected.size > 0 ? orders.filter(o => selected.has(o.id)) : visible)}
               className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-xs uppercase tracking-[0.2em] border border-gray-300 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition">
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -907,9 +966,10 @@ function OrdersTab() {
         )}
       </div>
 
-      {/* Table */}
-      <div className="border border-gray-200 bg-white rounded-xl overflow-x-auto shadow-sm">
-        <div className="grid grid-cols-[32px_100px_1fr_120px_90px_100px_100px_110px_80px] gap-x-3 px-5 py-3.5 border-b border-gray-200 bg-gray-50">
+      {/* Table — desktop */}
+      <div className="border border-gray-200 bg-white rounded-xl shadow-sm overflow-hidden">
+        {/* Desktop header */}
+        <div className="hidden md:grid grid-cols-[32px_100px_1fr_120px_90px_100px_100px_110px_80px] gap-x-3 px-5 py-3.5 border-b border-gray-200 bg-gray-50">
           <input type="checkbox" checked={allSelected} onChange={toggleAll}
             className="accent-gray-800 mt-0.5 cursor-pointer" />
           {['ORDER', 'CUSTOMER', 'WHATSAPP', 'PAYMENT', 'TOTAL', 'DATE', 'STATUS', 'ACTION'].map(h => (
@@ -920,41 +980,70 @@ function OrdersTab() {
         {visible.length === 0
           ? <p className="text-gray-400 text-sm italic text-center py-12">No orders found.</p>
           : visible.map(o => (
-            <div key={o.id}
-              className={`grid grid-cols-[32px_100px_1fr_120px_90px_100px_100px_110px_80px] gap-x-3 items-center px-5 py-4 border-b border-gray-100 last:border-0 transition cursor-pointer ${selected.has(o.id) ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
-              onClick={() => toggleOne(o.id)}>
-              <input type="checkbox" checked={selected.has(o.id)} onChange={() => toggleOne(o.id)}
-                onClick={e => e.stopPropagation()}
-                className="accent-gray-800 mt-0.5 cursor-pointer" />
-              <div className="min-w-0">
-                <span className="text-gray-900 text-sm font-bold">{orderNum(o.id)}</span>
-                {o.postex_tracking && (
-                  <p className="text-[10px] text-indigo-500 font-mono truncate mt-0.5">{o.postex_tracking}</p>
-                )}
+            <div key={o.id} className={`border-b border-gray-100 last:border-0 transition ${selected.has(o.id) ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+
+              {/* Desktop row */}
+              <div
+                className="hidden md:grid grid-cols-[32px_100px_1fr_120px_90px_100px_100px_110px_80px] gap-x-3 items-center px-5 py-4 cursor-pointer"
+                onClick={() => toggleOne(o.id)}>
+                <input type="checkbox" checked={selected.has(o.id)} onChange={() => toggleOne(o.id)}
+                  onClick={e => e.stopPropagation()} className="accent-gray-800 mt-0.5 cursor-pointer" />
+                <div className="min-w-0">
+                  <span className="text-gray-900 text-sm font-bold">{orderNum(o.id)}</span>
+                  {o.postex_tracking && (
+                    <p className="text-[10px] text-indigo-500 font-mono truncate mt-0.5">{o.postex_tracking}</p>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-gray-800 text-sm truncate font-medium">{o.first_name} {o.last_name}</p>
+                  <p className="text-gray-400 text-xs truncate">{[o.address, o.city].filter(Boolean).join(', ')}</p>
+                  {o.postex_status && <p className="text-[10px] text-purple-600 font-semibold uppercase tracking-wide mt-0.5">🚚 PostEx: {o.postex_status}</p>}
+                  {o.notes && <p className="text-blue-500 text-xs break-words whitespace-normal mt-0.5">📝 {o.notes}</p>}
+                </div>
+                <span className="text-gray-500 text-sm">{o.phone}</span>
+                <span className={`text-xs px-2 py-1 rounded border font-medium ${o.payment_method === 'bank' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                  {o.payment_method === 'bank' ? 'Bank' : 'COD'}
+                </span>
+                <span className="text-gray-900 text-sm font-semibold">Rs. {o.total?.toLocaleString()}</span>
+                <span className="text-gray-500 text-sm">
+                  {new Date(o.created_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span className={`text-xs uppercase tracking-[0.12em] px-2 py-1 border rounded-lg text-center ${STATUS[o.status]?.cls || STATUS.pending.cls}`}>
+                  {STATUS[o.status]?.label || o.status}
+                </span>
+                <button onClick={e => { e.stopPropagation(); viewOrder(o); }}
+                  className="text-gray-400 hover:text-gray-900 text-xs uppercase tracking-[0.2em] transition font-medium text-center">
+                  View →
+                </button>
               </div>
-              <div className="min-w-0">
-                <p className="text-gray-800 text-sm truncate font-medium">{o.first_name} {o.last_name}</p>
-                <p className="text-gray-400 text-xs truncate">{[o.address, o.city].filter(Boolean).join(', ')}</p>
-                {o.postex_status && (
-                  <p className="text-[10px] text-purple-600 font-semibold uppercase tracking-wide mt-0.5">🚚 PostEx: {o.postex_status}</p>
-                )}
-                {o.notes && <p className="text-blue-500 text-xs break-words whitespace-normal mt-0.5">📝 {o.notes}</p>}
+
+              {/* Mobile card */}
+              <div className="md:hidden px-4 py-3.5 cursor-pointer" onClick={() => viewOrder(o)}>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div>
+                    <span className="text-gray-900 text-sm font-bold">{orderNum(o.id)}</span>
+                    {o.postex_tracking && <span className="text-[10px] text-indigo-500 font-mono ml-2">{o.postex_tracking}</span>}
+                  </div>
+                  <span className={`text-[10px] uppercase tracking-[0.1em] px-2 py-1 border rounded-lg shrink-0 ${STATUS[o.status]?.cls || STATUS.pending.cls}`}>
+                    {STATUS[o.status]?.label || o.status}
+                  </span>
+                </div>
+                <p className="text-gray-800 text-sm font-medium">{o.first_name} {o.last_name}</p>
+                <p className="text-gray-400 text-xs mt-0.5">{o.city} · {o.phone}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-900 text-sm font-semibold">Rs. {o.total?.toLocaleString()}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded border ${o.payment_method === 'bank' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                      {o.payment_method === 'bank' ? 'Bank' : 'COD'}
+                    </span>
+                  </div>
+                  <span className="text-gray-400 text-xs">
+                    {new Date(o.created_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                {o.postex_status && <p className="text-[10px] text-purple-600 font-semibold uppercase tracking-wide mt-1.5">🚚 {o.postex_status}</p>}
+                {o.notes && <p className="text-blue-500 text-xs mt-1">📝 {o.notes}</p>}
               </div>
-              <span className="text-gray-500 text-sm">{o.phone}</span>
-              <span className={`text-xs px-2 py-1 rounded border font-medium ${o.payment_method === 'bank' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
-                {o.payment_method === 'bank' ? 'Bank' : 'COD'}
-              </span>
-              <span className="text-gray-900 text-sm font-semibold">Rs. {o.total?.toLocaleString()}</span>
-              <span className="text-gray-500 text-sm">
-                {new Date(o.created_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
-              </span>
-              <span className={`text-xs uppercase tracking-[0.12em] px-2 py-1 border rounded-lg text-center ${STATUS[o.status]?.cls || STATUS.pending.cls}`}>
-                {STATUS[o.status]?.label || o.status}
-              </span>
-              <button onClick={e => { e.stopPropagation(); viewOrder(o); }}
-                className="text-gray-400 hover:text-gray-900 text-xs uppercase tracking-[0.2em] transition font-medium text-center">
-                View →
-              </button>
             </div>
           ))
         }
@@ -982,6 +1071,7 @@ const EMPTY = {
   features: '', included: '', how_it_works: '',
   quote: '', quote_label: '', upsell_slug: '', tag: '',
   in_stock: true, hidden: false,
+  bulk_discount_qty: '', bulk_discount_pct: '',
 };
 
 const EMPTY_VARIATIONS = [];
@@ -1078,8 +1168,10 @@ function ProductsTab() {
       quote_label:  p.quote_label || '',
       upsell_slug:  p.upsell_slug || '',
       tag:          p.tag         || '',
-      in_stock:     p.in_stock !== false,
-      hidden:       p.hidden === true,
+      in_stock:          p.in_stock !== false,
+      hidden:            p.hidden === true,
+      bulk_discount_qty: p.bulk_discount_qty ? String(p.bulk_discount_qty) : '',
+      bulk_discount_pct: p.bulk_discount_pct ? String(p.bulk_discount_pct) : '',
     });
     const imgs = p.images?.length ? p.images : [p.img].filter(Boolean);
     setPreview(imgs[0] || '');
@@ -1134,10 +1226,12 @@ function ProductsTab() {
         quote_label:   form.quote_label.trim(),
         upsell_slug:   form.upsell_slug.trim() || null,
         tag:           form.tag.trim() || null,
-        in_stock:      form.in_stock,
-        hidden:        form.hidden,
-        faq:           faq.filter(r => r.q.trim()),
-        variations:    variations.filter(v => v?.name?.trim()),
+        in_stock:          form.in_stock,
+        hidden:            form.hidden,
+        bulk_discount_qty: parseInt(form.bulk_discount_qty) || null,
+        bulk_discount_pct: parseInt(form.bulk_discount_pct) || null,
+        faq:               faq.filter(r => r.q.trim()),
+        variations:        variations.filter(v => v?.name?.trim()),
       };
       const { error } = editId
         ? await supabase.from('products').update(payload).eq('id', editId)
@@ -1238,6 +1332,26 @@ function ProductsTab() {
                   </select>
                 </div>
               </div>
+              {/* Bulk Discount */}
+              <div className="space-y-2">
+                <label className={LBL}>Bulk Discount <span className="normal-case tracking-normal text-gray-400 font-normal">(optional — leave blank to disable)</span></label>
+                <div className="flex gap-3 flex-wrap">
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-[10px] text-gray-400 uppercase tracking-[0.15em] mb-1">Min Qty to Unlock</label>
+                    <input type="number" min="2" value={form.bulk_discount_qty} onChange={f('bulk_discount_qty')}
+                      placeholder="e.g. 2" className={INP} />
+                  </div>
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-[10px] text-gray-400 uppercase tracking-[0.15em] mb-1">Discount %</label>
+                    <input type="number" min="1" max="100" value={form.bulk_discount_pct} onChange={f('bulk_discount_pct')}
+                      placeholder="e.g. 10" className={INP} />
+                  </div>
+                </div>
+                {form.bulk_discount_qty && form.bulk_discount_pct && (
+                  <p className="text-green-600 text-xs">Buy {form.bulk_discount_qty}+ → {form.bulk_discount_pct}% discount applied automatically</p>
+                )}
+              </div>
+
               {/* Stock & Visibility toggles */}
               <div className="flex flex-wrap gap-6 pt-1">
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
@@ -1334,7 +1448,7 @@ function ProductsTab() {
                 <h4 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold">Variations (optional)</h4>
               </div>
               <p className="text-gray-400 text-sm">Enter name, combination, tagline, and price for each variation.</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <input
                   type="text"
                   value={varInput}
@@ -1440,7 +1554,8 @@ function ProductsTab() {
 
       {/* Product list */}
       <div className="border border-gray-200 bg-white rounded-xl overflow-hidden shadow-sm">
-        <div className="grid grid-cols-[64px_1fr_100px_80px_200px] gap-x-4 px-5 py-3.5 border-b border-gray-200 bg-gray-50">
+        {/* Desktop header */}
+        <div className="hidden md:grid grid-cols-[64px_1fr_100px_80px_200px] gap-x-4 px-5 py-3.5 border-b border-gray-200 bg-gray-50">
           {['', 'PRODUCT', 'CATEGORY', 'PRICE', 'ACTIONS'].map(h => (
             <span key={h} className="text-xs text-gray-500 uppercase tracking-[0.2em] font-semibold">{h}</span>
           ))}
@@ -1448,46 +1563,79 @@ function ProductsTab() {
         {filtered.length === 0
           ? <p className="text-gray-400 text-sm italic text-center py-12">No products found.</p>
           : filtered.map(p => (
-            <div key={p.id} className="grid grid-cols-[64px_1fr_100px_80px_200px] gap-x-4 items-center px-5 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition">
-              <div className="relative w-12 h-12 border border-gray-200 bg-gray-50 rounded-lg">
-                {p.img
-                  ? <Image src={p.img} alt="" fill className="object-contain" unoptimized />
-                  : <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">📦</div>
-                }
-              </div>
-              <div className="min-w-0">
-                <p className="text-gray-800 text-sm font-medium truncate">{p.title}</p>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  {p.in_stock === false && (
-                    <span className="text-red-600 text-[10px] font-bold uppercase tracking-[0.1em] bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">Out of Stock</span>
-                  )}
-                  {p.hidden && (
-                    <span className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.1em] bg-gray-100 border border-gray-300 px-1.5 py-0.5 rounded">Hidden</span>
-                  )}
-                  {p.tag && (
-                    <span className="text-blue-600 text-[10px] font-bold uppercase tracking-[0.1em]">{p.tag}</span>
-                  )}
+            <div key={p.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition">
+
+              {/* Desktop row */}
+              <div className="hidden md:grid grid-cols-[64px_1fr_100px_80px_200px] gap-x-4 items-center px-5 py-4">
+                <div className="relative w-12 h-12 border border-gray-200 bg-gray-50 rounded-lg">
+                  {p.img ? <Image src={p.img} alt="" fill className="object-contain" unoptimized />
+                    : <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">📦</div>}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-gray-800 text-sm font-medium truncate">{p.title}</p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    {p.in_stock === false && <span className="text-red-600 text-[10px] font-bold uppercase tracking-[0.1em] bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">Out of Stock</span>}
+                    {p.hidden && <span className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.1em] bg-gray-100 border border-gray-300 px-1.5 py-0.5 rounded">Hidden</span>}
+                    {p.tag && <span className="text-blue-600 text-[10px] font-bold uppercase tracking-[0.1em]">{p.tag}</span>}
+                  </div>
+                </div>
+                <span className="text-gray-500 text-sm">{p.category}</span>
+                <span className="text-gray-900 text-sm font-semibold">{p.price}</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button onClick={() => quickToggle(p.id, 'in_stock', p.in_stock !== false)}
+                    className={`text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1.5 border rounded-lg transition ${p.in_stock !== false ? 'border-gray-300 text-gray-500 hover:border-red-300 hover:text-red-600' : 'border-green-300 text-green-700 bg-green-50'}`}>
+                    {p.in_stock !== false ? 'Stock ✓' : 'Restock'}
+                  </button>
+                  <button onClick={() => quickToggle(p.id, 'hidden', p.hidden)}
+                    className={`text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1.5 border rounded-lg transition ${!p.hidden ? 'border-gray-300 text-gray-500 hover:border-gray-500' : 'border-orange-300 text-orange-700 bg-orange-50'}`}>
+                    {p.hidden ? 'Show' : 'Hide'}
+                  </button>
+                  <button onClick={() => startEdit(p)}
+                    className="text-gray-600 hover:text-gray-900 text-[10px] uppercase tracking-[0.1em] border border-gray-300 hover:border-gray-500 px-2.5 py-1.5 rounded-lg transition font-medium">
+                    Edit
+                  </button>
+                  <button onClick={() => del(p.id, p.title)}
+                    className="text-red-500 hover:text-red-700 text-[10px] uppercase tracking-[0.1em] border border-red-200 hover:border-red-400 px-2.5 py-1.5 rounded-lg transition font-medium">
+                    Del
+                  </button>
                 </div>
               </div>
-              <span className="text-gray-500 text-sm">{p.category}</span>
-              <span className="text-gray-900 text-sm font-semibold">{p.price}</span>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <button onClick={() => quickToggle(p.id, 'in_stock', p.in_stock !== false)}
-                  className={`text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1.5 border rounded-lg transition ${p.in_stock !== false ? 'border-gray-300 text-gray-500 hover:border-red-300 hover:text-red-600' : 'border-green-300 text-green-700 bg-green-50'}`}>
-                  {p.in_stock !== false ? 'Stock ✓' : 'Restock'}
-                </button>
-                <button onClick={() => quickToggle(p.id, 'hidden', p.hidden)}
-                  className={`text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1.5 border rounded-lg transition ${!p.hidden ? 'border-gray-300 text-gray-500 hover:border-gray-500' : 'border-orange-300 text-orange-700 bg-orange-50'}`}>
-                  {p.hidden ? 'Show' : 'Hide'}
-                </button>
-                <button onClick={() => startEdit(p)}
-                  className="text-gray-600 hover:text-gray-900 text-[10px] uppercase tracking-[0.1em] border border-gray-300 hover:border-gray-500 px-2.5 py-1.5 rounded-lg transition font-medium">
-                  Edit
-                </button>
-                <button onClick={() => del(p.id, p.title)}
-                  className="text-red-500 hover:text-red-700 text-[10px] uppercase tracking-[0.1em] border border-red-200 hover:border-red-400 px-2.5 py-1.5 rounded-lg transition font-medium">
-                  Del
-                </button>
+
+              {/* Mobile card */}
+              <div className="md:hidden px-4 py-3.5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="relative w-14 h-14 shrink-0 border border-gray-200 bg-gray-50 rounded-lg">
+                    {p.img ? <Image src={p.img} alt="" fill className="object-contain" unoptimized />
+                      : <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">📦</div>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-800 text-sm font-medium leading-snug">{p.title}</p>
+                    <p className="text-gray-900 text-sm font-semibold mt-0.5">{p.price}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      {p.in_stock === false && <span className="text-red-600 text-[10px] font-bold uppercase bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">Out of Stock</span>}
+                      {p.hidden && <span className="text-gray-500 text-[10px] font-bold uppercase bg-gray-100 border border-gray-300 px-1.5 py-0.5 rounded">Hidden</span>}
+                      {p.tag && <span className="text-blue-600 text-[10px] font-bold uppercase">{p.tag}</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button onClick={() => quickToggle(p.id, 'in_stock', p.in_stock !== false)}
+                    className={`text-[10px] uppercase tracking-[0.1em] font-medium px-3 py-2 border rounded-lg transition ${p.in_stock !== false ? 'border-gray-300 text-gray-500' : 'border-green-300 text-green-700 bg-green-50'}`}>
+                    {p.in_stock !== false ? 'Stock ✓' : 'Restock'}
+                  </button>
+                  <button onClick={() => quickToggle(p.id, 'hidden', p.hidden)}
+                    className={`text-[10px] uppercase tracking-[0.1em] font-medium px-3 py-2 border rounded-lg transition ${!p.hidden ? 'border-gray-300 text-gray-500' : 'border-orange-300 text-orange-700 bg-orange-50'}`}>
+                    {p.hidden ? 'Show' : 'Hide'}
+                  </button>
+                  <button onClick={() => startEdit(p)}
+                    className="text-gray-600 text-[10px] uppercase tracking-[0.1em] border border-gray-300 px-3 py-2 rounded-lg transition font-medium">
+                    Edit
+                  </button>
+                  <button onClick={() => del(p.id, p.title)}
+                    className="text-red-500 text-[10px] uppercase tracking-[0.1em] border border-red-200 px-3 py-2 rounded-lg transition font-medium">
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))

@@ -28,6 +28,18 @@ function cartReducer(state, action) {
   }
 }
 
+// Returns effective unit price for an item (applies bulk discount if threshold met)
+export function itemEffectivePrice(item) {
+  if (
+    item.bulkDiscountQty >= 2 &&
+    item.bulkDiscountPct > 0 &&
+    item.qty >= item.bulkDiscountQty
+  ) {
+    return Math.round(item.numericPrice * (1 - item.bulkDiscountPct / 100));
+  }
+  return item.numericPrice;
+}
+
 export function CartProvider({ children }) {
   const [items, dispatch] = useReducer(cartReducer, []);
   const [open, setOpen] = useState(false);
@@ -44,7 +56,7 @@ export function CartProvider({ children }) {
   }
 
   const totalItems = items.reduce((s, i) => s + i.qty, 0);
-  const totalPrice = items.reduce((s, i) => s + i.numericPrice * i.qty, 0);
+  const totalPrice = items.reduce((s, i) => s + itemEffectivePrice(i) * i.qty, 0);
 
   return (
     <CartContext.Provider

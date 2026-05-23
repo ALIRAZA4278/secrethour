@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { useCart } from '../context/CartContext';
+import { useCart, itemEffectivePrice } from '../context/CartContext';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -76,8 +76,25 @@ export default function CartDrawer() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-cream text-sm leading-snug" style={serif}>{item.title}</h3>
-                    <p className="text-gold text-sm mt-0.5">{item.price}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      {(() => {
+                        const eff = itemEffectivePrice(item);
+                        const discountApplied = eff < item.numericPrice;
+                        return discountApplied ? (
+                          <>
+                            <p className="text-gold text-sm font-semibold">Rs. {eff.toLocaleString()}</p>
+                            <p className="text-cream/40 text-xs line-through">{item.price}</p>
+                            <span className="text-[10px] text-green-400 font-bold uppercase tracking-wide">{item.bulkDiscountPct}% off</span>
+                          </>
+                        ) : (
+                          <p className="text-gold text-sm">{item.price}</p>
+                        );
+                      })()}
+                    </div>
                     {item.variation && <p className="text-cream/45 text-[10px] uppercase tracking-[0.15em] mt-0.5">{item.variation}</p>}
+                    {item.bulkDiscountQty >= 2 && item.qty < item.bulkDiscountQty && (
+                      <p className="text-cream/40 text-[10px] mt-0.5">Buy {item.bulkDiscountQty}+ for {item.bulkDiscountPct}% off</p>
+                    )}
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={() => updateQty(item.slug, item.qty - 1)}
