@@ -334,7 +334,7 @@ export default function Home() {
               Discover your perfect Secret Hour experience — in less than a minute.
             </p>
             <Link
-              href="/shop"
+              href="/quiz"
               className="inline-block mt-2 border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-10 py-4 btn-glow transition-all duration-300 hover:bg-burgundy"
             >
               Start the Experience
