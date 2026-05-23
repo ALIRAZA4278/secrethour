@@ -248,21 +248,21 @@ export default function CheckoutPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
-                      <label className={labelCls}>Email</label>
+                      <label className={labelCls}>Email <span className="text-red-400">*</span></label>
                       <input type="email" required value={form.email} onChange={set('email')} className={inputCls} />
                     </div>
                     <div>
-                      <label className={labelCls}>WhatsApp Number</label>
+                      <label className={labelCls}>WhatsApp Number <span className="text-red-400">*</span></label>
                       <input type="tel" required value={form.phone} onChange={set('phone')} placeholder="+92 3xx xxxxxxx" className={inputCls} />
                     </div>
                   </div>
                   <div className="mt-4">
-                    <label className={labelCls}>Address</label>
+                    <label className={labelCls}>Address <span className="text-red-400">*</span></label>
                     <input type="text" required value={form.address} onChange={set('address')} className={inputCls} />
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                     <div>
-                      <label className={labelCls}>City</label>
+                      <label className={labelCls}>City <span className="text-red-400">*</span></label>
                       <input type="text" required value={form.city} onChange={set('city')} className={inputCls} />
                     </div>
                     <div>
