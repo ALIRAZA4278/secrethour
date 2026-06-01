@@ -21,12 +21,12 @@ const BASE_URL = 'https://secrethour.pk';
 export const metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'Secret Hour — Quiet Luxuries for Married Couples',
+    default: 'Couple Gifts in Pakistan — Card Games, Candles & Intimate Sets | Secret Hour',
     template: '%s | Secret Hour',
   },
   description:
-    'Quietly luxurious gifts crafted for married couples in Pakistan — card games, candles, and intimate sets to slow down, come closer, and reconnect.',
-  keywords: ['couple gifts pakistan', 'wedding night gift', 'intimacy gifts', 'bridal box pakistan', 'secret hour', 'card game for couples', 'midnight deck'],
+    'Secret Hour makes quiet luxuries for married couples in Pakistan — a couples card game, luxury candles, and intimate gift sets. Free delivery. Discreet packaging.',
+  keywords: ['couple gifts pakistan', 'wedding night gift pakistan', 'intimacy gifts pakistan', 'bridal box pakistan', 'card game for couples', 'midnight deck', 'secret hour'],
   authors: [{ name: 'Secret Hour', url: BASE_URL }],
   creator: 'Secret Hour',
   openGraph: {
@@ -34,14 +34,14 @@ export const metadata = {
     locale: 'en_PK',
     url: BASE_URL,
     siteName: 'Secret Hour',
-    title: 'Secret Hour — Quiet Luxuries for Married Couples',
-    description: 'Quietly luxurious gifts crafted for married couples in Pakistan — card games, candles, and intimate sets to slow down, come closer, and reconnect.',
-    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Secret Hour' }],
+    title: 'Couple Gifts in Pakistan — Card Games, Candles & Intimate Sets',
+    description: 'Quiet luxuries for married couples in Pakistan. The Midnight Deck card game, luxury candles, and intimate gift sets. Free delivery nationwide. Discreet packaging.',
+    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Secret Hour — couple gifts laid out on a dark silk surface' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Secret Hour — Quiet Luxuries for Married Couples',
-    description: 'Quietly luxurious gifts crafted for married couples in Pakistan.',
+    title: 'Couple Gifts in Pakistan — Card Games, Candles & Intimate Sets',
+    description: 'Quiet luxuries for married couples in Pakistan. Free delivery. Discreet packaging.',
     images: ['/og-image.jpg'],
   },
   icons: {
@@ -59,6 +59,27 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <head>
+        {/* Organization schema — all pages */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Secret Hour",
+          "url": "https://secrethour.pk",
+          "logo": "https://secrethour.pk/logo.png",
+          "description": "Quietly luxurious gifts crafted for married couples in Pakistan — card games, candles, and intimate sets to slow down, come closer, and reconnect.",
+          "foundingLocation": { "@type": "Place", "name": "Pakistan" },
+          "contactPoint": { "@type": "ContactPoint", "contactType": "customer service", "email": "info@secrethour.pk", "availableLanguage": ["English", "Urdu"] },
+          "sameAs": ["https://www.instagram.com/secrethour.pk", "https://www.facebook.com/people/Secret-Hour/61585460425456/"],
+          "areaServed": { "@type": "Country", "name": "Pakistan" }
+        }) }} />
+        {/* Website schema — homepage sitelinks */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Secret Hour",
+          "url": "https://secrethour.pk",
+          "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://secrethour.pk/shop?q={search_term_string}" }, "query-input": "required name=search_term_string" }
+        }) }} />
         {/* Google Tag Manager */}
         <Script id="gtm" strategy="afterInteractive">{`
           (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':

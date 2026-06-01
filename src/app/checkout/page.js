@@ -19,7 +19,6 @@ export default function CheckoutPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [trackingNumber, setTrackingNumber] = useState('');
   const [payment, setPayment] = useState('cod');
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
@@ -81,36 +80,6 @@ export default function CheckoutPage() {
         }))
       );
 
-      // Create PostEx shipment
-      let confirmedTracking = '';
-      try {
-        const postexRes = await fetch('/api/postex', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderRefNumber: order.id,
-            invoicePayment: total,
-            orderDetail: items.map((i) => `${i.title}${i.variation ? ` (${i.variation})` : ''} x${i.qty}`).join(', '),
-            customerName: form.fullName,
-            customerPhone: form.phone,
-            deliveryAddress: form.address,
-            cityName: form.city,
-            items: totalItems,
-          }),
-        });
-        const postexData = await postexRes.json();
-        if (postexData.trackingNumber) {
-          confirmedTracking = postexData.trackingNumber;
-          setTrackingNumber(postexData.trackingNumber);
-          await supabase
-            .from('orders')
-            .update({ postex_tracking: postexData.trackingNumber })
-            .eq('id', order.id);
-        }
-      } catch {
-        // PostEx failure shouldn't block order confirmation
-      }
-
       // Send confirmation email
       try {
         await fetch('/api/email', {
@@ -126,7 +95,6 @@ export default function CheckoutPage() {
             total,
             payment,
             city: form.city,
-            trackingNumber: confirmedTracking || undefined,
           }),
         });
       } catch {
@@ -182,14 +150,6 @@ export default function CheckoutPage() {
                 We will be in touch at <span className="text-cream/80">{form.email}</span>.
               </p>
             </div>
-
-            {trackingNumber && (
-              <div className="border border-gold-border/30 px-6 py-4 space-y-1">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-gold/60">PostEx Tracking Number</p>
-                <p className="text-gold text-lg font-mono tracking-widest">{trackingNumber}</p>
-                <p className="text-cream/35 text-[10px]">Use this to track your delivery</p>
-              </div>
-            )}
 
             <p className="text-cream/30 text-[10px] uppercase tracking-[0.2em]">
               Discreet Packaging · No Mention of Brand Outside

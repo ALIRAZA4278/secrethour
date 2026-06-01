@@ -73,8 +73,7 @@ export default function ProductPage({ params }) {
   const [qty, setQty] = useState(1);
   const [status, setStatus] = useState('loading'); // 'loading' | 'found' | 'notfound'
   const [reviews, setReviews] = useState([]);
-  const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, body: '' });
-  const [submitStatus, setSubmitStatus] = useState('idle');
+  const [reviewIdx, setReviewIdx] = useState(0);
 
   useEffect(() => {
     async function load() {
@@ -109,20 +108,11 @@ export default function ProductPage({ params }) {
       .then(({ data }) => setReviews(data || []));
   }, [slug]);
 
-  async function submitReview(e) {
-    e.preventDefault();
-    setSubmitStatus('submitting');
-    const { error } = await supabase.from('product_reviews').insert({
-      product_slug: slug,
-      reviewer_name: reviewForm.name,
-      rating: Number(reviewForm.rating),
-      body: reviewForm.body,
-    });
-    if (error) { setSubmitStatus('error'); } else {
-      setSubmitStatus('submitted');
-      setReviewForm({ name: '', rating: 5, body: '' });
-    }
-  }
+  useEffect(() => {
+    if (reviews.length < 2) return;
+    const t = setInterval(() => setReviewIdx(i => (i + 1) % reviews.length), 4000);
+    return () => clearInterval(t);
+  }, [reviews]);
 
   if (status === 'loading') {
     return (
@@ -471,87 +461,89 @@ export default function ProductPage({ params }) {
         </section>
       )}
 
-      {/* ── Reviews ── */}
-      <section className="py-16 px-4 md:px-6 border-t border-gold-border/20">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-gold/60 text-[10px] uppercase tracking-[0.35em] mb-2">Customer Voices</p>
-            <h2 className="text-2xl md:text-3xl italic text-cream" style={serif}>
-              What they <span className="text-gold-light">say</span>
-            </h2>
-            {reviews.length > 0 && (() => {
-              const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
-              return (
-                <div className="flex items-center justify-center gap-2 mt-3">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i} className={`text-base ${i < Math.round(avg) ? 'text-gold' : 'text-cream/20'}`}>★</span>
-                    ))}
-                  </div>
-                  <span className="text-cream/50 text-sm">{avg.toFixed(1)} · {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</span>
-                </div>
-              );
-            })()}
-          </div>
+      {/* ── Reviews Slider ── */}
+      {reviews.length > 0 && (
+        <section className="py-16 px-4 md:px-6 border-t border-gold-border/20">
+          <div className="max-w-2xl mx-auto">
 
-          {reviews.length > 0 ? (
-            <div className="space-y-4 mb-10">
-              {reviews.map((r) => (
-                <div key={r.id} className="border border-gold-border/40 p-5" style={{ background: 'rgba(11,10,9,0.5)' }}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="text-cream text-sm font-medium">{r.reviewer_name}</p>
-                      <div className="flex mt-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <span key={i} className={`text-sm ${i < r.rating ? 'text-gold' : 'text-cream/20'}`}>★</span>
-                        ))}
-                      </div>
+            {/* Header */}
+            <div className="text-center mb-10">
+              <p className="text-gold/60 text-[10px] uppercase tracking-[0.35em] mb-2">Customer Voices</p>
+              <h2 className="text-2xl md:text-3xl italic text-cream" style={serif}>
+                What they <span className="text-gold-light">say</span>
+              </h2>
+              {(() => {
+                const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+                return (
+                  <div className="flex items-center justify-center gap-2 mt-3">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className={`text-base ${i < Math.round(avg) ? 'text-gold' : 'text-cream/20'}`}>★</span>
+                      ))}
                     </div>
-                    <span className="text-cream/30 text-xs">
-                      {new Date(r.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </span>
+                    <span className="text-cream/50 text-sm">{avg.toFixed(1)} · {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</span>
                   </div>
-                  <p className="text-cream/65 text-sm leading-relaxed italic" style={serif}>&ldquo;{r.body}&rdquo;</p>
-                </div>
-              ))}
+                );
+              })()}
             </div>
-          ) : (
-            <p className="text-cream/40 italic text-sm text-center mb-10" style={serif}>Be the first to share your experience.</p>
-          )}
 
-          {submitStatus === 'submitted' ? (
-            <div className="border border-gold-border/40 p-6 text-center" style={{ background: 'rgba(11,10,9,0.5)' }}>
-              <p className="text-gold italic text-sm" style={serif}>Thank you — your review will appear after approval.</p>
-              <button type="button" onClick={() => setSubmitStatus('idle')} className="text-cream/40 text-[10px] uppercase tracking-[0.2em] mt-3 hover:text-gold transition-colors">Write Another</button>
-            </div>
-          ) : (
-            <form onSubmit={submitReview} className="border border-gold-border/40 p-6 space-y-4" style={{ background: 'rgba(11,10,9,0.5)' }}>
-              <h3 className="text-cream italic text-lg" style={serif}>Write a Review</h3>
-              <div>
-                <label className="block text-cream/50 text-[10px] uppercase tracking-[0.2em] mb-1.5">Your Name</label>
-                <input required value={reviewForm.name} onChange={e => setReviewForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Fatima A." className="w-full px-3.5 py-2.5 bg-black/40 border border-gold-border/40 text-cream text-sm outline-none focus:border-gold/60 transition placeholder:text-cream/25" />
+            {/* Slide */}
+            <div className="relative overflow-hidden">
+              <div
+                className="flex transition-transform duration-700 ease-in-out"
+                style={{ transform: `translateX(-${reviewIdx * 100}%)` }}
+              >
+                {reviews.map((r) => (
+                  <div key={r.id} className="w-full shrink-0 border border-gold-border/40 p-7 md:p-10 text-center" style={{ background: 'rgba(11,10,9,0.5)' }}>
+                    <p className="text-cream/75 text-base md:text-lg leading-relaxed italic mb-6" style={serif}>&ldquo;{r.body}&rdquo;</p>
+                    <div className="flex justify-center mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className={`text-sm ${i < r.rating ? 'text-gold' : 'text-cream/20'}`}>★</span>
+                      ))}
+                    </div>
+                    <p className="text-cream/50 text-xs uppercase tracking-[0.2em]">{r.reviewer_name}</p>
+                  </div>
+                ))}
               </div>
-              <div>
-                <label className="block text-cream/50 text-[10px] uppercase tracking-[0.2em] mb-1.5">Rating</label>
+            </div>
+
+            {/* Controls */}
+            {reviews.length > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <button
+                  onClick={() => setReviewIdx(i => (i - 1 + reviews.length) % reviews.length)}
+                  className="text-cream/40 hover:text-gold transition-colors"
+                  aria-label="Previous review"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 19.5 8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
                 <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map(n => (
-                    <button key={n} type="button" onClick={() => setReviewForm(f => ({ ...f, rating: n }))} className={`text-2xl transition-colors ${n <= reviewForm.rating ? 'text-gold' : 'text-cream/20 hover:text-gold/50'}`}>★</button>
+                  {reviews.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setReviewIdx(i)}
+                      className={`transition-all duration-300 rounded-full ${i === reviewIdx ? 'w-5 h-1.5 bg-gold' : 'w-1.5 h-1.5 bg-cream/20 hover:bg-cream/40'}`}
+                      aria-label={`Review ${i + 1}`}
+                    />
                   ))}
                 </div>
+                <button
+                  onClick={() => setReviewIdx(i => (i + 1) % reviews.length)}
+                  className="text-cream/40 hover:text-gold transition-colors"
+                  aria-label="Next review"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                  </svg>
+                </button>
               </div>
-              <div>
-                <label className="block text-cream/50 text-[10px] uppercase tracking-[0.2em] mb-1.5">Your Review</label>
-                <textarea required rows={4} value={reviewForm.body} onChange={e => setReviewForm(f => ({ ...f, body: e.target.value }))} placeholder="Share your honest experience..." className="w-full px-3.5 py-2.5 bg-black/40 border border-gold-border/40 text-cream text-sm outline-none focus:border-gold/60 transition placeholder:text-cream/25 resize-none" />
-              </div>
-              {submitStatus === 'error' && <p className="text-red-400 text-xs">Something went wrong. Please try again.</p>}
-              <button type="submit" disabled={submitStatus === 'submitting'} className="bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.2em] px-6 py-3 btn-glow transition-all disabled:opacity-50">
-                {submitStatus === 'submitting' ? 'Submitting…' : 'Submit Review'}
-              </button>
-              <p className="text-cream/30 text-[10px]">Reviews are approved before they appear.</p>
-            </form>
-          )}
-        </div>
-      </section>
+            )}
+
+          </div>
+        </section>
+      )}
 
       {/* Spacer for mobile sticky bar */}
       <div className="h-20 lg:h-0" />

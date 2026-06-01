@@ -155,6 +155,17 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
   const [events,        setEvents]        = useState([]);
   const [newComment,    setNewComment]    = useState('');
   const [addingComment, setAddingComment] = useState(false);
+  const [editing,       setEditing]       = useState(false);
+  const [editForm,      setEditForm]      = useState({
+    first_name: order?.first_name || '',
+    last_name:  order?.last_name  || '',
+    phone:      order?.phone      || '',
+    email:      order?.email      || '',
+    address:    order?.address    || '',
+    city:       order?.city       || '',
+  });
+  const [savingOrder,   setSavingOrder]   = useState(false);
+  const [bookingPostex, setBookingPostex] = useState(false);
 
   async function loadEvents() {
     const { data } = await supabase
@@ -168,6 +179,15 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
   useEffect(() => {
     setStatus(order?.status || 'pending');
     setNewComment('');
+    setEditing(false);
+    setEditForm({
+      first_name: order?.first_name || '',
+      last_name:  order?.last_name  || '',
+      phone:      order?.phone      || '',
+      email:      order?.email      || '',
+      address:    order?.address    || '',
+      city:       order?.city       || '',
+    });
     if (!order) return;
     loadEvents();
     setCustLoading(true);
@@ -220,6 +240,66 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
     setNewComment('');
     setAddingComment(false);
     loadEvents();
+  }
+
+  async function saveOrder() {
+    setSavingOrder(true);
+    await supabase.from('orders').update({
+      first_name: editForm.first_name,
+      last_name:  editForm.last_name,
+      phone:      editForm.phone,
+      email:      editForm.email,
+      address:    editForm.address,
+      city:       editForm.city,
+    }).eq('id', order.id);
+    await supabase.from('order_events').insert({
+      order_id: order.id,
+      type: 'comment',
+      content: 'Order details updated by admin',
+    });
+    setSavingOrder(false);
+    setEditing(false);
+    loadEvents();
+  }
+
+  async function bookOnPostEx() {
+    setBookingPostex(true);
+    try {
+      const customerName = `${editForm.first_name} ${editForm.last_name}`.trim();
+      const totalItems   = items?.reduce((s, i) => s + i.quantity, 0) || 1;
+      const orderDetail  = items?.map(i => `${i.product_title}${i.variation ? ` (${i.variation})` : ''} x${i.quantity}`).join(', ') || '';
+      const res  = await fetch('/api/postex', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderRefNumber:  order.id,
+          invoicePayment:  order.total,
+          orderDetail,
+          customerName,
+          customerPhone:   editForm.phone,
+          deliveryAddress: editForm.address,
+          cityName:        editForm.city,
+          items:           totalItems,
+        }),
+      });
+      const data = await res.json();
+      if (data.trackingNumber) {
+        await supabase.from('orders').update({ postex_tracking: data.trackingNumber }).eq('id', order.id);
+        await supabase.from('order_events').insert({
+          order_id: order.id,
+          type: 'status_change',
+          content: `Booked on PostEx — Tracking: ${data.trackingNumber}`,
+        });
+        onStatusChange(order.id, { postex_tracking: data.trackingNumber });
+        loadEvents();
+        setPostexInfo({ type: 'track', data: { transactionStatus: `Booked — ${data.trackingNumber}` } });
+      } else {
+        setPostexInfo({ type: 'track', error: data.message || JSON.stringify(data) });
+      }
+    } catch (err) {
+      setPostexInfo({ type: 'track', error: err.message });
+    }
+    setBookingPostex(false);
   }
 
   async function trackOrder() {
@@ -349,23 +429,68 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
 
         {/* Customer details */}
         <div className="px-6 py-5 border-b border-gray-200 space-y-3">
-          {[
-            ['CUSTOMER', name],
-            ['WHATSAPP', order.phone],
-            ['EMAIL',    order.email],
-            ['ADDRESS',  order.address],
-            ['CITY',     order.city],
-            ['PAYMENT',  payment],
-            ['DATE',     new Date(order.created_at).toLocaleString('en-PK', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })],
-            ['POSTEX TRACKING', order.postex_tracking],
-            ['POSTEX STATUS',   order.postex_status],
-            ['POSTEX UPDATED',  order.postex_updated_at ? new Date(order.postex_updated_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null],
-          ].map(([l, v]) => v ? (
-            <div key={l} className="flex justify-between gap-4">
-              <span className="text-gray-400 text-xs uppercase tracking-[0.2em] shrink-0">{l}</span>
-              <span className="text-gray-800 text-sm text-right">{v}</span>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-gray-400 text-xs uppercase tracking-[0.2em]">Customer Details</span>
+            {!editing ? (
+              <button onClick={() => setEditing(true)} className="text-xs text-blue-600 hover:text-blue-800 transition font-medium uppercase tracking-[0.12em]">Edit</button>
+            ) : (
+              <div className="flex gap-3">
+                <button onClick={() => setEditing(false)} className="text-xs text-gray-400 hover:text-gray-700 transition uppercase tracking-[0.12em]">Cancel</button>
+                <button onClick={saveOrder} disabled={savingOrder} className="text-xs text-white bg-gray-900 hover:bg-black px-3 py-1 rounded transition disabled:opacity-50 uppercase tracking-[0.12em]">{savingOrder ? 'Saving…' : 'Save'}</button>
+              </div>
+            )}
+          </div>
+
+          {editing ? (
+            <div className="space-y-3 pt-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">First Name</p>
+                  <input value={editForm.first_name} onChange={e => setEditForm(f => ({...f, first_name: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" />
+                </div>
+                <div>
+                  <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">Last Name</p>
+                  <input value={editForm.last_name} onChange={e => setEditForm(f => ({...f, last_name: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" />
+                </div>
+              </div>
+              <div>
+                <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">WhatsApp</p>
+                <input value={editForm.phone} onChange={e => setEditForm(f => ({...f, phone: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" />
+              </div>
+              <div>
+                <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">Email</p>
+                <input value={editForm.email} onChange={e => setEditForm(f => ({...f, email: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" />
+              </div>
+              <div>
+                <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">Address</p>
+                <input value={editForm.address} onChange={e => setEditForm(f => ({...f, address: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" />
+              </div>
+              <div>
+                <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">City</p>
+                <input value={editForm.city} onChange={e => setEditForm(f => ({...f, city: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" />
+              </div>
             </div>
-          ) : null)}
+          ) : (
+            <>
+              {[
+                ['CUSTOMER', name],
+                ['WHATSAPP', order.phone],
+                ['EMAIL',    order.email],
+                ['ADDRESS',  order.address],
+                ['CITY',     order.city],
+                ['PAYMENT',  payment],
+                ['DATE',     new Date(order.created_at).toLocaleString('en-PK', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })],
+                ['POSTEX TRACKING', order.postex_tracking],
+                ['POSTEX STATUS',   order.postex_status],
+                ['POSTEX UPDATED',  order.postex_updated_at ? new Date(order.postex_updated_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null],
+              ].map(([l, v]) => v ? (
+                <div key={l} className="flex justify-between gap-4">
+                  <span className="text-gray-400 text-xs uppercase tracking-[0.2em] shrink-0">{l}</span>
+                  <span className="text-gray-800 text-sm text-right">{v}</span>
+                </div>
+              ) : null)}
+            </>
+          )}
 
           {/* Customer order history */}
           {!custLoading && totalOrders > 0 && (
@@ -425,6 +550,27 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
               <span className="italic text-gray-900 text-base" style={serif}>Total</span>
               <span className="text-gray-900 font-bold text-base" style={serif}>Rs. {order.total?.toLocaleString()}</span>
             </div>
+          </div>
+        )}
+
+        {/* Book on PostEx */}
+        {!order.postex_tracking && (
+          <div className="px-6 py-5 border-b border-gray-200">
+            <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-3">BOOK ON POSTEX</p>
+            <p className="text-gray-500 text-xs mb-4">Order details ke sath PostEx par shipment book karo. Edit karne ke baad save karein phir book karein.</p>
+            <button
+              onClick={bookOnPostEx}
+              disabled={bookingPostex}
+              className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white text-xs uppercase tracking-[0.2em] py-3.5 rounded-lg hover:bg-black transition disabled:opacity-50"
+            >
+              {bookingPostex ? 'Booking…' : 'Book on PostEx'}
+            </button>
+            {postexInfo?.error && (
+              <p className="text-red-500 text-xs mt-2">{postexInfo.error}</p>
+            )}
+            {postexInfo?.data?.transactionStatus?.startsWith('Booked') && (
+              <p className="text-green-600 text-xs mt-2 font-medium">{postexInfo.data.transactionStatus}</p>
+            )}
           </div>
         )}
 

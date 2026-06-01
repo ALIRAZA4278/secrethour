@@ -1,0 +1,164 @@
+<!--
+=======================================================
+  SECRET HOUR — IMAGE OPTIMIZATION GUIDE
+  Fix all image issues for SEO + speed
+=======================================================
+-->
+
+
+<!-- ====================================================
+  STEP 1 — RENAME IMAGE FILES
+  Current problem: spaces, double extensions, generic names
+  Rule: lowercase, hyphens only, no spaces, no double extensions
+
+  RENAME THESE FILES:
+  /Banners/1 mob.jpg.jpeg        → /banners/banner-couple-mobile-1.jpg
+  /Banners/2 mob.jpg.jpeg        → /banners/banner-couple-mobile-2.jpg
+  /assets/hero-couple-CSWWAnnc.jpg → /assets/hero-couple-home.jpg
+  /logo.png                      → keep as-is (already fine)
+===================================================== -->
+
+
+<!-- ====================================================
+  STEP 2 — CONVERT TO WEBP
+  WebP is 25–35% smaller than JPEG at same quality.
+  Keep JPG as fallback using <picture> tag.
+  Target file sizes:
+  - Hero images: under 200KB
+  - Product images: under 100KB
+  - Thumbnails: under 40KB
+===================================================== -->
+
+<!-- CORRECT WAY to serve WebP with JPG fallback: -->
+<picture>
+  <source srcset="/assets/hero-couple-home.webp" type="image/webp">
+  <img
+    src="/assets/hero-couple-home.jpg"
+    alt="Married couple spending a quiet evening together with Secret Hour products"
+    width="1440"
+    height="800"
+    loading="eager"
+    fetchpriority="high"
+  >
+</picture>
+
+<!-- For below-fold images, use lazy loading: -->
+<picture>
+  <source srcset="/assets/sh-card-game.webp" type="image/webp">
+  <img
+    src="/assets/sh-card-game.jpg"
+    alt="The Midnight Deck couples card game — matte black box with gold detail by Secret Hour"
+    width="600"
+    height="600"
+    loading="lazy"
+  >
+</picture>
+
+
+<!-- ====================================================
+  STEP 3 — ALT TEXT FOR ALL IMAGES
+  Copy-paste these alt attributes into your image tags.
+===================================================== -->
+
+<!-- Homepage hero image -->
+alt="Married couple spending a quiet evening together at home with Secret Hour"
+
+<!-- Homepage mobile banner 1 -->
+alt="Secret Hour couple gift collection — intimate products for married couples in Pakistan"
+
+<!-- Homepage mobile banner 2 -->
+alt="The Midnight Deck card game and Secret Hour bridal box laid on dark silk"
+
+<!-- The Midnight Deck product image -->
+alt="The Midnight Deck couples card game — matte black box with soft gold detailing by Secret Hour"
+
+<!-- Midnight Glow Candle product image -->
+alt="Midnight Glow Candle by Secret Hour — luxury scented candle for couples"
+
+<!-- Silk Bond product image -->
+alt="Silk Bond intimate set by Secret Hour Pakistan"
+
+<!-- Bridal Box product image -->
+alt="Secret Hour Bridal Box — luxury wedding night gift set for couples in Pakistan"
+
+<!-- Logo in header -->
+alt="Secret Hour logo"
+
+<!-- Logo in footer -->
+alt="Secret Hour — quiet luxuries for married couples"
+
+<!-- Silk background texture (decorative) -->
+alt=""
+<!-- Note: purely decorative images use empty alt="" — this is correct and intentional -->
+
+
+<!-- ====================================================
+  STEP 4 — ADD WIDTH AND HEIGHT TO PREVENT CLS
+  Always set explicit width/height on img tags.
+  This prevents Cumulative Layout Shift (CLS) — a Core Web Vital.
+  Use the actual pixel dimensions of the image.
+  CLS target: under 0.1
+
+  Example (replace with your actual dimensions):
+===================================================== -->
+<img
+  src="/assets/sh-card-game.webp"
+  alt="The Midnight Deck couples card game — matte black box with gold detail"
+  width="600"
+  height="600"
+  loading="lazy"
+>
+
+
+<!-- ====================================================
+  STEP 5 — LAZY LOADING RULES
+  - First image visible on load (hero): loading="eager" + fetchpriority="high"
+  - All images below the fold: loading="lazy"
+  - This alone can improve LCP by 0.5–1s
+===================================================== -->
+
+<!-- Hero (above fold) -->
+<img src="..." loading="eager" fetchpriority="high" ...>
+
+<!-- All other images (below fold) -->
+<img src="..." loading="lazy" ...>
+
+
+<!-- ====================================================
+  STEP 6 — FREE TOOLS TO COMPRESS IMAGES
+  Run your images through one of these before uploading:
+
+  - Squoosh (free, browser-based): https://squoosh.app
+    → Use WebP, quality 80, enable mozjpeg
+  - TinyPNG (free up to 500/month): https://tinypng.com
+  - Cloudflare Images (if you add Cloudflare):
+    → Automatically serves WebP to supported browsers
+    → No code changes needed
+
+  Target final sizes:
+  - Hero: < 200 KB
+  - Product images: < 100 KB
+  - Background textures: < 50 KB
+===================================================== -->
+
+
+<!-- ====================================================
+  STEP 7 — CLOUDFLARE SETUP (FREE SPEED WIN)
+  Cloudflare free tier gives you:
+  - Automatic WebP conversion
+  - Brotli compression (faster than gzip)
+  - CDN edge caching across Pakistan
+  - Free SSL
+  - DDoS protection
+
+  Setup (takes ~15 minutes):
+  1. Go to cloudflare.com → Add a site → enter secrethour.pk
+  2. Copy the nameservers Cloudflare gives you
+  3. Go to your domain registrar (pknic or whoever hosts .pk)
+  4. Replace existing nameservers with Cloudflare's
+  5. In Cloudflare dashboard → Speed → Optimization:
+     → Enable "Polish" (auto WebP)
+     → Enable "Brotli"
+     → Enable "Rocket Loader" (defers non-critical JS)
+  6. In Caching → Cache Rules: cache static assets for 1 year
+===================================================== -->

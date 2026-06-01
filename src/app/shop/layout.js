@@ -1,10 +1,17 @@
 export const metadata = {
-  title: 'Shop',
-  description: 'Browse Secret Hour\'s full collection — card games, candles, bridal boxes, and intimate sets crafted for married couples in Pakistan.',
+  title: 'Shop Couple Gifts Pakistan — Secret Hour Collection',
+  description: 'Browse the full Secret Hour collection — The Midnight Deck couples card game, the Bridal Box, Midnight Glow Candle, and more. Free delivery across Pakistan.',
   openGraph: {
-    title: 'Shop — Secret Hour',
-    description: 'Browse our full collection of quiet luxuries for married couples.',
+    title: 'Shop Couple Gifts Pakistan — Secret Hour Collection',
+    description: 'Browse the full Secret Hour collection — couples card games, luxury candles, bridal boxes, and intimate sets. Free delivery across Pakistan.',
     url: 'https://secrethour.pk/shop',
+    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Secret Hour product collection' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Shop Couple Gifts Pakistan — Secret Hour Collection',
+    description: 'The full Secret Hour collection. Free delivery across Pakistan.',
+    images: ['/og-image.jpg'],
   },
   alternates: { canonical: 'https://secrethour.pk/shop' },
 };
