@@ -31,11 +31,9 @@ export default function ThankYouPage() {
           </div>
           <div className="w-10 h-px bg-gold-border mx-auto" />
           <div className="space-y-3">
-            {name && (
-              <p className="text-cream italic text-base leading-relaxed" style={serif}>
-                Thank you, {name}.
-              </p>
-            )}
+            <p className="text-cream italic text-base leading-relaxed" style={serif}>
+              Thank you{name ? `, ${name}` : ''}.
+            </p>
             <p className="text-cream/55 text-sm leading-relaxed" style={serif}>
               Your order has been received and is being prepared.
               {email && (

@@ -48,6 +48,13 @@ export default async function ShopPage() {
           <p className="text-cream/55 italic text-sm max-w-md mx-auto" style={serif}>
             Quiet luxuries, made for the hours that belong only to the two of you.
           </p>
+          <p className="text-cream/40 text-xs max-w-xl mx-auto mt-4 leading-relaxed">
+            Secret Hour makes thoughtfully designed products for married couples across Pakistan — from a{' '}
+            <strong className="text-cream/60">couples card game</strong> and{' '}
+            <strong className="text-cream/60">luxury scented candles</strong> to{' '}
+            <strong className="text-cream/60">bridal gift sets</strong> and intimate collections.
+            Every order ships free across Pakistan in discreet, unmarked packaging.
+          </p>
         </section>
 
         {/* Products grid */}

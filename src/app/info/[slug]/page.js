@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
-import FaqAccordion from '../FaqAccordion';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 
@@ -126,9 +125,23 @@ export default async function PolicyPage({ params }) {
             <p className="text-gold text-[10px] uppercase tracking-[0.3em] mb-3">Secret Hour</p>
             <h1 className="text-3xl md:text-5xl italic text-gold" style={serif}>Frequently Asked</h1>
           </div>
-          <div className="max-w-2xl mx-auto border border-gold-border/50 px-8 md:px-12 py-4"
+          <div className="max-w-2xl mx-auto border border-gold-border/50 px-8 md:px-12 py-4 divide-y divide-gold-border/20"
             style={{ background: 'rgba(11,10,9,0.6)' }}>
-            <FaqAccordion items={FAQ_ITEMS} />
+            {FAQ_ITEMS.map((item, i) => (
+              <details key={i} className="group py-1">
+                <summary className="flex items-center justify-between py-4 cursor-pointer list-none text-left gap-4">
+                  <span className="italic text-cream text-base md:text-lg leading-snug" style={serif}>
+                    {item.q}
+                  </span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor"
+                    className="text-gold shrink-0 transition-transform duration-300 group-open:rotate-180">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </summary>
+                <p className="pb-5 text-cream/65 text-sm leading-relaxed">{item.a}</p>
+              </details>
+            ))}
           </div>
           <div className="text-center mt-14">
             <Link href="/contact"

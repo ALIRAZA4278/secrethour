@@ -767,7 +767,12 @@ function OrdersChart({ orders }) {
   for (const d of days) byDay[d] = { orders: 0, revenue: 0 };
   for (const o of orders) {
     const d = o.created_at?.slice(0, 10);
-    if (byDay[d]) { byDay[d].orders += 1; byDay[d].revenue += o.total || 0; }
+    if (byDay[d]) {
+      byDay[d].orders += 1;
+      if (!['cancelled', 'returned'].includes(o.status)) {
+        byDay[d].revenue += Number(o.total) || 0;
+      }
+    }
   }
 
   const values = days.map(d => byDay[d][mode]);
@@ -857,7 +862,7 @@ function Dashboard() {
         const delivered = orders.filter(o => o.status === 'delivered').length;
         setStats({
           total:        orders.length,
-          revenue:      orders.reduce((s, o) => s + (o.total || 0), 0),
+          revenue:      orders.filter(o => !['cancelled','returned'].includes(o.status)).reduce((s, o) => s + (Number(o.total) || 0), 0),
           pending:      orders.filter(o => o.status === 'pending').length,
           deliveryRate: orders.length ? Math.round((delivered / orders.length) * 100) : 0,
         });
@@ -1132,7 +1137,7 @@ function OrdersTab() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: 'Total Orders',  value: orders.length },
-          { label: 'Revenue',       value: `Rs. ${orders.reduce((s, o) => s + (o.total || 0), 0).toLocaleString()}` },
+          { label: 'Revenue',       value: `Rs. ${orders.filter(o => !['cancelled','returned'].includes(o.status)).reduce((s, o) => s + (Number(o.total) || 0), 0).toLocaleString()}` },
           { label: 'Pending',       value: orders.filter(o => o.status === 'pending').length },
           { label: 'Delivery Rate', value: orders.length ? `${Math.round((orders.filter(o => o.status === 'delivered').length / orders.length) * 100)}%` : '0%' },
         ].map(s => (

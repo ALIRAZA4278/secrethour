@@ -45,7 +45,8 @@
       "Bash(node add-postex-column.mjs)",
       "Bash(node test-postex.mjs)",
       "Bash(node get-pickup-address.mjs)",
-      "Bash(node test-email2.mjs)"
+      "Bash(node test-email2.mjs)",
+      "Bash(python *)"
     ]
   }
 }
