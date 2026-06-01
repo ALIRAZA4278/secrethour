@@ -112,7 +112,7 @@ export default function CheckoutPage() {
   }
 
   /* ── Empty cart ── */
-  if (totalItems === 0 && !submitted) {
+  if (totalItems === 0) {
     return (
       <div className="min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26), rgb(11,10,9) 60%)' }}>
         <Navbar />
