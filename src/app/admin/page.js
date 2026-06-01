@@ -113,7 +113,7 @@ function Login({ onLogin }) {
             <label className={LBL}>Email</label>
             <input type="email" value={email} autoFocus required
               onChange={e => { setEmail(e.target.value); setError(''); }}
-              placeholder="admin@secrethour.pk" className={INP} />
+              placeholder="admin@email" className={INP} />
           </div>
           <div>
             <label className={LBL}>Password</label>
@@ -146,7 +146,7 @@ function Login({ onLogin }) {
 /* ═══════════════════════════════════════════
    ORDER DRAWER
 ═══════════════════════════════════════════ */
-function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }) {
+function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustomerFilter }) {
   const [status,        setStatus]        = useState(order?.status || 'pending');
   const [custOrders,    setCustOrders]    = useState([]);
   const [custLoading,   setCustLoading]   = useState(false);
@@ -300,6 +300,13 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
       setPostexInfo({ type: 'track', error: err.message });
     }
     setBookingPostex(false);
+  }
+
+  async function deleteOrder() {
+    if (!window.confirm(`Delete order ${orderNum(order.id)}? This cannot be undone.`)) return;
+    await supabase.from('orders').delete().eq('id', order.id);
+    onDelete?.(order.id);
+    onClose();
   }
 
   async function trackOrder() {
@@ -713,7 +720,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
         )}
 
         {/* WhatsApp send */}
-        <div className="px-6 py-5">
+        <div className="px-6 py-5 border-b border-gray-200">
           <button
             onClick={() => sendWhatsApp(order, status, items, order.total)}
             className="w-full flex items-center justify-center gap-2.5 bg-green-600 text-white text-xs uppercase tracking-[0.25em] py-4 rounded-lg hover:bg-green-700 transition-all">
@@ -725,6 +732,15 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onCustomerFilter }
           <p className="text-gray-400 text-xs text-center mt-2 uppercase tracking-[0.15em]">
             Opens WhatsApp for {order.phone || 'customer'}
           </p>
+        </div>
+
+        {/* Delete order */}
+        <div className="px-6 py-5">
+          <button
+            onClick={deleteOrder}
+            className="w-full text-xs uppercase tracking-[0.2em] font-medium py-3 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 rounded-lg transition">
+            Delete Order
+          </button>
         </div>
       </div>
     </>
@@ -1025,6 +1041,20 @@ function OrdersTab() {
     setBulkStatus('');
   }
 
+  async function deleteSelectedOrders() {
+    if (selected.size === 0) return;
+    if (!window.confirm(`Delete ${selected.size} order(s)? This cannot be undone.`)) return;
+    const ids = [...selected];
+    await supabase.from('orders').delete().in('id', ids);
+    setOrders(prev => prev.filter(o => !selected.has(o.id)));
+    setSelected(new Set());
+  }
+
+  function handleDeleteOrder(id) {
+    setOrders(prev => prev.filter(o => o.id !== id));
+    setSelectedOrder(null);
+  }
+
   async function generateLoadSheet() {
     const trackingNumbers = visible
       .filter(o => o.postex_tracking)
@@ -1080,6 +1110,13 @@ function OrdersTab() {
               </svg>
               {syncingPostex ? 'Syncing PostEx…' : 'Sync PostEx'}
             </button>
+            <button onClick={generateLoadSheet} disabled={sheetLoading}
+              className="flex items-center gap-1.5 text-blue-600 hover:text-blue-900 text-xs uppercase tracking-[0.2em] border border-blue-300 px-3.5 py-2 rounded-lg hover:bg-blue-50 transition disabled:opacity-50">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+              </svg>
+              {sheetLoading ? 'Loading…' : 'Load Sheet'}
+            </button>
             <button onClick={load}
               className="flex items-center gap-1.5 text-gray-500 hover:text-gray-900 text-xs uppercase tracking-[0.2em] border border-gray-300 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition">
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1133,6 +1170,10 @@ function OrdersTab() {
             <button onClick={applyBulkStatus} disabled={!bulkStatus}
               className="bg-gray-900 text-white text-xs uppercase tracking-[0.15em] px-3.5 py-2 rounded-lg hover:bg-black transition disabled:opacity-40">
               Apply
+            </button>
+            <button onClick={deleteSelectedOrders}
+              className="bg-red-600 text-white text-xs uppercase tracking-[0.15em] px-3.5 py-2 rounded-lg hover:bg-red-700 transition">
+              Delete
             </button>
           </div>
         )}
@@ -1227,6 +1268,7 @@ function OrdersTab() {
           items={itemsMap[selectedOrder.id]}
           onClose={() => setSelectedOrder(null)}
           onStatusChange={handleStatusChange}
+          onDelete={handleDeleteOrder}
           onCustomerFilter={val => setSearch(val)}
         />
       )}
@@ -1246,7 +1288,6 @@ const EMPTY = {
   bulk_discount_qty: '', bulk_discount_pct: '',
 };
 
-const EMPTY_VARIATIONS = [];
 
 async function uploadImg(file, slug) {
   const ext  = file.name.split('.').pop();
@@ -1301,6 +1342,7 @@ function ProductsTab() {
   const [saving,        setSaving]        = useState(false);
   const [editId,        setEditId]        = useState(null);
   const [search,        setSearch]        = useState('');
+  const [selectedProds, setSelectedProds] = useState(new Set());
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1419,6 +1461,23 @@ function ProductsTab() {
   async function del(id, title) {
     if (!window.confirm(`Delete "${title}"?`)) return;
     await supabase.from('products').delete().eq('id', id);
+    setSelectedProds(prev => { const n = new Set(prev); n.delete(id); return n; });
+    load();
+  }
+
+  const allProdsSelected = filtered.length > 0 && filtered.every(p => selectedProds.has(p.id));
+  function toggleAllProds() {
+    if (allProdsSelected) setSelectedProds(new Set());
+    else setSelectedProds(new Set(filtered.map(p => p.id)));
+  }
+  function toggleOneProd(id) {
+    setSelectedProds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }
+  async function deleteSelectedProds() {
+    if (selectedProds.size === 0) return;
+    if (!window.confirm(`Delete ${selectedProds.size} product(s)? This cannot be undone.`)) return;
+    await supabase.from('products').delete().in('id', [...selectedProds]);
+    setSelectedProds(new Set());
     load();
   }
 
@@ -1458,7 +1517,18 @@ function ProductsTab() {
             )}
           </div>
         </div>
-        <p className="text-gray-400 text-sm mt-1">{products.length} products total</p>
+        <div className="flex items-center gap-3 mt-1">
+          <p className="text-gray-400 text-sm">{products.length} products total</p>
+          {selectedProds.size > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-xs">{selectedProds.size} selected</span>
+              <button onClick={deleteSelectedProds}
+                className="bg-red-600 text-white text-xs uppercase tracking-[0.15em] px-3 py-1.5 rounded-lg hover:bg-red-700 transition">
+                Delete Selected
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Form */}
@@ -1727,7 +1797,8 @@ function ProductsTab() {
       {/* Product list */}
       <div className="border border-gray-200 bg-white rounded-xl overflow-hidden shadow-sm">
         {/* Desktop header */}
-        <div className="hidden md:grid grid-cols-[64px_1fr_100px_80px_200px] gap-x-4 px-5 py-3.5 border-b border-gray-200 bg-gray-50">
+        <div className="hidden md:grid grid-cols-[32px_64px_1fr_100px_80px_200px] gap-x-4 px-5 py-3.5 border-b border-gray-200 bg-gray-50">
+          <input type="checkbox" checked={allProdsSelected} onChange={toggleAllProds} className="accent-gray-800 mt-0.5 cursor-pointer" />
           {['', 'PRODUCT', 'CATEGORY', 'PRICE', 'ACTIONS'].map(h => (
             <span key={h} className="text-xs text-gray-500 uppercase tracking-[0.2em] font-semibold">{h}</span>
           ))}
@@ -1735,10 +1806,11 @@ function ProductsTab() {
         {filtered.length === 0
           ? <p className="text-gray-400 text-sm italic text-center py-12">No products found.</p>
           : filtered.map(p => (
-            <div key={p.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition">
+            <div key={p.id} className={`border-b border-gray-100 last:border-0 transition ${selectedProds.has(p.id) ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
 
               {/* Desktop row */}
-              <div className="hidden md:grid grid-cols-[64px_1fr_100px_80px_200px] gap-x-4 items-center px-5 py-4">
+              <div className="hidden md:grid grid-cols-[32px_64px_1fr_100px_80px_200px] gap-x-4 items-center px-5 py-4">
+                <input type="checkbox" checked={selectedProds.has(p.id)} onChange={() => toggleOneProd(p.id)} className="accent-gray-800 cursor-pointer" />
                 <div className="relative w-12 h-12 border border-gray-200 bg-gray-50 rounded-lg">
                   {p.img ? <Image src={p.img} alt="" fill className="object-contain" unoptimized />
                     : <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">📦</div>}
@@ -1776,6 +1848,7 @@ function ProductsTab() {
               {/* Mobile card */}
               <div className="md:hidden px-4 py-3.5">
                 <div className="flex items-center gap-3 mb-3">
+                  <input type="checkbox" checked={selectedProds.has(p.id)} onChange={() => toggleOneProd(p.id)} className="accent-gray-800 cursor-pointer shrink-0" />
                   <div className="relative w-14 h-14 shrink-0 border border-gray-200 bg-gray-50 rounded-lg">
                     {p.img ? <Image src={p.img} alt="" fill className="object-contain" unoptimized />
                       : <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">📦</div>}
