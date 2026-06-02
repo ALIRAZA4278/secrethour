@@ -564,10 +564,22 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
         {!order.postex_tracking && (
           <div className="px-6 py-5 border-b border-gray-200">
             <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-3">BOOK ON POSTEX</p>
-            <p className="text-gray-500 text-xs mb-4">Order details ke sath PostEx par shipment book karo. Edit karne ke baad save karein phir book karein.</p>
+            <div className="mb-3 space-y-1.5">
+              <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em]">City (PostEx)</p>
+              <select
+                value={editForm.city}
+                onChange={e => setEditForm(f => ({ ...f, city: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500 bg-white"
+              >
+                <option value="">— Select City —</option>
+                {['Karachi','Lahore','Islamabad','Rawalpindi','Faisalabad','Multan','Hyderabad','Peshawar','Quetta','Gujranwala','Sialkot','Sargodha','Bahawalpur','Sukkur','Larkana','Sheikhupura','Rahim Yar Khan','Jhang','Dera Ghazi Khan','Gujrat','Mardan','Kasur','Sahiwal','Okara','Wah Cantt','Abbottabad','Mirpur','Chiniot','Hafizabad','Narowal','Vehari','Bahawalnagar','Khushab','Chakwal','Kohat','Attock','Mianwali','Muzaffargarh','Khanewal','Pakpattan','Toba Tek Singh','Lodhran','Mingora','Nawabshah','Mirpur Khas'].map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
             <button
               onClick={bookOnPostEx}
-              disabled={bookingPostex}
+              disabled={bookingPostex || !editForm.city}
               className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white text-xs uppercase tracking-[0.2em] py-3.5 rounded-lg hover:bg-black transition disabled:opacity-50"
             >
               {bookingPostex ? 'Booking…' : 'Book on PostEx'}
