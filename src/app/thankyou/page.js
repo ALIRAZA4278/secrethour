@@ -17,14 +17,21 @@ export default function ThankYouPage() {
       setData(stored);
       sessionStorage.removeItem('sh_order');
 
-      if (stored.total && typeof window !== 'undefined' && window.fbq) {
-        window.fbq('track', 'Purchase', {
-          value: stored.total,
-          currency: 'PKR',
-          num_items: (stored.items || []).reduce((s, i) => s + (i.qty || 1), 0),
-          content_ids: (stored.items || []).map(i => i.title),
-          content_type: 'product',
-        });
+      if (stored.total) {
+        const firePixel = (retries = 15) => {
+          if (typeof window !== 'undefined' && window.fbq) {
+            window.fbq('track', 'Purchase', {
+              value: stored.total,
+              currency: 'PKR',
+              num_items: (stored.items || []).reduce((s, i) => s + (i.qty || 1), 0),
+              content_ids: (stored.items || []).map(i => i.title),
+              content_type: 'product',
+            });
+          } else if (retries > 0) {
+            setTimeout(() => firePixel(retries - 1), 300);
+          }
+        };
+        firePixel();
       }
     } catch {}
   }, []);
