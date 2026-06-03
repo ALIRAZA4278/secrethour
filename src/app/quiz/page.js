@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import MetaPixel from '../components/MetaPixel';
 import { supabase } from '../../lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -145,6 +146,7 @@ export default function QuizPage() {
       className="text-cream min-h-screen flex flex-col"
       style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(9,8,7) 65%)' }}
     >
+      <MetaPixel />
       <Navbar />
 
       <main className="flex-1 pt-10 pb-20 px-4 md:px-6">

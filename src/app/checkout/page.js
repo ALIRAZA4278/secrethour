@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import MetaPixel from '../components/MetaPixel';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -144,6 +145,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26), rgb(11,10,9) 60%)' }}>
+      <MetaPixel />
       <Navbar />
 
       <main className="pt-10 pb-20">

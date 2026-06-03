@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
+import MetaPixel from '../components/MetaPixel';
 import Footer from '../components/Footer';
 import { getServerSupabase } from '../../lib/supabase-server';
 import AddToCartBtn from './AddToCartBtn';
@@ -32,6 +33,7 @@ export default async function ShopPage() {
 
   return (
     <div className="text-cream flex flex-col bg-sh-bg">
+      <MetaPixel />
       <Navbar />
 
       <div className="relative flex-1" style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>

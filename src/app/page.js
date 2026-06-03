@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from './components/Navbar';
+import MetaPixel from './components/MetaPixel';
 import Footer from './components/Footer';
 import { useCart } from './context/CartContext';
 import { supabase } from '../lib/supabase';
@@ -84,6 +85,7 @@ export default function Home() {
 
   return (
     <div className="bg-sh-bg text-cream min-h-screen">
+      <MetaPixel />
 
       <Navbar />
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
+import MetaPixel from '../components/MetaPixel';
 import Footer from '../components/Footer';
 import { supabase } from '../../lib/supabase';
 
@@ -98,6 +99,7 @@ export default function TestimonialsPage() {
 
   return (
     <div className="text-cream min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(40,12,18) 0%, rgb(9,8,7) 55%)' }}>
+      <MetaPixel />
       <Navbar />
 
       <div className="relative flex-1">

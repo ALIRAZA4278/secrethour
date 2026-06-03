@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
+import MetaPixel from '../components/MetaPixel';
 import Footer from '../components/Footer';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
@@ -18,6 +19,7 @@ const VALUES = [
 export default function AboutPage() {
   return (
     <div className="text-cream min-h-screen flex flex-col" style={{ background: 'radial-gradient(ellipse at top, rgb(57,19,26) 0%, rgb(11,10,9) 50%, rgb(20,8,8) 100%)' }}>
+      <MetaPixel />
       <Navbar />
 
       <section className="pt-10 pb-20 px-6 text-center">

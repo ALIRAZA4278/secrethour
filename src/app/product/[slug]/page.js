@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '../../components/Navbar';
+import MetaPixel from '../../components/MetaPixel';
 import Footer from '../../components/Footer';
 import { supabase } from '../../../lib/supabase';
 import { useCart } from '../../context/CartContext';
@@ -135,6 +136,7 @@ export default function ProductPage({ params }) {
 
   return (
     <div className="bg-sh-bg text-cream min-h-screen flex flex-col">
+      <MetaPixel />
       <Navbar />
 
       {/* ── Main product section ── */}

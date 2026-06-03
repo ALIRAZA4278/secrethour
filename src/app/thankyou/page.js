@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Navbar from '../components/Navbar';
+import MetaPixel from '../components/MetaPixel';
 import Footer from '../components/Footer';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
@@ -46,6 +47,7 @@ export default function ThankYouPage() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26), rgb(11,10,9) 60%)' }}>
+      <MetaPixel />
       <Navbar />
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-lg space-y-6">

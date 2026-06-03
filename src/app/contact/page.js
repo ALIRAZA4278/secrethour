@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Navbar from '../components/Navbar';
+import MetaPixel from '../components/MetaPixel';
 import Footer from '../components/Footer';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
@@ -57,6 +58,7 @@ export default function ContactPage() {
 
   return (
     <div className="text-cream min-h-screen flex flex-col" style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>
+      <MetaPixel />
       <Navbar />
 
       <section className="flex-1 pt-10 pb-24 px-6">
