@@ -21,12 +21,37 @@ export default function ThankYouPage() {
       if (stored.total) {
         const firePixel = (retries = 15) => {
           if (typeof window !== 'undefined' && window.fbq) {
+            // Prepare contents array with detailed item information
+            const contents = (stored.items || []).map(item => ({
+              id: item.slug || item.title,
+              title: item.title,
+              quantity: item.qty,
+              unit_price: item.unitPrice || item.price,
+              price: item.totalPrice || (item.price * item.qty),
+            }));
+
+            // Fire Purchase event with detailed data
             window.fbq('track', 'Purchase', {
               value: stored.total,
               currency: 'PKR',
               num_items: (stored.items || []).reduce((s, i) => s + (i.qty || 1), 0),
-              content_ids: (stored.items || []).map(i => i.title),
+              content_ids: (stored.items || []).map(i => i.slug || i.title),
               content_type: 'product',
+              contents: contents,
+              subtotal: stored.subtotal,
+              discount: stored.discount,
+            });
+
+            // Fire ViewContent events for each item (optional - for more detailed analytics)
+            (stored.items || []).forEach(item => {
+              window.fbq('track', 'ViewContent', {
+                content_ids: [item.slug || item.title],
+                content_name: item.title,
+                content_type: 'product',
+                value: item.totalPrice || (item.price * item.qty),
+                currency: 'PKR',
+                quantity: item.qty,
+              });
             });
           } else if (retries > 0) {
             setTimeout(() => firePixel(retries - 1), 300);

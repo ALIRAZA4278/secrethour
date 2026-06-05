@@ -103,19 +103,26 @@ export default function CheckoutPage() {
         // Email failure shouldn't block order confirmation
       }
 
-      sessionStorage.setItem('sh_order', JSON.stringify({
-        name:    form.fullName,
-        email:   form.email,
-        payment: payment,
-        total:   total,
-        items:   items.map(i => ({
-          title:   i.title,
-          img:     i.img,
-          qty:     i.qty,
-          price:   itemEffectivePrice(i),
-          variation: i.variation || null,
+      const orderData = {
+        name:       form.fullName,
+        email:      form.email,
+        payment:    payment,
+        total:      total,
+        subtotal:   totalPrice,
+        discount:   discount,
+        items:      items.map(i => ({
+          title:       i.title,
+          img:         i.img,
+          qty:         i.qty,
+          price:       itemEffectivePrice(i),
+          unitPrice:   itemEffectivePrice(i),
+          totalPrice:  itemEffectivePrice(i) * i.qty,
+          variation:   i.variation || null,
+          slug:        i.slug,
         })),
-      }));
+      };
+
+      sessionStorage.setItem('sh_order', JSON.stringify(orderData));
       router.push('/thankyou');
     } catch (err) {
       setSubmitError(err.message || 'Something went wrong. Please try again.');
