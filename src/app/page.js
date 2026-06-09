@@ -21,10 +21,12 @@ const SLIDES = [
   { desk: '/Banners/2.jpg.jpeg',              mob: '/Banners/2 mob.jpg.jpeg' },
 ];
 
-const TESTIMONIALS = [
-  { quote: "Our wedding night felt like a film. The bridal box made it unforgettable." },
-  { quote: "The card game pulled us out of routine. We've never talked like this before." },
-  { quote: "Beautifully made. It feels like a gift you'd buy for someone you really love." },
+const FALLBACK_REVIEWS = [
+  { quote: "Our wedding night felt like a film. The bridal box made it unforgettable.", author: "Anonymous" },
+  { quote: "The card game pulled us out of routine. We've never talked like this before.", author: "Anonymous" },
+  { quote: "Beautifully made. It feels like a gift you'd buy for someone you really love.", author: "Anonymous" },
+  { quote: "Discreet, elegant, and so romantic. Worth every rupee.", author: "Anonymous, Karachi" },
+  { quote: "It felt like a private little ritual just for us.", author: "Anonymous" },
 ];
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
@@ -35,6 +37,7 @@ export default function Home() {
   const router = useRouter();
   const [products, setProducts] = useState({});
   const [bundles, setBundles] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [featImg, setFeatImg] = useState(0);
 
   // Hero slider
@@ -83,6 +86,18 @@ export default function Home() {
         // First 2 visible products that are NOT the midnight deck
         setBundles(visible.filter(p => p.slug.toLowerCase() !== 'the-midnight-deck').slice(0, 2));
       });
+
+    // Fetch real reviews from both tables
+    Promise.all([
+      supabase.from('testimonials').select('name, location, body').eq('approved', true).order('created_at', { ascending: false }),
+      supabase.from('product_reviews').select('reviewer_name, body').eq('approved', true).order('created_at', { ascending: false }),
+    ]).then(([{ data: t }, { data: pr }]) => {
+      const combined = [
+        ...(t || []).map(r => ({ quote: r.body, author: r.location ? `${r.name || 'Anonymous'}, ${r.location}` : (r.name || 'Anonymous') })),
+        ...(pr || []).map(r => ({ quote: r.body, author: r.reviewer_name || 'Anonymous' })),
+      ];
+      if (combined.length > 0) setReviews(combined);
+    });
   }, []);
 
   return (
@@ -347,31 +362,47 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── Testimonials ────────────────────────────────────── */}
-      <section className="relative py-16 md:py-28 px-4 md:px-6 overflow-hidden">
+      {/* ─── Testimonials Slider ─────────────────────────────── */}
+      <section className="relative py-16 md:py-28 overflow-hidden">
+        <style>{`
+          @keyframes marquee-rtl {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .marquee-track { animation: marquee-rtl 30s linear infinite; }
+          .marquee-track:hover { animation-play-state: paused; }
+        `}</style>
+
         <div className="absolute inset-0 opacity-40 pointer-events-none">
           <Image src={IMG.silk} alt="" fill className="object-cover" unoptimized />
         </div>
 
-        <div className="relative z-10 max-w-5xl mx-auto">
-          <h2 className="text-2xl md:text-4xl italic text-center mb-10 md:mb-16 text-cream" style={serif}>
+        <div className="relative z-10">
+          <h2 className="text-2xl md:text-4xl italic text-center mb-10 md:mb-16 text-cream px-6" style={serif}>
             Whispered Back to Us
           </h2>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <div key={i} className="border border-gold-border p-8 space-y-5">
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, s) => (
-                    <span key={s} className="text-gold text-lg">★</span>
+          {/* Slider */}
+          <div className="overflow-hidden">
+            {(() => {
+              const items = reviews.length > 0 ? reviews : FALLBACK_REVIEWS;
+              const cards = [...items, ...items]; // duplicate for seamless loop
+              return (
+                <div className="marquee-track flex gap-5" style={{ width: 'max-content' }}>
+                  {cards.map((t, i) => (
+                    <div key={i} className="border border-gold-border p-8 space-y-4 shrink-0" style={{ width: '320px', background: 'rgba(11,10,9,0.65)' }}>
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, s) => <span key={s} className="text-gold text-base">★</span>)}
+                      </div>
+                      <p className="text-cream/75 italic leading-relaxed text-sm" style={serif}>
+                        &ldquo;{t.quote}&rdquo;
+                      </p>
+                      <p className="text-gold-muted text-[10px] uppercase tracking-[0.25em]">— {t.author}</p>
+                    </div>
                   ))}
                 </div>
-                <p className="text-cream/75 italic leading-relaxed text-sm" style={serif}>
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <p className="text-gold-muted text-[10px] uppercase tracking-[0.25em]">— Anonymous</p>
-              </div>
-            ))}
+              );
+            })()}
           </div>
         </div>
       </section>

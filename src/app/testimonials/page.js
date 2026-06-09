@@ -143,8 +143,9 @@ export default function TestimonialsPage() {
 
         {/* Grid testimonials */}
         {(() => {
-          const grid = approved.length > 0
-            ? approved.map(t => ({
+          const gridItems = approved.length > 1 ? approved.slice(1) : approved.length === 1 ? [] : null;
+          const grid = gridItems
+            ? gridItems.map(t => ({
                 quote: t.body,
                 author: t.location ? `${t.name || 'Anonymous'}, ${t.location}` : (t.name || 'Anonymous'),
               }))
