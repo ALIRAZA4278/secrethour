@@ -9,11 +9,13 @@ export default function AddToCartBtn({ product }) {
     e.preventDefault();
     e.stopPropagation();
     addToCart({
-      slug:         product.slug,
-      title:        product.title,
-      price:        product.price,
-      numericPrice: product.numeric_price,
-      img:          product.img,
+      slug:             product.slug,
+      title:            product.title,
+      price:            product.price,
+      numericPrice:     product.numeric_price,
+      img:              product.img,
+      bulkDiscountQty:  product.bulk_discount_qty || null,
+      bulkDiscountPct:  product.bulk_discount_pct || 0,
     });
   }
 

@@ -304,7 +304,7 @@ export default function Home() {
                   <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
                   <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
                   <button
-                    onClick={(e) => { e.preventDefault(); addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numeric_price, img: p.img }); }}
+                    onClick={(e) => { e.preventDefault(); addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numeric_price, img: p.img, bulkDiscountQty: p.bulk_discount_qty || null, bulkDiscountPct: p.bulk_discount_pct || 0 }); }}
                     className="mt-1 w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
                   >
                     Add to Cart
