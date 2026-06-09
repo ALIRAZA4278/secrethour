@@ -24,7 +24,7 @@ export default function CartDrawer() {
 
     supabase
       .from('products')
-      .select('slug, title, price, numeric_price, images, img')
+      .select('slug, title, price, numeric_price, images, img, bulk_discount_qty, bulk_discount_pct')
       .neq('hidden', true)
       .then(({ data }) => {
         if (!data?.length) return;
@@ -148,11 +148,13 @@ export default function CartDrawer() {
                           </div>
                           <button
                             onClick={() => addToCart({
-                              slug: u.slug,
-                              title: u.title,
-                              price: `Rs. ${numericPrice.toLocaleString()}`,
+                              slug:            u.slug,
+                              title:           u.title,
+                              price:           `Rs. ${numericPrice.toLocaleString()}`,
                               numericPrice,
-                              img: img || '',
+                              img:             img || '',
+                              bulkDiscountQty: u.bulk_discount_qty || null,
+                              bulkDiscountPct: u.bulk_discount_pct || 0,
                             })}
                             aria-label={`Add ${u.title} to cart`}
                             className="w-8 h-8 shrink-0 rounded-full border border-gold/50 text-gold hover:bg-gold/10 transition-colors flex items-center justify-center"
