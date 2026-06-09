@@ -383,7 +383,7 @@ export default function Home() {
           </h2>
 
           {/* Slider */}
-          <div className="overflow-hidden">
+          <div className="overflow-hidden mx-auto" style={{ width: '80%' }}>
             {(() => {
               const items = reviews.length > 0 ? reviews : FALLBACK_REVIEWS;
               const cards = [...items, ...items]; // duplicate for seamless loop
