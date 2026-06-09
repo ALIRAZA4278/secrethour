@@ -21,13 +21,6 @@ const SLIDES = [
   { desk: '/Banners/2.jpg.jpeg',              mob: '/Banners/2 mob.jpg.jpeg' },
 ];
 
-const FALLBACK_REVIEWS = [
-  { quote: "Our wedding night felt like a film. The bridal box made it unforgettable.", author: "Anonymous" },
-  { quote: "The card game pulled us out of routine. We've never talked like this before.", author: "Anonymous" },
-  { quote: "Beautifully made. It feels like a gift you'd buy for someone you really love.", author: "Anonymous" },
-  { quote: "Discreet, elegant, and so romantic. Worth every rupee.", author: "Anonymous, Karachi" },
-  { quote: "It felt like a private little ritual just for us.", author: "Anonymous" },
-];
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 
@@ -385,11 +378,7 @@ export default function Home() {
           {/* Slider */}
           <div className="overflow-hidden mx-auto" style={{ width: '80%' }}>
             {(() => {
-              const base = reviews.length > 0 ? reviews : FALLBACK_REVIEWS;
-              // Pad with fallback so we always have at least 5 cards for a smooth loop
-              const items = base.length < 5
-                ? [...base, ...FALLBACK_REVIEWS].slice(0, Math.max(5, base.length))
-                : base;
+              const items = reviews;
               const cards = [...items, ...items]; // duplicate for seamless loop
               return (
                 <div className="marquee-track flex gap-5" style={{ width: 'max-content' }}>
