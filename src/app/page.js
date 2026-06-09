@@ -385,7 +385,11 @@ export default function Home() {
           {/* Slider */}
           <div className="overflow-hidden mx-auto" style={{ width: '80%' }}>
             {(() => {
-              const items = reviews.length > 0 ? reviews : FALLBACK_REVIEWS;
+              const base = reviews.length > 0 ? reviews : FALLBACK_REVIEWS;
+              // Pad with fallback so we always have at least 5 cards for a smooth loop
+              const items = base.length < 5
+                ? [...base, ...FALLBACK_REVIEWS].slice(0, Math.max(5, base.length))
+                : base;
               const cards = [...items, ...items]; // duplicate for seamless loop
               return (
                 <div className="marquee-track flex gap-5" style={{ width: 'max-content' }}>
