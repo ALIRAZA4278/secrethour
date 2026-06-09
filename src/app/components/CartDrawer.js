@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { useCart, itemEffectivePrice } from '../context/CartContext';
 
@@ -15,6 +16,7 @@ const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, s
 
 export default function CartDrawer() {
   const { items, open, setOpen, removeFromCart, updateQty, totalPrice, addToCart } = useCart();
+  const router = useRouter();
   const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
@@ -24,7 +26,7 @@ export default function CartDrawer() {
 
     supabase
       .from('products')
-      .select('slug, title, price, numeric_price, images, img, bulk_discount_qty, bulk_discount_pct')
+      .select('slug, title, price, numeric_price, images, img, bulk_discount_qty, bulk_discount_pct, variations')
       .neq('hidden', true)
       .then(({ data }) => {
         if (!data?.length) return;
@@ -147,15 +149,22 @@ export default function CartDrawer() {
                             <p className="text-gold text-xs mt-0.5">Rs. {numericPrice.toLocaleString()}</p>
                           </div>
                           <button
-                            onClick={() => addToCart({
-                              slug:            u.slug,
-                              title:           u.title,
-                              price:           `Rs. ${numericPrice.toLocaleString()}`,
-                              numericPrice,
-                              img:             img || '',
-                              bulkDiscountQty: u.bulk_discount_qty || null,
-                              bulkDiscountPct: u.bulk_discount_pct || 0,
-                            })}
+                            onClick={() => {
+                              if (u.variations?.length > 0) {
+                                setOpen(false);
+                                router.push(`/product/${u.slug}`);
+                              } else {
+                                addToCart({
+                                  slug:            u.slug,
+                                  title:           u.title,
+                                  price:           `Rs. ${numericPrice.toLocaleString()}`,
+                                  numericPrice,
+                                  img:             img || '',
+                                  bulkDiscountQty: u.bulk_discount_qty || null,
+                                  bulkDiscountPct: u.bulk_discount_pct || 0,
+                                });
+                              }
+                            }}
                             aria-label={`Add ${u.title} to cart`}
                             className="w-8 h-8 shrink-0 rounded-full border border-gold/50 text-gold hover:bg-gold/10 transition-colors flex items-center justify-center"
                           >
