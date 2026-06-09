@@ -53,12 +53,24 @@ export default function ProductPage({ params }) {
   }
 
   function handleAddToCart() {
+    if (product?.variations?.length > 0 && !selectedVariation) {
+      setVariationError(true);
+      document.getElementById('variation-selector')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    setVariationError(false);
     const item = cartItem();
     addToCart(item);
     if (qty > 1) updateQty(item.slug, qty);
   }
 
   function buyNow() {
+    if (product?.variations?.length > 0 && !selectedVariation) {
+      setVariationError(true);
+      document.getElementById('variation-selector')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    setVariationError(false);
     const item = cartItem();
     addToCart(item);
     if (qty > 1) updateQty(item.slug, qty);
@@ -71,6 +83,7 @@ export default function ProductPage({ params }) {
   const [upsell, setUpsell] = useState(null);
   const [activeImg, setActiveImg] = useState(0);
   const [selectedVariation, setSelectedVariation] = useState(null);
+  const [variationError, setVariationError] = useState(false);
   const [qty, setQty] = useState(1);
   const [status, setStatus] = useState('loading'); // 'loading' | 'found' | 'notfound'
   const [reviews, setReviews] = useState([]);
@@ -216,9 +229,11 @@ export default function ProductPage({ params }) {
 
               {/* Variations */}
               {product.variations?.length > 0 && (
-                <div className="space-y-3">
-                  <p className="text-cream/50 text-[10px] uppercase tracking-[0.25em]">Select Option</p>
-                  <div className="flex flex-wrap gap-2">
+                <div id="variation-selector" className="space-y-3">
+                  <p className={`text-[10px] uppercase tracking-[0.25em] ${variationError ? 'text-red-400' : 'text-cream/50'}`}>
+                    {variationError ? 'Please select an option' : 'Select Option'}
+                  </p>
+                  <div className={`flex flex-wrap gap-2 ${variationError ? 'ring-1 ring-red-400/50 p-2' : ''}`}>
                     {product.variations.map((v) => {
                       const label = v?.name ?? v;
                       const isSelected = selectedVariation?.name === label || selectedVariation === label;
@@ -226,7 +241,7 @@ export default function ProductPage({ params }) {
                         <button
                           key={label}
                           type="button"
-                          onClick={() => setSelectedVariation(isSelected ? null : (v?.name ? v : { name: v, price: null }))}
+                          onClick={() => { setSelectedVariation(isSelected ? null : (v?.name ? v : { name: v, price: null })); setVariationError(false); }}
                           className={`px-4 py-2 text-[11px] uppercase tracking-[0.15em] border transition-all duration-200 ${
                             isSelected
                               ? 'border-gold bg-gold/10 text-gold'
@@ -553,7 +568,7 @@ export default function ProductPage({ params }) {
       {/* Mobile sticky Add to Cart + Buy Now */}
       <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-sh-bg/95 backdrop-blur-sm border-t border-gold-border/40 p-3 flex gap-3">
         <button
-          onClick={() => addToCart({ slug: product.slug, title: product.title, price: product.price, numericPrice: product.numeric_price, img: images[0] })}
+          onClick={handleAddToCart}
           className="flex-1 bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.18em] py-3.5 btn-glow transition-all"
         >
           Add to Cart

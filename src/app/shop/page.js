@@ -23,7 +23,7 @@ export default async function ShopPage() {
     const supabase = getServerSupabase();
     const { data } = await supabase
       .from('products')
-      .select('slug, title, category, img, price, numeric_price, tag')
+      .select('slug, title, category, img, price, numeric_price, tag, variations, bulk_discount_qty, bulk_discount_pct')
       .eq('hidden', false)
       .order('created_at');
     if (data) products = data;

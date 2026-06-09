@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Navbar from './components/Navbar';
 import MetaPixel from './components/MetaPixel';
 import Footer from './components/Footer';
@@ -31,6 +32,7 @@ const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, s
 export default function Home() {
   const [email, setEmail] = useState('');
   const { addToCart } = useCart();
+  const router = useRouter();
   const [products, setProducts] = useState({});
   const [bundles, setBundles] = useState([]);
   const [featImg, setFeatImg] = useState(0);
@@ -68,7 +70,7 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from('products')
-      .select('slug, title, subtitle, price, numeric_price, img, images, tag')
+      .select('slug, title, subtitle, price, numeric_price, img, images, tag, variations, bulk_discount_qty, bulk_discount_pct')
       .neq('hidden', true)
       .then(({ data }) => {
         if (!data) return;
@@ -304,7 +306,7 @@ export default function Home() {
                   <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
                   <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
                   <button
-                    onClick={(e) => { e.preventDefault(); addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numeric_price, img: p.img, bulkDiscountQty: p.bulk_discount_qty || null, bulkDiscountPct: p.bulk_discount_pct || 0 }); }}
+                    onClick={(e) => { e.preventDefault(); if (p.variations?.length > 0) { router.push(`/product/${p.slug}`); } else { addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numeric_price, img: p.img, bulkDiscountQty: p.bulk_discount_qty || null, bulkDiscountPct: p.bulk_discount_pct || 0 }); } }}
                     className="mt-1 w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
                   >
                     Add to Cart

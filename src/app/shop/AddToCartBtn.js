@@ -1,21 +1,27 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 
 export default function AddToCartBtn({ product }) {
   const { addToCart } = useCart();
+  const router = useRouter();
 
   function handle(e) {
     e.preventDefault();
     e.stopPropagation();
+    if (product.variations?.length > 0) {
+      router.push(`/product/${product.slug}`);
+      return;
+    }
     addToCart({
-      slug:             product.slug,
-      title:            product.title,
-      price:            product.price,
-      numericPrice:     product.numeric_price,
-      img:              product.img,
-      bulkDiscountQty:  product.bulk_discount_qty || null,
-      bulkDiscountPct:  product.bulk_discount_pct || 0,
+      slug:            product.slug,
+      title:           product.title,
+      price:           product.price,
+      numericPrice:    product.numeric_price,
+      img:             product.img,
+      bulkDiscountQty: product.bulk_discount_qty || null,
+      bulkDiscountPct: product.bulk_discount_pct || 0,
     });
   }
 
@@ -23,7 +29,7 @@ export default function AddToCartBtn({ product }) {
     <button
       onClick={handle}
       className="w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-3 btn-glow transition-all duration-300 hover:bg-[#5a1a24]">
-      Add to Cart
+      {product.variations?.length > 0 ? 'Select Options' : 'Add to Cart'}
     </button>
   );
 }
