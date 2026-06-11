@@ -35,16 +35,18 @@ export default function CheckoutPage() {
   const sessionIdRef   = useRef(null);
   const abandonedIdRef = useRef(null);
 
-  useEffect(() => {
+  // Initialize synchronously so it's ready before any keypress
+  if (typeof window !== 'undefined' && !sessionIdRef.current) {
     let sid = localStorage.getItem('sh_session');
     if (!sid) { sid = crypto.randomUUID(); localStorage.setItem('sh_session', sid); }
     sessionIdRef.current = sid;
-  }, []);
+  }
 
   async function saveAbandoned(updatedForm) {
     const sid = sessionIdRef.current;
-    if (!sid) return;
-    if (!updatedForm.email && !updatedForm.phone) return;
+    console.log('[AC] saveAbandoned called — sid:', sid, 'email:', updatedForm.email, 'phone:', updatedForm.phone);
+    if (!sid) { console.log('[AC] no sid, skip'); return; }
+    if (!updatedForm.email && !updatedForm.phone) { console.log('[AC] no email/phone, skip'); return; }
     try {
       const res = await fetch('/api/abandoned-cart', {
         method: 'POST',
@@ -61,8 +63,9 @@ export default function CheckoutPage() {
         }),
       });
       const data = await res.json();
+      console.log('[AC] API response:', data);
       if (data?.id) abandonedIdRef.current = data.id;
-    } catch {}
+    } catch (err) { console.log('[AC] fetch error:', err); }
   }
 
   function set(field) {
