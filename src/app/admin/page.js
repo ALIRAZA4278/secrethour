@@ -2366,6 +2366,12 @@ function AbandonedCartsTab() {
                     <p className="text-gray-400 text-[10px] uppercase tracking-[0.15em] mb-0.5">Total</p>
                     <p className="text-gray-900 font-semibold">Rs. {(c.total || 0).toLocaleString()}</p>
                   </div>
+                  {c.address && (
+                    <div className="col-span-2 sm:col-span-4">
+                      <p className="text-gray-400 text-[10px] uppercase tracking-[0.15em] mb-0.5">Address</p>
+                      <p className="text-gray-700">{c.address}</p>
+                    </div>
+                  )}
                 </div>
 
                 {itemsSummary && (

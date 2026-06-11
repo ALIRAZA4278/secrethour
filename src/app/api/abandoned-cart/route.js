@@ -27,7 +27,7 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { session_id, name, email, phone, city, items, total, status } = body;
+    const { session_id, name, email, phone, address, city, items, total, status } = body;
 
     if (!session_id) return NextResponse.json({ error: 'session_id required' }, { status: 400 });
 
@@ -38,6 +38,7 @@ export async function POST(req) {
         name:       name       || null,
         email:      email      || null,
         phone:      phone      || null,
+        address:    address    || null,
         city:       city       || null,
         items:      items      || [],
         total:      total      || 0,
