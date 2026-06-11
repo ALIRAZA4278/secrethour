@@ -2273,22 +2273,20 @@ function PromoCodesTab() {
 function AbandonedCartsTab() {
   const [carts,   setCarts]   = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter,  setFilter]  = useState('abandoned');
 
   const load = useCallback(async () => {
     setLoading(true);
-    let q = supabase.from('abandoned_carts').select('*').order('updated_at', { ascending: false });
-    if (filter !== 'all') q = q.eq('status', filter);
-    const { data } = await q;
-    setCarts(data || []);
+    const res  = await fetch('/api/abandoned-cart');
+    const data = await res.json();
+    setCarts(Array.isArray(data) ? data : []);
     setLoading(false);
-  }, [filter]);
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 
   async function del(id) {
     if (!window.confirm('Delete this abandoned cart record?')) return;
-    await supabase.from('abandoned_carts').delete().eq('id', id);
+    await fetch(`/api/abandoned-cart?id=${id}`, { method: 'DELETE' });
     setCarts(prev => prev.filter(c => c.id !== id));
   }
 
@@ -2304,27 +2302,19 @@ function AbandonedCartsTab() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Admin</p>
-        <h1 className="text-4xl italic text-gray-900" style={serif}>Abandoned Carts</h1>
-      </div>
-
-      {/* Filter */}
-      <div className="flex gap-2 flex-wrap">
-        {[['abandoned', 'Abandoned'], ['converted', 'Converted'], ['all', 'All']].map(([v, l]) => (
-          <button key={v} onClick={() => setFilter(v)}
-            className={`text-xs uppercase tracking-[0.15em] px-4 py-2 rounded-lg border font-medium transition ${filter === v ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-500 border-gray-300 hover:border-gray-500'}`}>
-            {l}
-          </button>
-        ))}
-        <button onClick={load} className="ml-auto text-xs uppercase tracking-[0.15em] px-4 py-2 rounded-lg border border-gray-300 text-gray-500 hover:border-gray-500 bg-white transition">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Admin</p>
+          <h1 className="text-4xl italic text-gray-900" style={serif}>Abandoned Carts</h1>
+        </div>
+        <button onClick={load} className="text-xs uppercase tracking-[0.15em] px-4 py-2 rounded-lg border border-gray-300 text-gray-500 hover:border-gray-500 bg-white transition">
           Refresh
         </button>
       </div>
 
       {loading ? <Spinner /> : carts.length === 0 ? (
         <p className="text-gray-400 text-sm italic py-10 text-center border border-dashed border-gray-200 rounded-xl">
-          No {filter !== 'all' ? filter : ''} carts.
+          No abandoned carts yet.
         </p>
       ) : (
         <div className="border border-gray-200 bg-white rounded-xl overflow-hidden shadow-sm">
