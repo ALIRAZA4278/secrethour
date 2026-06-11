@@ -45,22 +45,24 @@ export default function CheckoutPage() {
     const sid = sessionIdRef.current;
     if (!sid) return;
     if (!updatedForm.email && !updatedForm.phone) return;
-    const { data } = await supabase
-      .from('abandoned_carts')
-      .upsert({
-        session_id:  sid,
-        name:        updatedForm.fullName  || null,
-        email:       updatedForm.email     || null,
-        phone:       updatedForm.phone     || null,
-        city:        updatedForm.city      || null,
-        items:       items.map(i => ({ slug: i.slug, title: i.title, qty: i.qty, price: itemEffectivePrice(i) })),
-        total:       totalPrice,
-        status:      'abandoned',
-        updated_at:  new Date().toISOString(),
-      }, { onConflict: 'session_id' })
-      .select('id')
-      .single();
-    if (data?.id) abandonedIdRef.current = data.id;
+    try {
+      const res = await fetch('/api/abandoned-cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sid,
+          name:       updatedForm.fullName || null,
+          email:      updatedForm.email    || null,
+          phone:      updatedForm.phone    || null,
+          city:       updatedForm.city     || null,
+          items:      items.map(i => ({ slug: i.slug, title: i.title, qty: i.qty, price: itemEffectivePrice(i) })),
+          total:      totalPrice,
+          status:     'abandoned',
+        }),
+      });
+      const data = await res.json();
+      if (data?.id) abandonedIdRef.current = data.id;
+    } catch {}
   }
 
   function set(field) {
@@ -161,7 +163,11 @@ export default function CheckoutPage() {
       // Mark abandoned cart as converted
       const sid = sessionIdRef.current;
       if (sid) {
-        await supabase.from('abandoned_carts').update({ status: 'converted' }).eq('session_id', sid);
+        fetch('/api/abandoned-cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sid, status: 'converted' }),
+        }).catch(() => {});
       }
 
       sessionStorage.setItem('sh_order', JSON.stringify(orderData));
