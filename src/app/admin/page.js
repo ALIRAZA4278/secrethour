@@ -2317,48 +2317,60 @@ function AbandonedCartsTab() {
           No abandoned carts yet.
         </p>
       ) : (
-        <div className="border border-gray-200 bg-white rounded-xl overflow-hidden shadow-sm">
-          {/* Header */}
-          <div className="hidden md:grid grid-cols-[160px_1fr_1fr_1fr_100px_90px_80px] gap-3 px-5 py-3 bg-gray-50 border-b border-gray-200">
-            {['Time', 'Name / Email', 'Phone', 'City', 'Total', 'Status', 'Actions'].map(h => (
-              <span key={h} className="text-xs text-gray-500 uppercase tracking-[0.2em] font-semibold">{h}</span>
-            ))}
-          </div>
-
+        <div className="space-y-3">
           {carts.map(c => {
             const itemsSummary = (c.items || []).map(i => `${i.title} ×${i.qty}`).join(', ');
             const date = new Date(c.updated_at || c.created_at).toLocaleString('en-PK', {
               day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
             });
             return (
-              <div key={c.id} className="flex flex-col md:grid md:grid-cols-[160px_1fr_1fr_1fr_100px_90px_80px] gap-3 items-start md:items-center px-5 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition">
-                <div>
-                  <p className="text-gray-600 text-xs">{date}</p>
-                </div>
-                <div className="min-w-0">
-                  <p className="text-gray-900 text-sm font-semibold truncate">{c.name || '—'}</p>
-                  <p className="text-gray-400 text-xs truncate">{c.email || '—'}</p>
-                  {itemsSummary && <p className="text-gray-400 text-[10px] mt-0.5 truncate">{itemsSummary}</p>}
-                </div>
-                <p className="text-gray-700 text-sm">{c.phone || '—'}</p>
-                <p className="text-gray-700 text-sm">{c.city || '—'}</p>
-                <p className="text-gray-900 text-sm font-semibold">Rs. {(c.total || 0).toLocaleString()}</p>
-                <span className={`text-xs font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-full border ${c.status === 'converted' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
-                  {c.status}
-                </span>
-                <div className="flex items-center gap-2">
-                  {c.phone && c.status !== 'converted' && (
-                    <button onClick={() => waFollowUp(c)}
-                      title="Follow up on WhatsApp"
-                      className="text-xs uppercase tracking-[0.12em] font-medium px-3 py-1.5 border border-green-300 text-green-700 hover:bg-green-50 rounded-lg transition">
-                      WA
+              <div key={c.id} className="bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm hover:border-gray-300 transition">
+                {/* Top row: name + status + actions */}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="min-w-0">
+                    <p className="text-gray-900 text-sm font-semibold">{c.name || 'Anonymous'}</p>
+                    <p className="text-gray-400 text-xs mt-0.5">{date}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`text-[10px] font-bold uppercase tracking-[0.1em] px-2 py-1 rounded-full border ${c.status === 'converted' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
+                      {c.status}
+                    </span>
+                    {c.phone && c.status !== 'converted' && (
+                      <button onClick={() => waFollowUp(c)}
+                        className="text-xs font-medium px-3 py-1.5 border border-green-300 text-green-700 hover:bg-green-50 rounded-lg transition">
+                        WA
+                      </button>
+                    )}
+                    <button onClick={() => del(c.id)}
+                      className="text-xs font-medium px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg transition">
+                      Del
                     </button>
-                  )}
-                  <button onClick={() => del(c.id)}
-                    className="text-xs uppercase tracking-[0.12em] font-medium px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg transition">
-                    Del
-                  </button>
+                  </div>
                 </div>
+
+                {/* Details grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                  <div>
+                    <p className="text-gray-400 text-[10px] uppercase tracking-[0.15em] mb-0.5">Email</p>
+                    <p className="text-gray-700 break-all">{c.email || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-[10px] uppercase tracking-[0.15em] mb-0.5">Phone</p>
+                    <p className="text-gray-700">{c.phone || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-[10px] uppercase tracking-[0.15em] mb-0.5">City</p>
+                    <p className="text-gray-700">{c.city || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-[10px] uppercase tracking-[0.15em] mb-0.5">Total</p>
+                    <p className="text-gray-900 font-semibold">Rs. {(c.total || 0).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {itemsSummary && (
+                  <p className="text-gray-400 text-xs mt-3 pt-3 border-t border-gray-100">{itemsSummary}</p>
+                )}
               </div>
             );
           })}
