@@ -32,9 +32,8 @@ export default function CheckoutPage() {
     address: '', city: '', postalCode: '', country: 'Pakistan',
   });
 
-  const sessionIdRef  = useRef(null);
+  const sessionIdRef   = useRef(null);
   const abandonedIdRef = useRef(null);
-  const saveTimer     = useRef(null);
 
   useEffect(() => {
     let sid = localStorage.getItem('sh_session');
@@ -42,29 +41,26 @@ export default function CheckoutPage() {
     sessionIdRef.current = sid;
   }, []);
 
-  function scheduleSave(updatedForm) {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      const sid = sessionIdRef.current;
-      if (!sid) return;
-      if (!updatedForm.email && !updatedForm.phone) return;
-      const { data } = await supabase
-        .from('abandoned_carts')
-        .upsert({
-          session_id:  sid,
-          name:        updatedForm.fullName  || null,
-          email:       updatedForm.email     || null,
-          phone:       updatedForm.phone     || null,
-          city:        updatedForm.city      || null,
-          items:       items.map(i => ({ slug: i.slug, title: i.title, qty: i.qty, price: itemEffectivePrice(i) })),
-          total:       totalPrice,
-          status:      'abandoned',
-          updated_at:  new Date().toISOString(),
-        }, { onConflict: 'session_id' })
-        .select('id')
-        .single();
-      if (data?.id) abandonedIdRef.current = data.id;
-    }, 2000);
+  async function saveAbandoned(updatedForm) {
+    const sid = sessionIdRef.current;
+    if (!sid) return;
+    if (!updatedForm.email && !updatedForm.phone) return;
+    const { data } = await supabase
+      .from('abandoned_carts')
+      .upsert({
+        session_id:  sid,
+        name:        updatedForm.fullName  || null,
+        email:       updatedForm.email     || null,
+        phone:       updatedForm.phone     || null,
+        city:        updatedForm.city      || null,
+        items:       items.map(i => ({ slug: i.slug, title: i.title, qty: i.qty, price: itemEffectivePrice(i) })),
+        total:       totalPrice,
+        status:      'abandoned',
+        updated_at:  new Date().toISOString(),
+      }, { onConflict: 'session_id' })
+      .select('id')
+      .single();
+    if (data?.id) abandonedIdRef.current = data.id;
   }
 
   function set(field) {
@@ -72,7 +68,7 @@ export default function CheckoutPage() {
       const value = e.target.value;
       setForm((f) => {
         const updated = { ...f, [field]: value };
-        scheduleSave(updated);
+        saveAbandoned(updated);
         return updated;
       });
     };
