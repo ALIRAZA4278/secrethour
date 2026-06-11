@@ -2268,6 +2268,117 @@ function PromoCodesTab() {
 }
 
 /* ═══════════════════════════════════════════
+   ABANDONED CARTS TAB
+═══════════════════════════════════════════ */
+function AbandonedCartsTab() {
+  const [carts,   setCarts]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter,  setFilter]  = useState('abandoned');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    let q = supabase.from('abandoned_carts').select('*').order('updated_at', { ascending: false });
+    if (filter !== 'all') q = q.eq('status', filter);
+    const { data } = await q;
+    setCarts(data || []);
+    setLoading(false);
+  }, [filter]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function del(id) {
+    if (!window.confirm('Delete this abandoned cart record?')) return;
+    await supabase.from('abandoned_carts').delete().eq('id', id);
+    setCarts(prev => prev.filter(c => c.id !== id));
+  }
+
+  function waFollowUp(cart) {
+    const raw   = (cart.phone || '').replace(/\D/g, '');
+    const phone = raw.startsWith('92') ? raw : raw.startsWith('0') ? '92' + raw.slice(1) : raw ? '92' + raw : '';
+    if (!phone) return;
+    const name = cart.name || 'there';
+    const itemsList = (cart.items || []).map(i => `• ${i.title} x${i.qty}`).join('\n');
+    const text = `Assalam o Alaikum ${name}!\n\nWe noticed you were checking out on SecretHour.pk but didn't complete your order.\n\nYour cart:\n${itemsList}\n\nTotal: Rs. ${(cart.total || 0).toLocaleString()}\n\nCan we help? We'd love to get your order to you. 😊\n\nSecretHour.pk`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Admin</p>
+        <h1 className="text-4xl italic text-gray-900" style={serif}>Abandoned Carts</h1>
+      </div>
+
+      {/* Filter */}
+      <div className="flex gap-2 flex-wrap">
+        {[['abandoned', 'Abandoned'], ['converted', 'Converted'], ['all', 'All']].map(([v, l]) => (
+          <button key={v} onClick={() => setFilter(v)}
+            className={`text-xs uppercase tracking-[0.15em] px-4 py-2 rounded-lg border font-medium transition ${filter === v ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-500 border-gray-300 hover:border-gray-500'}`}>
+            {l}
+          </button>
+        ))}
+        <button onClick={load} className="ml-auto text-xs uppercase tracking-[0.15em] px-4 py-2 rounded-lg border border-gray-300 text-gray-500 hover:border-gray-500 bg-white transition">
+          Refresh
+        </button>
+      </div>
+
+      {loading ? <Spinner /> : carts.length === 0 ? (
+        <p className="text-gray-400 text-sm italic py-10 text-center border border-dashed border-gray-200 rounded-xl">
+          No {filter !== 'all' ? filter : ''} carts.
+        </p>
+      ) : (
+        <div className="border border-gray-200 bg-white rounded-xl overflow-hidden shadow-sm">
+          {/* Header */}
+          <div className="hidden md:grid grid-cols-[160px_1fr_1fr_1fr_100px_90px_80px] gap-3 px-5 py-3 bg-gray-50 border-b border-gray-200">
+            {['Time', 'Name / Email', 'Phone', 'City', 'Total', 'Status', 'Actions'].map(h => (
+              <span key={h} className="text-xs text-gray-500 uppercase tracking-[0.2em] font-semibold">{h}</span>
+            ))}
+          </div>
+
+          {carts.map(c => {
+            const itemsSummary = (c.items || []).map(i => `${i.title} ×${i.qty}`).join(', ');
+            const date = new Date(c.updated_at || c.created_at).toLocaleString('en-PK', {
+              day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+            });
+            return (
+              <div key={c.id} className="flex flex-col md:grid md:grid-cols-[160px_1fr_1fr_1fr_100px_90px_80px] gap-3 items-start md:items-center px-5 py-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition">
+                <div>
+                  <p className="text-gray-600 text-xs">{date}</p>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-gray-900 text-sm font-semibold truncate">{c.name || '—'}</p>
+                  <p className="text-gray-400 text-xs truncate">{c.email || '—'}</p>
+                  {itemsSummary && <p className="text-gray-400 text-[10px] mt-0.5 truncate">{itemsSummary}</p>}
+                </div>
+                <p className="text-gray-700 text-sm">{c.phone || '—'}</p>
+                <p className="text-gray-700 text-sm">{c.city || '—'}</p>
+                <p className="text-gray-900 text-sm font-semibold">Rs. {(c.total || 0).toLocaleString()}</p>
+                <span className={`text-xs font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-full border ${c.status === 'converted' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
+                  {c.status}
+                </span>
+                <div className="flex items-center gap-2">
+                  {c.phone && c.status !== 'converted' && (
+                    <button onClick={() => waFollowUp(c)}
+                      title="Follow up on WhatsApp"
+                      className="text-xs uppercase tracking-[0.12em] font-medium px-3 py-1.5 border border-green-300 text-green-700 hover:bg-green-50 rounded-lg transition">
+                      WA
+                    </button>
+                  )}
+                  <button onClick={() => del(c.id)}
+                    className="text-xs uppercase tracking-[0.12em] font-medium px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg transition">
+                    Del
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
    SHARED
 ═══════════════════════════════════════════ */
 function Spinner() {
@@ -2293,6 +2404,7 @@ export default function AdminPage() {
 
   const TABS = [
     { id: 'orders',    label: 'Orders' },
+    { id: 'abandoned', label: 'Abandoned Carts' },
     { id: 'products',  label: 'Products' },
     { id: 'reviews',   label: 'Reviews' },
     { id: 'promos',    label: 'Promo Codes' },
@@ -2332,6 +2444,7 @@ export default function AdminPage() {
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-10">
         {tab === 'orders'    && <OrdersTab />}
+        {tab === 'abandoned' && <AbandonedCartsTab />}
         {tab === 'products'  && <ProductsTab />}
         {tab === 'reviews'   && <ReviewsTab />}
         {tab === 'promos'    && <PromoCodesTab />}

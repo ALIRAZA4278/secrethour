@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import MetaPixel from '../components/MetaPixel';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -32,8 +32,50 @@ export default function CheckoutPage() {
     address: '', city: '', postalCode: '', country: 'Pakistan',
   });
 
+  const sessionIdRef  = useRef(null);
+  const abandonedIdRef = useRef(null);
+  const saveTimer     = useRef(null);
+
+  useEffect(() => {
+    let sid = localStorage.getItem('sh_session');
+    if (!sid) { sid = crypto.randomUUID(); localStorage.setItem('sh_session', sid); }
+    sessionIdRef.current = sid;
+  }, []);
+
+  function scheduleSave(updatedForm) {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      const sid = sessionIdRef.current;
+      if (!sid) return;
+      if (!updatedForm.email && !updatedForm.phone) return;
+      const { data } = await supabase
+        .from('abandoned_carts')
+        .upsert({
+          session_id:  sid,
+          name:        updatedForm.fullName  || null,
+          email:       updatedForm.email     || null,
+          phone:       updatedForm.phone     || null,
+          city:        updatedForm.city      || null,
+          items:       items.map(i => ({ slug: i.slug, title: i.title, qty: i.qty, price: itemEffectivePrice(i) })),
+          total:       totalPrice,
+          status:      'abandoned',
+          updated_at:  new Date().toISOString(),
+        }, { onConflict: 'session_id' })
+        .select('id')
+        .single();
+      if (data?.id) abandonedIdRef.current = data.id;
+    }, 2000);
+  }
+
   function set(field) {
-    return (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+    return (e) => {
+      const value = e.target.value;
+      setForm((f) => {
+        const updated = { ...f, [field]: value };
+        scheduleSave(updated);
+        return updated;
+      });
+    };
   }
 
   const bankDiscount = payment === 'bank' ? Math.round(totalPrice * 0.10) : 0;
@@ -121,6 +163,12 @@ export default function CheckoutPage() {
           slug:        i.slug,
         })),
       };
+
+      // Mark abandoned cart as converted
+      const sid = sessionIdRef.current;
+      if (sid) {
+        await supabase.from('abandoned_carts').update({ status: 'converted' }).eq('session_id', sid);
+      }
 
       sessionStorage.setItem('sh_order', JSON.stringify(orderData));
       router.push('/thankyou');
