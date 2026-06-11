@@ -66,11 +66,9 @@ export default function CheckoutPage() {
   function set(field) {
     return (e) => {
       const value = e.target.value;
-      setForm((f) => {
-        const updated = { ...f, [field]: value };
-        saveAbandoned(updated);
-        return updated;
-      });
+      const updated = { ...form, [field]: value };
+      setForm(updated);
+      saveAbandoned(updated);
     };
   }
 
