@@ -157,8 +157,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   const [addingComment, setAddingComment] = useState(false);
   const [editing,       setEditing]       = useState(false);
   const [editForm,      setEditForm]      = useState({
-    first_name: order?.first_name || '',
-    last_name:  order?.last_name  || '',
+    full_name:  `${order?.first_name || ''} ${order?.last_name || ''}`.trim(),
     phone:      order?.phone      || '',
     email:      order?.email      || '',
     address:    order?.address    || '',
@@ -181,8 +180,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
     setNewComment('');
     setEditing(false);
     setEditForm({
-      first_name: order?.first_name || '',
-      last_name:  order?.last_name  || '',
+      full_name:  `${order?.first_name || ''} ${order?.last_name || ''}`.trim(),
       phone:      order?.phone      || '',
       email:      order?.email      || '',
       address:    order?.address    || '',
@@ -244,9 +242,10 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
 
   async function saveOrder() {
     setSavingOrder(true);
+    const nameParts = (editForm.full_name || '').trim().split(/\s+/);
     await supabase.from('orders').update({
-      first_name: editForm.first_name,
-      last_name:  editForm.last_name,
+      first_name: nameParts[0] || '',
+      last_name:  nameParts.slice(1).join(' ') || '',
       phone:      editForm.phone,
       email:      editForm.email,
       address:    editForm.address,
@@ -265,7 +264,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   async function bookOnPostEx() {
     setBookingPostex(true);
     try {
-      const customerName = `${editForm.first_name} ${editForm.last_name}`.trim();
+      const customerName = (editForm.full_name || '').trim();
       const totalItems   = items?.reduce((s, i) => s + i.quantity, 0) || 1;
       const orderDetail  = items?.map(i => `${i.product_title}${i.variation ? ` (${i.variation})` : ''} x${i.quantity}`).join(', ') || '';
       const res  = await fetch('/api/postex', {
@@ -450,15 +449,9 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
 
           {editing ? (
             <div className="space-y-3 pt-1">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">First Name</p>
-                  <input value={editForm.first_name} onChange={e => setEditForm(f => ({...f, first_name: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" />
-                </div>
-                <div>
-                  <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">Last Name</p>
-                  <input value={editForm.last_name} onChange={e => setEditForm(f => ({...f, last_name: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" />
-                </div>
+              <div>
+                <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">Full Name</p>
+                <input value={editForm.full_name} onChange={e => setEditForm(f => ({...f, full_name: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" />
               </div>
               <div>
                 <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">WhatsApp</p>
@@ -2412,10 +2405,10 @@ export default function AdminPage() {
 
   const TABS = [
     { id: 'orders',    label: 'Orders' },
-    { id: 'abandoned', label: 'Abandoned Carts' },
+    { id: 'abandoned', label: 'Abandoned' },
     { id: 'products',  label: 'Products' },
     { id: 'reviews',   label: 'Reviews' },
-    { id: 'promos',    label: 'Promo Codes' },
+    { id: 'promos',    label: 'Promos' },
     { id: 'settings',  label: 'Settings' },
     { id: 'dashboard', label: 'Dashboard' },
   ];

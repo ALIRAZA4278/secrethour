@@ -68,6 +68,13 @@ export default function ThankYouPage() {
   const total   = data?.total   || 0;
   const items   = data?.items   || [];
 
+  function orderNum(id) {
+    let h = 0;
+    for (const c of (id || '').replace(/-/g, '')) h = ((h << 5) - h + parseInt(c, 16)) | 0;
+    return `SH-${Math.abs(h % 9000) + 1000}`;
+  }
+  const orderRef = data?.orderId ? orderNum(data.orderId) : '';
+
   const paymentLabel = payment === 'bank' ? 'Bank Transfer' : 'Cash on Delivery';
 
   return (
@@ -85,6 +92,9 @@ export default function ThankYouPage() {
             <p className="text-cream italic text-base leading-relaxed" style={serif}>
               Thank you{name ? `, ${name}` : ''}.
             </p>
+            {orderRef && (
+              <p className="text-gold/70 text-xs uppercase tracking-[0.25em] mt-3">{orderRef}</p>
+            )}
             <p className="text-cream/50 text-sm leading-relaxed mt-2" style={serif}>
               Your order has been received and is being prepared.
               {email && <><br /><span className="text-cream/70">{email}</span></>}

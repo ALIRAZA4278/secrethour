@@ -103,6 +103,12 @@ export default function ProductPage({ params }) {
           const found = (all || []).find(x => x.slug === p.upsell_slug);
           setUpsell(found || null);
         }
+        if (p.variations?.length > 0) {
+          const vanillaOud = p.variations.find(v =>
+            (typeof v === 'string' ? v : v?.name)?.toLowerCase().includes('vanilla oud')
+          );
+          if (vanillaOud) setSelectedVariation(typeof vanillaOud === 'string' ? { name: vanillaOud, price: null } : vanillaOud);
+        }
         setStatus('found');
       } catch {
         setStatus('notfound');
@@ -222,7 +228,7 @@ export default function ProductPage({ params }) {
                 )}
                 {product.bulk_discount_qty && product.bulk_discount_pct && (
                   <p className="text-green-400/90 text-xs uppercase tracking-[0.15em] mt-1.5 font-medium">
-                    Buy {product.bulk_discount_qty}+ and save {product.bulk_discount_pct}%
+                    Buy {product.bulk_discount_qty} and save {product.bulk_discount_pct}%
                   </p>
                 )}
               </div>
