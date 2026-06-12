@@ -51,11 +51,12 @@ function fmtItems(items, total) {
 }
 
 const WA_MSG = {
-  pending:   (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nWe have received your Secret Hour order *${num}*. We will confirm it shortly.${fmtItems(items, total)}\n\nThank you!\nSecretHour.pk`,
-  confirmed: (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nGreat news! Your Secret Hour order *${num}* has been confirmed. We are preparing your package.${fmtItems(items, total)}\n\nThank you!\nSecretHour.pk`,
-  shipped:   (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been shipped! You will receive it within 2-3 business days.${fmtItems(items, total)}\n\nFor tracking, feel free to contact us.\n\nThank you!\nSecretHour.pk`,
-  delivered: (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been delivered! We hope you love it.${fmtItems(items, total)}\n\nWe would love to hear your feedback!\n\nThank you!\nSecretHour.pk`,
-  cancelled: (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nUnfortunately, your Secret Hour order *${num}* has been cancelled. Please contact us if you have any questions.${fmtItems(items, total)}\n\nThank you!\nSecretHour.pk`,
+  pending:          (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nWe have received your Secret Hour order *${num}*. We will confirm it shortly.${fmtItems(items, total)}\n\nThank you!\nSecretHour.pk`,
+  confirmed:        (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nGreat news! Your Secret Hour order *${num}* has been confirmed. We are preparing your package.${fmtItems(items, total)}\n\nThank you!\nSecretHour.pk`,
+  shipped:          (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been shipped! You will receive it within 2-3 business days.${fmtItems(items, total)}\n\nFor tracking, feel free to contact us.\n\nThank you!\nSecretHour.pk`,
+  out_for_delivery: (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* is out for delivery today! Our courier is on the way to you.${fmtItems(items, total)}\n\nPlease keep your phone available.\n\nThank you!\nSecretHour.pk`,
+  delivered:        (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been delivered! We hope you love it.${fmtItems(items, total)}\n\nWe would love to hear your feedback!\n\nThank you!\nSecretHour.pk`,
+  cancelled:        (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nUnfortunately, your Secret Hour order *${num}* has been cancelled. Please contact us if you have any questions.${fmtItems(items, total)}\n\nThank you!\nSecretHour.pk`,
 };
 
 function sendWhatsApp(order, status, items, total) {
@@ -68,15 +69,16 @@ function sendWhatsApp(order, status, items, total) {
 }
 
 const STATUS = {
-  pending:   { label: 'Pending',   cls: 'bg-yellow-50 text-yellow-700 border-yellow-300' },
-  confirmed: { label: 'Confirmed', cls: 'bg-blue-50   text-blue-700   border-blue-300'   },
-  shipped:   { label: 'Shipped',   cls: 'bg-purple-50 text-purple-700 border-purple-300' },
-  delivered: { label: 'Delivered', cls: 'bg-green-50  text-green-700  border-green-300'  },
-  cancelled: { label: 'Cancelled', cls: 'bg-red-50    text-red-700    border-red-300'    },
-  returned:  { label: 'Returned',  cls: 'bg-orange-50 text-orange-700 border-orange-300' },
+  pending:          { label: 'Pending',          cls: 'bg-yellow-50 text-yellow-700 border-yellow-300' },
+  confirmed:        { label: 'Confirmed',        cls: 'bg-blue-50   text-blue-700   border-blue-300'   },
+  shipped:          { label: 'Shipped',          cls: 'bg-purple-50 text-purple-700 border-purple-300' },
+  out_for_delivery: { label: 'Out for Delivery', cls: 'bg-teal-50   text-teal-700   border-teal-300'   },
+  delivered:        { label: 'Delivered',        cls: 'bg-green-50  text-green-700  border-green-300'  },
+  cancelled:        { label: 'Cancelled',        cls: 'bg-red-50    text-red-700    border-red-300'    },
+  returned:         { label: 'Returned',         cls: 'bg-orange-50 text-orange-700 border-orange-300' },
 };
 
-const STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'returned'];
+const STATUSES = ['pending', 'confirmed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned'];
 
 const INP = 'w-full px-3.5 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-100 transition placeholder:text-gray-400';
 const LBL = 'block text-xs uppercase tracking-[0.18em] text-gray-500 font-medium mb-1.5';
@@ -582,7 +584,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
                 className={`text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border rounded-lg transition ${
                   status === s ? STATUS[s].cls : 'border-gray-300 text-gray-500 hover:text-gray-800 hover:border-gray-500 bg-white'
                 }`}>
-                {s}
+                {STATUS[s]?.label || s}
               </button>
             ))}
           </div>
