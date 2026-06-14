@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { use, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '../../components/Navbar';
 import MetaPixel from '../../components/MetaPixel';
 import Footer from '../../components/Footer';
@@ -36,6 +36,8 @@ function FaqItem({ q, a }) {
 export default function ProductPage({ params }) {
   const { slug } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isPreview = searchParams.get('preview') === '1';
   const { addToCart, setOpen, updateQty } = useCart();
 
   function cartItem() {
@@ -92,10 +94,10 @@ export default function ProductPage({ params }) {
   useEffect(() => {
     async function load() {
       try {
-        const [{ data: p, error: pErr }, { data: all }] = await Promise.all([
-          supabase.from('products').select('*').eq('slug', slug).neq('hidden', true).single(),
-          supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('slug', slug).neq('hidden', true),
-        ]);
+        let pQuery = supabase.from('products').select('*').eq('slug', slug);
+        if (!isPreview) pQuery = pQuery.neq('hidden', true);
+        const allQuery = supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('slug', slug).neq('hidden', true);
+        const [{ data: p, error: pErr }, { data: all }] = await Promise.all([pQuery.single(), allQuery]);
         if (pErr || !p) { setStatus('notfound'); return; }
         setProduct(p);
         setRelated((all || []).slice(0, 3));
@@ -147,8 +149,8 @@ export default function ProductPage({ params }) {
   }
 
   if (status === 'notfound') {
-    router.replace('/shop');
-    return null;
+    if (!isPreview) router.replace('/shop');
+    return <div className="min-h-screen flex items-center justify-center text-white text-sm opacity-50">Product not found.</div>;
   }
 
   const images = product.images?.length ? product.images : [product.img].filter(Boolean);
