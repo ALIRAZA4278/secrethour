@@ -1833,6 +1833,10 @@ function ProductsTab() {
                     className={`text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1.5 border rounded-lg transition ${!p.hidden ? 'border-gray-300 text-gray-500 hover:border-gray-500' : 'border-orange-300 text-orange-700 bg-orange-50'}`}>
                     {p.hidden ? 'Show' : 'Hide'}
                   </button>
+                  <a href={`/product/${p.slug}`} target="_blank" rel="noreferrer"
+                    className="text-gray-600 hover:text-gray-900 text-[10px] uppercase tracking-[0.1em] border border-gray-300 hover:border-gray-500 px-2.5 py-1.5 rounded-lg transition font-medium">
+                    View
+                  </a>
                   <button onClick={() => startEdit(p)}
                     className="text-gray-600 hover:text-gray-900 text-[10px] uppercase tracking-[0.1em] border border-gray-300 hover:border-gray-500 px-2.5 py-1.5 rounded-lg transition font-medium">
                     Edit
@@ -1871,6 +1875,10 @@ function ProductsTab() {
                     className={`text-[10px] uppercase tracking-[0.1em] font-medium px-3 py-2 border rounded-lg transition ${!p.hidden ? 'border-gray-300 text-gray-500' : 'border-orange-300 text-orange-700 bg-orange-50'}`}>
                     {p.hidden ? 'Show' : 'Hide'}
                   </button>
+                  <a href={`/product/${p.slug}`} target="_blank" rel="noreferrer"
+                    className="text-gray-600 text-[10px] uppercase tracking-[0.1em] border border-gray-300 px-3 py-2 rounded-lg transition font-medium">
+                    View
+                  </a>
                   <button onClick={() => startEdit(p)}
                     className="text-gray-600 text-[10px] uppercase tracking-[0.1em] border border-gray-300 px-3 py-2 rounded-lg transition font-medium">
                     Edit
