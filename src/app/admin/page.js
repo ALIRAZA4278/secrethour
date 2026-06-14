@@ -1464,6 +1464,11 @@ function ProductsTab() {
     load();
   }
 
+  const filtered = products.filter(p =>
+    p.title?.toLowerCase().includes(search.toLowerCase()) ||
+    p.category?.toLowerCase().includes(search.toLowerCase())
+  );
+
   const allProdsSelected = filtered.length > 0 && filtered.every(p => selectedProds.has(p.id));
   function toggleAllProds() {
     if (allProdsSelected) setSelectedProds(new Set());
@@ -1484,11 +1489,6 @@ function ProductsTab() {
     await supabase.from('products').update({ [field]: !value }).eq('id', id);
     setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: !value } : p));
   }
-
-  const filtered = products.filter(p =>
-    p.title?.toLowerCase().includes(search.toLowerCase()) ||
-    p.category?.toLowerCase().includes(search.toLowerCase())
-  );
 
   if (loading) return <Spinner />;
 
