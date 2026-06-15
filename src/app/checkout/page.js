@@ -58,7 +58,7 @@ export default function CheckoutPage() {
           phone:      updatedForm.phone    || null,
           address:    updatedForm.address  || null,
           city:       updatedForm.city     || null,
-          items:      items.map(i => ({ slug: i.slug, title: i.title, qty: i.qty, price: itemEffectivePrice(i) })),
+          items:      items.map(i => ({ slug: i.slug, title: i.title, qty: i.qty, price: itemEffectivePrice(i), img: i.img || null, variation: i.variation || null })),
           total:      totalPrice,
           status:     'abandoned',
         }),

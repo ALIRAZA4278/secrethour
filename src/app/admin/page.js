@@ -2364,12 +2364,17 @@ function PromoCodesTab() {
 function AbandonedCartsTab() {
   const [carts,   setCarts]   = useState([]);
   const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res  = await fetch('/api/abandoned-cart');
-    const data = await res.json();
-    setCarts(Array.isArray(data) ? data : []);
+    setApiError('');
+    try {
+      const res  = await fetch('/api/abandoned-cart');
+      const data = await res.json();
+      if (!res.ok || data?.error) { setApiError(data?.error || `HTTP ${res.status}`); setCarts([]); }
+      else setCarts(Array.isArray(data) ? data : []);
+    } catch (err) { setApiError(err.message); setCarts([]); }
     setLoading(false);
   }, []);
 
@@ -2403,7 +2408,11 @@ function AbandonedCartsTab() {
         </button>
       </div>
 
-      {loading ? <Spinner /> : carts.length === 0 ? (
+      {loading ? <Spinner /> : apiError ? (
+        <p className="text-red-500 text-sm py-10 text-center border border-dashed border-red-200 rounded-xl bg-red-50">
+          API Error: {apiError}
+        </p>
+      ) : carts.length === 0 ? (
         <p className="text-gray-400 text-sm italic py-10 text-center border border-dashed border-gray-200 rounded-xl">
           No abandoned carts yet.
         </p>
@@ -2413,7 +2422,7 @@ function AbandonedCartsTab() {
             const date = new Date(c.updated_at || c.created_at).toLocaleString('en-PK', {
               day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
             });
-            const cartItems = c.items || [];
+            const cartItems = Array.isArray(c.items) ? c.items : [];
             return (
               <div key={c.id} className="bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm hover:border-gray-300 transition">
                 {/* Top row: name + status + actions */}
