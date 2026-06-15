@@ -57,6 +57,7 @@ const WA_MSG = {
   out_for_delivery: (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* is out for delivery today! Our courier is on the way to you.${fmtItems(items, total)}\n\nPlease keep your phone available.\n\nThank you!\nSecretHour.pk`,
   delivered:        (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been delivered! We hope you love it.${fmtItems(items, total)}\n\nWe would love to hear your feedback!\n\nThank you!\nSecretHour.pk`,
   cancelled:        (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nUnfortunately, your Secret Hour order *${num}* has been cancelled. Please contact us if you have any questions.${fmtItems(items, total)}\n\nThank you!\nSecretHour.pk`,
+  attempt:          (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nWe attempted delivery of your Secret Hour order *${num}* but were unable to reach you.${fmtItems(items, total)}\n\nPlease contact us to reschedule.\n\nThank you!\nSecretHour.pk`,
 };
 
 function sendWhatsApp(order, status, items, total) {
@@ -76,9 +77,10 @@ const STATUS = {
   delivered:        { label: 'Delivered',        cls: 'bg-green-50  text-green-700  border-green-300'  },
   cancelled:        { label: 'Cancelled',        cls: 'bg-red-50    text-red-700    border-red-300'    },
   returned:         { label: 'Returned',         cls: 'bg-orange-50 text-orange-700 border-orange-300' },
+  attempt:          { label: 'Attempt',          cls: 'bg-yellow-50 text-yellow-700 border-yellow-300' },
 };
 
-const STATUSES = ['pending', 'confirmed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'returned'];
+const STATUSES = ['pending', 'confirmed', 'shipped', 'out_for_delivery', 'attempt', 'delivered', 'cancelled', 'returned'];
 
 const INP = 'w-full px-3.5 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-100 transition placeholder:text-gray-400';
 const LBL = 'block text-xs uppercase tracking-[0.18em] text-gray-500 font-medium mb-1.5';
@@ -159,11 +161,12 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   const [addingComment, setAddingComment] = useState(false);
   const [editing,       setEditing]       = useState(false);
   const [editForm,      setEditForm]      = useState({
-    full_name:  `${order?.first_name || ''} ${order?.last_name || ''}`.trim(),
-    phone:      order?.phone      || '',
-    email:      order?.email      || '',
-    address:    order?.address    || '',
-    city:       order?.city       || '',
+    full_name:      `${order?.first_name || ''} ${order?.last_name || ''}`.trim(),
+    phone:          order?.phone           || '',
+    email:          order?.email           || '',
+    address:        order?.address         || '',
+    city:           order?.city            || '',
+    payment_method: order?.payment_method  || 'cod',
   });
   const [savingOrder,   setSavingOrder]   = useState(false);
   const [bookingPostex, setBookingPostex] = useState(false);
@@ -182,11 +185,12 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
     setNewComment('');
     setEditing(false);
     setEditForm({
-      full_name:  `${order?.first_name || ''} ${order?.last_name || ''}`.trim(),
-      phone:      order?.phone      || '',
-      email:      order?.email      || '',
-      address:    order?.address    || '',
-      city:       order?.city       || '',
+      full_name:      `${order?.first_name || ''} ${order?.last_name || ''}`.trim(),
+      phone:          order?.phone           || '',
+      email:          order?.email           || '',
+      address:        order?.address         || '',
+      city:           order?.city            || '',
+      payment_method: order?.payment_method  || 'cod',
     });
     if (!order) return;
     loadEvents();
@@ -246,12 +250,13 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
     setSavingOrder(true);
     const nameParts = (editForm.full_name || '').trim().split(/\s+/);
     await supabase.from('orders').update({
-      first_name: nameParts[0] || '',
-      last_name:  nameParts.slice(1).join(' ') || '',
-      phone:      editForm.phone,
-      email:      editForm.email,
-      address:    editForm.address,
-      city:       editForm.city,
+      first_name:     nameParts[0] || '',
+      last_name:      nameParts.slice(1).join(' ') || '',
+      phone:          editForm.phone,
+      email:          editForm.email,
+      address:        editForm.address,
+      city:           editForm.city,
+      payment_method: editForm.payment_method,
     }).eq('id', order.id);
     await supabase.from('order_events').insert({
       order_id: order.id,
@@ -471,6 +476,13 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
                 <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">City</p>
                 <input value={editForm.city} onChange={e => setEditForm(f => ({...f, city: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" />
               </div>
+              <div>
+                <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">Payment Method</p>
+                <select value={editForm.payment_method} onChange={e => setEditForm(f => ({...f, payment_method: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500 bg-white cursor-pointer">
+                  <option value="cod">Cash on Delivery</option>
+                  <option value="bank">Bank Transfer</option>
+                </select>
+              </div>
             </div>
           ) : (
             <>
@@ -542,7 +554,9 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
                         <Image src={item.product_img} alt="" fill className="object-contain" unoptimized />
                       </div>
                     )}
-                    <span className="text-gray-700 text-sm">{item.product_title}{item.variation ? <span className="text-orange-500 text-xs ml-1">({item.variation})</span> : ''} <span className="text-gray-400">× {item.quantity}</span></span>
+                    <span className="text-gray-700 text-sm">{item.product_title}{item.variation ? <span className="text-orange-500 text-xs ml-1">({item.variation})</span> : ''} <span className="text-gray-400">× {item.quantity}</span>
+                      {item.custom_note && <span className="block text-purple-600 text-xs mt-0.5">Note: {item.custom_note}</span>}
+                    </span>
                   </div>
                   <span className="text-gray-800 text-sm shrink-0 font-medium">Rs. {(item.price * item.quantity).toLocaleString()}</span>
                 </div>
@@ -1283,7 +1297,7 @@ const EMPTY = {
   numeric_price: '', stock_note: '', description: '',
   features: '', included: '', how_it_works: '',
   quote: '', quote_label: '', upsell_slug: '', tag: '',
-  in_stock: true, hidden: false,
+  in_stock: true, hidden: false, custom_text_enabled: false,
   bulk_discount_qty: '', bulk_discount_pct: '',
 };
 
@@ -1381,8 +1395,9 @@ function ProductsTab() {
       quote_label:  p.quote_label || '',
       upsell_slug:  p.upsell_slug || '',
       tag:          p.tag         || '',
-      in_stock:          p.in_stock !== false,
-      hidden:            p.hidden === true,
+      in_stock:            p.in_stock !== false,
+      hidden:              p.hidden === true,
+      custom_text_enabled: p.custom_text_enabled === true,
       bulk_discount_qty: p.bulk_discount_qty ? String(p.bulk_discount_qty) : '',
       bulk_discount_pct: p.bulk_discount_pct ? String(p.bulk_discount_pct) : '',
     });
@@ -1439,8 +1454,9 @@ function ProductsTab() {
         quote_label:   form.quote_label.trim(),
         upsell_slug:   form.upsell_slug.trim() || null,
         tag:           form.tag.trim() || null,
-        in_stock:          form.in_stock,
-        hidden:            form.hidden,
+        in_stock:            form.in_stock,
+        hidden:              form.hidden,
+        custom_text_enabled: form.custom_text_enabled,
         bulk_discount_qty: parseInt(form.bulk_discount_qty) || null,
         bulk_discount_pct: parseInt(form.bulk_discount_pct) || null,
         faq:               faq.filter(r => r.q.trim()),
@@ -1610,6 +1626,14 @@ function ProductsTab() {
                     <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.hidden ? 'translate-x-5' : 'translate-x-0.5'}`} />
                   </div>
                   <span className="text-sm text-gray-700 font-medium">{form.hidden ? 'Hidden from Shop' : 'Visible in Shop'}</span>
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <div
+                    onClick={() => setForm(p => ({ ...p, custom_text_enabled: !p.custom_text_enabled }))}
+                    className={`w-11 h-6 rounded-full transition-colors relative ${form.custom_text_enabled ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.custom_text_enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </div>
+                  <span className="text-sm text-gray-700 font-medium">{form.custom_text_enabled ? 'Secret Note: On' : 'Secret Note: Off'}</span>
                 </label>
               </div>
               <div>

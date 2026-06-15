@@ -121,6 +121,7 @@ export default function CheckoutPage() {
           quantity: item.qty,
           price: itemEffectivePrice(item),
           variation: item.variation || null,
+          custom_note: item.customNote || null,
         }))
       );
 

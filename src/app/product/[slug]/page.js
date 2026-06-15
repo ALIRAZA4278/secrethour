@@ -51,6 +51,7 @@ export default function ProductPage({ params }) {
       variation: selectedVariation?.name || null,
       bulkDiscountQty: product?.bulk_discount_qty || null,
       bulkDiscountPct: product?.bulk_discount_pct || null,
+      customNote: customNote.trim() || null,
     };
   }
 
@@ -87,6 +88,7 @@ export default function ProductPage({ params }) {
   const [selectedVariation, setSelectedVariation] = useState(null);
   const [variationError, setVariationError] = useState(false);
   const [qty, setQty] = useState(1);
+  const [customNote, setCustomNote] = useState('');
   const [status, setStatus] = useState('loading'); // 'loading' | 'found' | 'notfound'
   const [reviews, setReviews] = useState([]);
   const [reviewIdx, setReviewIdx] = useState(0);
@@ -296,6 +298,20 @@ export default function ProductPage({ params }) {
                   <span className="text-green-400 text-[10px] font-bold uppercase tracking-wide">{product.bulk_discount_pct}% off unlocked!</span>
                 )}
               </div>
+
+              {/* Secret note field */}
+              {product.custom_text_enabled && (
+                <div className="space-y-1.5">
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-cream/50">Secret Note / Custom Text</p>
+                  <textarea
+                    value={customNote}
+                    onChange={e => setCustomNote(e.target.value)}
+                    rows={3}
+                    placeholder="Add your personalised message or custom text…"
+                    className="w-full bg-transparent border border-gold-border/40 text-cream text-sm px-3 py-2.5 placeholder-cream/25 focus:outline-none focus:border-gold-border/70 resize-none"
+                  />
+                </div>
+              )}
 
               {/* Buttons — directly below price */}
               <div className="flex flex-col sm:flex-row gap-3">
