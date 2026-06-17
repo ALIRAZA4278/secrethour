@@ -167,6 +167,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
     address:        order?.address         || '',
     city:           order?.city            || '',
     payment_method: order?.payment_method  || 'cod',
+    total:          order?.total != null   ? String(order.total) : '',
   });
   const [savingOrder,   setSavingOrder]   = useState(false);
   const [bookingPostex, setBookingPostex] = useState(false);
@@ -191,6 +192,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
       address:        order?.address         || '',
       city:           order?.city            || '',
       payment_method: order?.payment_method  || 'cod',
+      total:          order?.total != null   ? String(order.total) : '',
     });
     if (!order) return;
     loadEvents();
@@ -257,6 +259,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
       address:        editForm.address,
       city:           editForm.city,
       payment_method: editForm.payment_method,
+      total:          parseFloat(editForm.total) || order.total,
     }).eq('id', order.id);
     await supabase.from('order_events').insert({
       order_id: order.id,
@@ -483,16 +486,22 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
                   <option value="bank">Bank Transfer</option>
                 </select>
               </div>
+              <div>
+                <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">Order Amount (Rs.)</p>
+                <input type="number" min="0" value={editForm.total} onChange={e => setEditForm(f => ({...f, total: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" placeholder="e.g. 2500" />
+                <p className="text-gray-400 text-[10px] mt-1">Edit for special discounts / custom pricing</p>
+              </div>
             </div>
           ) : (
             <>
               {[
-                ['CUSTOMER', name],
-                ['WHATSAPP', order.phone],
-                ['EMAIL',    order.email],
-                ['ADDRESS',  order.address],
-                ['CITY',     order.city],
-                ['PAYMENT',  payment],
+                ['CUSTOMER', editForm.full_name || name],
+                ['WHATSAPP', editForm.phone],
+                ['EMAIL',    editForm.email],
+                ['ADDRESS',  editForm.address],
+                ['CITY',     editForm.city],
+                ['PAYMENT',  editForm.payment_method === 'bank' ? 'Bank Transfer' : 'Cash on Delivery'],
+                ['AMOUNT',   editForm.total ? `Rs. ${Number(editForm.total).toLocaleString()}` : null],
                 ['DATE',     new Date(order.created_at).toLocaleString('en-PK', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })],
                 ['POSTEX TRACKING', order.postex_tracking],
                 ['POSTEX STATUS',   order.postex_status],
