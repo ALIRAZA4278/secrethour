@@ -768,8 +768,10 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
    ORDERS CHART
 ═══════════════════════════════════════════ */
 function OrdersChart({ orders }) {
-  const [mode,  setMode]  = useState('orders'); // 'orders' | 'revenue'
-  const [range, setRange] = useState('30d');    // '30d' | '3m' | '1y' | 'all'
+  const [mode,      setMode]      = useState('orders');
+  const [range,     setRange]     = useState('30d');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo,   setCustomTo]   = useState('');
 
   const W = 560, H = 160, PAD = { t: 12, r: 8, b: 36, l: 44 };
   const iW = W - PAD.l - PAD.r;
@@ -777,7 +779,6 @@ function OrdersChart({ orders }) {
 
   const skip = (o) => ['cancelled', 'returned'].includes(o.status);
 
-  // Build buckets based on range
   const { buckets, title } = (() => {
     const now = new Date();
 
@@ -796,7 +797,6 @@ function OrdersChart({ orders }) {
     }
 
     if (range === '3m') {
-      // weekly buckets — 13 week-start dates
       const starts = Array.from({ length: 13 }, (_, i) => {
         const d = new Date(now); d.setDate(d.getDate() - (12 - i) * 7);
         return d.toISOString().slice(0, 10);
@@ -806,7 +806,6 @@ function OrdersChart({ orders }) {
       for (const o of orders) {
         const oDate = o.created_at?.slice(0, 10);
         if (!oDate) continue;
-        // assign to latest bucket start <= oDate
         let bucket = null;
         for (let i = starts.length - 1; i >= 0; i--) {
           if (oDate >= starts[i]) { bucket = starts[i]; break; }
@@ -820,7 +819,6 @@ function OrdersChart({ orders }) {
     }
 
     if (range === '1y') {
-      // monthly buckets — last 12 months
       const months = Array.from({ length: 12 }, (_, i) => {
         const d = new Date(now); d.setDate(1); d.setMonth(d.getMonth() - (11 - i));
         return d.toISOString().slice(0, 7);
@@ -832,6 +830,28 @@ function OrdersChart({ orders }) {
         if (k && map[k]) { map[k].orders++; if (!skip(o)) map[k].revenue += Number(o.total) || 0; }
       }
       return { buckets: months.map(k => ({ key: k, ...map[k] })), title: 'Last 12 Months' };
+    }
+
+    if (range === 'custom') {
+      const from = customFrom || now.toISOString().slice(0, 10);
+      const to   = customTo   || now.toISOString().slice(0, 10);
+      if (from > to) return { buckets: [], title: 'Custom Range' };
+      // build daily buckets between from and to
+      const keys = [];
+      const cur = new Date(from);
+      const end = new Date(to);
+      while (cur <= end) {
+        keys.push(cur.toISOString().slice(0, 10));
+        cur.setDate(cur.getDate() + 1);
+      }
+      const map = {};
+      for (const k of keys) map[k] = { label: k.slice(5), orders: 0, revenue: 0 };
+      for (const o of orders) {
+        const k = o.created_at?.slice(0, 10);
+        if (k && map[k]) { map[k].orders++; if (!skip(o)) map[k].revenue += Number(o.total) || 0; }
+      }
+      const label = `${from.slice(5)} → ${to.slice(5)}`;
+      return { buckets: keys.map(k => ({ key: k, ...map[k] })), title: label };
     }
 
     // 'all' — monthly from first order to today
@@ -853,19 +873,19 @@ function OrdersChart({ orders }) {
     return { buckets: months.map(k => ({ key: k, ...map[k] })), title: 'All Time' };
   })();
 
-  const values  = buckets.map(b => b[mode]);
-  const maxVal  = Math.max(...values, 1);
-  const N       = buckets.length || 1;
-  const barW    = iW / N;
-  const barGap  = barW * 0.25;
-  const every   = N <= 15 ? 1 : N <= 30 ? 3 : N <= 60 ? 7 : N <= 90 ? 10 : 1; // label every Nth
+  const values = buckets.map(b => b[mode]);
+  const maxVal = Math.max(...values, 1);
+  const N      = buckets.length || 1;
+  const barW   = iW / N;
+  const barGap = barW * 0.25;
+  const every  = N <= 15 ? 1 : N <= 30 ? 3 : N <= 60 ? 7 : N <= 90 ? 10 : 1;
 
   return (
     <div className="border border-gray-200 bg-white rounded-xl shadow-sm p-5 md:p-6 space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-xl italic text-gray-800" style={serif}>{title}</h2>
         <div className="flex gap-1 flex-wrap justify-end">
-          {[['30d','30 Days'],['3m','3 Months'],['1y','1 Year'],['all','All Time']].map(([v, l]) => (
+          {[['30d','30 Days'],['3m','3 Months'],['1y','1 Year'],['all','All Time'],['custom','Custom']].map(([v, l]) => (
             <button key={v} onClick={() => setRange(v)}
               className={`text-xs uppercase tracking-[0.15em] px-3 py-1.5 rounded-lg border font-medium transition ${range === v ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-500 border-gray-300 hover:border-gray-500'}`}>
               {l}
@@ -880,6 +900,22 @@ function OrdersChart({ orders }) {
           ))}
         </div>
       </div>
+
+      {range === 'custom' && (
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <label className="text-gray-400 text-[10px] uppercase tracking-[0.15em]">From</label>
+            <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500 bg-white" />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-gray-400 text-[10px] uppercase tracking-[0.15em]">To</label>
+            <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500 bg-white" />
+          </div>
+        </div>
+      )}
+
       <div className="overflow-x-auto">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ minWidth: 320 }}>
           {[0, 0.25, 0.5, 0.75, 1].map(f => {
