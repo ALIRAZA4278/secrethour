@@ -251,7 +251,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   async function saveOrder() {
     setSavingOrder(true);
     const nameParts = (editForm.full_name || '').trim().split(/\s+/);
-    await supabase.from('orders').update({
+    const patch = {
       first_name:     nameParts[0] || '',
       last_name:      nameParts.slice(1).join(' ') || '',
       phone:          editForm.phone,
@@ -260,12 +260,14 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
       city:           editForm.city,
       payment_method: editForm.payment_method,
       total:          parseFloat(editForm.total) || order.total,
-    }).eq('id', order.id);
+    };
+    await supabase.from('orders').update(patch).eq('id', order.id);
     await supabase.from('order_events').insert({
       order_id: order.id,
       type: 'comment',
       content: 'Order details updated by admin',
     });
+    onStatusChange?.(order.id, patch);
     setSavingOrder(false);
     setEditing(false);
     loadEvents();
@@ -1053,7 +1055,11 @@ function Dashboard() {
           order={selectedOrder}
           items={itemsMap[selectedOrder.id]}
           onClose={() => setSelectedOrder(null)}
-          onStatusChange={(id, s) => setRecent(prev => prev.map(o => o.id === id ? { ...o, status: s } : o))}
+          onStatusChange={(id, s) => {
+            const patch = typeof s === 'object' ? s : { status: s };
+            setRecent(prev => prev.map(o => o.id === id ? { ...o, ...patch } : o));
+            if (selectedOrder?.id === id) setSelectedOrder(o => ({ ...o, ...patch }));
+          }}
         />
       )}
     </div>
