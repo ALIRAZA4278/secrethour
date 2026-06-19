@@ -173,12 +173,17 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   const [bookingPostex, setBookingPostex] = useState(false);
 
   async function loadEvents() {
-    const { data } = await supabase
-      .from('order_events')
-      .select('*')
-      .eq('order_id', order.id)
-      .order('created_at', { ascending: true });
-    setEvents(data || []);
+    const res = await fetch(`/api/order-events?order_id=${order.id}`);
+    const data = await res.json();
+    setEvents(Array.isArray(data) ? data : []);
+  }
+
+  async function insertEvent(type, content) {
+    await fetch('/api/order-events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: order.id, type, content }),
+    });
   }
 
   useEffect(() => {
@@ -208,11 +213,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   async function changeStatus(s) {
     setStatus(s);
     await supabase.from('orders').update({ status: s }).eq('id', order.id);
-    await supabase.from('order_events').insert({
-      order_id: order.id,
-      type: 'status_change',
-      content: `Status changed to ${STATUS[s]?.label || s}`,
-    });
+    await insertEvent('status_change', `Status changed to ${STATUS[s]?.label || s}`);
     onStatusChange(order.id, s);
     loadEvents();
 
@@ -238,11 +239,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
     const text = newComment.trim();
     if (!text) return;
     setAddingComment(true);
-    await supabase.from('order_events').insert({
-      order_id: order.id,
-      type: 'comment',
-      content: text,
-    });
+    await insertEvent('comment', text);
     setNewComment('');
     setAddingComment(false);
     loadEvents();
@@ -262,11 +259,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
       total:          parseFloat(editForm.total) || order.total,
     };
     await supabase.from('orders').update(patch).eq('id', order.id);
-    await supabase.from('order_events').insert({
-      order_id: order.id,
-      type: 'comment',
-      content: 'Order details updated by admin',
-    });
+    await insertEvent('comment', 'Order details updated by admin');
     onStatusChange?.(order.id, patch);
     setSavingOrder(false);
     setEditing(false);
@@ -296,11 +289,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
       const data = await res.json();
       if (data.trackingNumber) {
         await supabase.from('orders').update({ postex_tracking: data.trackingNumber }).eq('id', order.id);
-        await supabase.from('order_events').insert({
-          order_id: order.id,
-          type: 'status_change',
-          content: `Booked on PostEx — Tracking: ${data.trackingNumber}`,
-        });
+        await insertEvent('status_change', `Booked on PostEx — Tracking: ${data.trackingNumber}`);
         onStatusChange(order.id, { postex_tracking: data.trackingNumber });
         loadEvents();
         setPostexInfo({ type: 'track', data: { transactionStatus: `Booked — ${data.trackingNumber}` } });
@@ -342,11 +331,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
         };
         await supabase.from('orders').update(updatePatch).eq('id', order.id);
         onStatusChange && onStatusChange(order.id, updatePatch);
-        await supabase.from('order_events').insert({
-          order_id: order.id,
-          type: 'status_change',
-          content: `PostEx: ${liveStatus}`,
-        });
+        await insertEvent('status_change', `PostEx: ${liveStatus}`);
         loadEvents();
       }
     } catch (err) {
