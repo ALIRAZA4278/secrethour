@@ -452,22 +452,6 @@ export default function ProductPage({ params }) {
         </section>
       )}
 
-      {/* ── FAQ ── */}
-      {product.faq?.length > 0 && (
-        <section className="py-16 px-4 md:px-6 border-t border-gold-border/20">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-2xl md:text-3xl italic text-center mb-8 text-cream" style={serif}>
-              Quick <span className="text-gold-light">questions</span>
-            </h2>
-            <div className="border border-gold-border/40 divide-y divide-gold-border/20 px-5">
-              {product.faq.map((item, i) => (
-                <FaqItem key={i} q={item.q} a={item.a} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* ── You May Also Love ── */}
       {related.length > 0 && (
         <section className="py-20 border-t border-gold/10 px-4 md:px-6">
@@ -496,6 +480,22 @@ export default function ProductPage({ params }) {
                     </button>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── FAQ ── */}
+      {product.faq?.length > 0 && (
+        <section className="py-16 px-4 md:px-6 border-t border-gold-border/20">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-2xl md:text-3xl italic text-center mb-8 text-cream" style={serif}>
+              Quick <span className="text-gold-light">questions</span>
+            </h2>
+            <div className="border border-gold-border/40 divide-y divide-gold-border/20 px-5">
+              {product.faq.map((item, i) => (
+                <FaqItem key={i} q={item.q} a={item.a} />
               ))}
             </div>
           </div>
