@@ -25,23 +25,32 @@ export async function POST(req) {
 
     // Customer confirmation email (only if customer has email)
     if (to) {
-      await sendEmail({
-        to,
-        subject: 'Your Secret Hour Order is Confirmed',
-        html: orderConfirmationHtml({ name, orderId, items, total, payment, city, trackingNumber }),
-      });
+      try {
+        await sendEmail({
+          to,
+          subject: 'Your Secret Hour Order is Confirmed',
+          html: orderConfirmationHtml({ name, orderId, items, total, payment, city, trackingNumber }),
+        });
+      } catch (emailErr) {
+        console.error('Failed to send customer email:', emailErr.message);
+      }
     }
 
     // Admin notification email — always send
     const adminEmail = process.env.ADMIN_EMAIL || 'secrethour.pk@gmail.com';
-    await sendEmail({
-      to: adminEmail,
-      subject: `New Order #${String(orderId).slice(0, 8).toUpperCase()} — ${name} (${city})`,
-      html: adminOrderNotificationHtml({ name, phone, city, address, orderId, items, total, payment }),
-    });
+    try {
+      await sendEmail({
+        to: adminEmail,
+        subject: `New Order #${String(orderId).slice(0, 8).toUpperCase()} — ${name} (${city})`,
+        html: adminOrderNotificationHtml({ name, phone, city, address, orderId, items, total, payment }),
+      });
+    } catch (emailErr) {
+      console.error('Failed to send admin email:', emailErr.message);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
+    console.error('Email endpoint error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

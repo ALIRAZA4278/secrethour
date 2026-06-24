@@ -179,11 +179,21 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   }
 
   async function insertEvent(type, content) {
-    await fetch('/api/order-events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: order.id, type, content }),
-    });
+    try {
+      const res = await fetch('/api/order-events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: order.id, type, content }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        console.error('Failed to insert event:', error);
+        alert(`Error: ${error.error}`);
+      }
+    } catch (err) {
+      console.error('Insert event error:', err);
+      alert('Failed to add note');
+    }
   }
 
   useEffect(() => {
