@@ -251,7 +251,6 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
       setStatus(order.status);
       alert(`Failed to update status: ${err.message}`);
     }
-    }
   }
 
   async function addComment() {
