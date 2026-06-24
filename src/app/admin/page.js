@@ -222,26 +222,35 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
 
   async function changeStatus(s) {
     setStatus(s);
-    await supabase.from('orders').update({ status: s }).eq('id', order.id);
-    await insertEvent('status_change', `Status changed to ${STATUS[s]?.label || s}`);
-    onStatusChange(order.id, s);
-    loadEvents();
+    try {
+      const { error } = await supabase.from('orders').update({ status: s }).eq('id', order.id);
+      if (error) throw error;
 
-    if (order.email) {
-      const name = `${order.first_name || ''} ${order.last_name || ''}`.trim();
-      fetch('/api/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'status_update',
-          to: order.email,
-          name,
-          orderId: order.id,
-          status: s,
-          items,
-          total: order.total,
-        }),
-      }).catch(() => {});
+      await insertEvent('status_change', `Status changed to ${STATUS[s]?.label || s}`);
+      onStatusChange(order.id, s);
+      loadEvents();
+
+      if (order.email) {
+        const name = `${order.first_name || ''} ${order.last_name || ''}`.trim();
+        fetch('/api/email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'status_update',
+            to: order.email,
+            name,
+            orderId: order.id,
+            status: s,
+            items,
+            total: order.total,
+          }),
+        }).catch(() => {});
+      }
+    } catch (err) {
+      console.error('Status update failed:', err);
+      setStatus(order.status);
+      alert(`Failed to update status: ${err.message}`);
+    }
     }
   }
 
