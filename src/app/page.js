@@ -76,8 +76,8 @@ export default function Home() {
         const deck = visible.find(p => p.slug.toLowerCase() === 'the-midnight-deck');
         if (deck) setProducts({ 'the-midnight-deck': deck });
 
-        // First 2 visible products that are NOT the midnight deck
-        setBundles(visible.filter(p => p.slug.toLowerCase() !== 'the-midnight-deck').slice(0, 2));
+        // All visible products that are NOT the midnight deck (for slider)
+        setBundles(visible.filter(p => p.slug.toLowerCase() !== 'the-midnight-deck'));
       });
 
     // Fetch real reviews from both tables
@@ -297,31 +297,33 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-5 md:gap-6">
-            {bundles.map((p) => (
-              <Link key={p.slug} href={`/product/${p.slug}`}
-                className="group block border border-gold-border hover:border-gold transition-colors duration-300 relative">
-                {p.tag === 'best-seller' && (
-                  <span className="absolute top-3 left-3 z-10 bg-gold text-sh-bg text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1">
-                    Best Seller
-                  </span>
-                )}
-                <div className="relative aspect-4/3 overflow-hidden">
-                  <Image src={p.img} alt={p.title} fill className="object-cover" unoptimized />
-                </div>
-                <div className="p-4 space-y-1.5 bg-black/40 text-center">
-                  <h3 className="text-sm md:text-base italic text-cream" style={serif}>{p.title}</h3>
-                  <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
-                  <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
-                  <button
-                    onClick={(e) => { e.preventDefault(); if (p.variations?.length > 0) { router.push(`/product/${p.slug}`); } else { addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numeric_price, img: p.img, bulkDiscountQty: p.bulk_discount_qty || null, bulkDiscountPct: p.bulk_discount_pct || 0 }); } }}
-                    className="mt-1 w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
-                  >
-                    Add to Cart
-                  </button>
-                </div>
-              </Link>
-            ))}
+          <div className="overflow-x-auto pb-2 -mx-4 md:-mx-6 px-4 md:px-6 scrollbar-hide">
+            <div className="flex gap-5 md:gap-6 min-w-min">
+              {bundles.map((p) => (
+                <Link key={p.slug} href={`/product/${p.slug}`}
+                  className="group block border border-gold-border hover:border-gold transition-colors duration-300 relative shrink-0 w-full sm:w-96">
+                  {p.tag === 'best-seller' && (
+                    <span className="absolute top-3 left-3 z-10 bg-gold text-sh-bg text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1">
+                      Best Seller
+                    </span>
+                  )}
+                  <div className="relative aspect-4/3 overflow-hidden">
+                    <Image src={p.img} alt={p.title} fill className="object-cover" unoptimized />
+                  </div>
+                  <div className="p-4 space-y-1.5 bg-black/40 text-center">
+                    <h3 className="text-sm md:text-base italic text-cream" style={serif}>{p.title}</h3>
+                    <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
+                    <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
+                    <button
+                      onClick={(e) => { e.preventDefault(); if (p.variations?.length > 0) { router.push(`/product/${p.slug}`); } else { addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numeric_price, img: p.img, bulkDiscountQty: p.bulk_discount_qty || null, bulkDiscountPct: p.bulk_discount_pct || 0 }); } }}
+                      className="mt-1 w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
