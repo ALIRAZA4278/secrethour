@@ -42,6 +42,61 @@ function exportCSV(orders) {
   URL.revokeObjectURL(url);
 }
 
+function exportInstaworldCSV(orders, itemsMap) {
+  const rows = [
+    ['ref_no', 'consignee_first_name', 'consignee_last_name', 'consignee_email', 'consignee_phone', 'consignee_city', 'consignee_address', 'amount', 'financial_status', 'remarks', 'item_title', 'item_detail', 'item_price', 'item_quantity', 'item_sku', 'item_kg', 'open_parcel'],
+    ...orders.flatMap(o => {
+      const items = itemsMap[o.id] || [];
+      if (items.length === 0) {
+        return [[
+          o.id,
+          o.first_name || '',
+          o.last_name || '',
+          o.email || '',
+          o.phone || '',
+          (o.city || 'LAHORE').toUpperCase(),
+          o.address || '',
+          o.total || 0,
+          o.payment_method === 'bank' ? 'paid' : 'cod',
+          'Order from Secret Hour',
+          '',
+          '',
+          '',
+          '',
+          '',
+          0.5,
+          'no',
+        ]];
+      }
+      return items.map((item, idx) => [
+        o.id,
+        idx === 0 ? (o.first_name || '') : '',
+        idx === 0 ? (o.last_name || '') : '',
+        idx === 0 ? (o.email || '') : '',
+        idx === 0 ? (o.phone || '') : '',
+        idx === 0 ? (o.city || 'LAHORE').toUpperCase() : '',
+        idx === 0 ? (o.address || '') : '',
+        idx === 0 ? (o.total || 0) : '',
+        idx === 0 ? (o.payment_method === 'bank' ? 'paid' : 'cod') : '',
+        idx === 0 ? 'Order from Secret Hour' : '',
+        item.product_title || item.title || '',
+        item.variation || '',
+        item.price || 0,
+        item.quantity || 1,
+        item.sku || '',
+        0.5,
+        'no',
+      ]);
+    }),
+  ];
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'instaworld-bulk-shipments.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
 function fmtItems(items, total) {
   if (!items?.length) return '';
   const lines = items.map(i =>
@@ -174,6 +229,24 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   const [bookingInstaworld, setBookingInstaworld] = useState(false);
   const [instaworldInfo,   setInstaworldInfo]   = useState(null);
   const [instaworldLoading, setInstaworldLoading] = useState('');
+  const [cities,           setCities]           = useState([]);
+  const [citiesLoading,    setCitiesLoading]    = useState(false);
+
+  async function loadCities() {
+    setCitiesLoading(true);
+    try {
+      const res = await fetch('/api/instaworld', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cities' }),
+      });
+      const data = await res.json();
+      setCities(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load cities:', err);
+    }
+    setCitiesLoading(false);
+  }
 
   async function loadEvents() {
     const res = await fetch(`/api/order-events?order_id=${order.id}`);
@@ -214,6 +287,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
     });
     if (!order) return;
     loadEvents();
+    loadCities();
     setCustLoading(true);
     const key = order.phone || order.email;
     if (!key) { setCustLoading(false); return; }
@@ -579,7 +653,12 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
               </div>
               <div>
                 <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">City</p>
-                <input value={editForm.city} onChange={e => setEditForm(f => ({...f, city: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500" />
+                <select value={editForm.city} onChange={e => setEditForm(f => ({...f, city: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500 bg-white cursor-pointer">
+                  <option value="">Select City</option>
+                  {cities.map(c => (
+                    <option key={c.id || c.name} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">Payment Method</p>
@@ -1380,6 +1459,14 @@ function OrdersTab() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
               Export {selected.size > 0 ? `(${selected.size})` : 'All'}
+            </button>
+
+            <button onClick={() => exportInstaworldCSV(selected.size > 0 ? orders.filter(o => selected.has(o.id)) : visible, itemsMap)}
+              className="flex items-center gap-1.5 text-blue-600 hover:text-blue-900 text-xs uppercase tracking-[0.2em] border border-blue-300 px-3.5 py-2 rounded-lg hover:bg-blue-50 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Insta World CSV {selected.size > 0 ? `(${selected.size})` : 'All'}
             </button>
 
             <button onClick={syncAllPostex} disabled={syncingPostex}
