@@ -169,8 +169,11 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
     payment_method: order?.payment_method  || 'cod',
     total:          order?.total != null   ? String(order.total) : '',
   });
-  const [savingOrder,   setSavingOrder]   = useState(false);
-  const [bookingPostex, setBookingPostex] = useState(false);
+  const [savingOrder,      setSavingOrder]      = useState(false);
+  const [bookingPostex,    setBookingPostex]    = useState(false);
+  const [bookingInstaworld, setBookingInstaworld] = useState(false);
+  const [instaworldInfo,   setInstaworldInfo]   = useState(null);
+  const [instaworldLoading, setInstaworldLoading] = useState('');
 
   async function loadEvents() {
     const res = await fetch(`/api/order-events?order_id=${order.id}`);
@@ -320,6 +323,51 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
     setBookingPostex(false);
   }
 
+  async function bookOnInstaworld() {
+    setBookingInstaworld(true);
+    try {
+      const res = await fetch('/api/instaworld', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'createShipment',
+          data: {
+            ref_no: order.id,
+            consignee_first_name: editForm.full_name?.split(' ')[0] || '',
+            consignee_last_name: editForm.full_name?.split(' ').slice(1).join(' ') || '',
+            consignee_email: editForm.email || '',
+            consignee_phone: editForm.phone || '',
+            consignee_address: editForm.address || '',
+            consignee_city: (editForm.city || 'LAHORE').toUpperCase(),
+            amount: order.total || 0,
+            financial_status: order.payment_method === 'bank' ? 'paid' : 'cod',
+            remarks: 'Secret Hour Order',
+            items: items?.map(i => ({
+              title: i.product_title || 'Product',
+              price: i.price || 0,
+              quantity: i.quantity || 1,
+              sku: i.sku || '',
+              kg: 0.5,
+            })) || [{ title: 'Order', price: order.total, quantity: 1, sku: '', kg: 0.5 }],
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.tracking_number) {
+        await supabase.from('orders').update({ instaworld_tracking: data.tracking_number }).eq('id', order.id);
+        await insertEvent('status_change', `Booked on Insta World — Tracking: ${data.tracking_number}`);
+        onStatusChange(order.id, { instaworld_tracking: data.tracking_number });
+        loadEvents();
+        setInstaworldInfo({ type: 'track', data: { transactionStatus: `Booked — ${data.tracking_number}` } });
+      } else {
+        setInstaworldInfo({ type: 'track', error: data.error || JSON.stringify(data) });
+      }
+    } catch (err) {
+      setInstaworldInfo({ type: 'track', error: err.message });
+    }
+    setBookingInstaworld(false);
+  }
+
   async function deleteOrder() {
     if (!window.confirm(`Delete order ${orderNum(order.id)}? This cannot be undone.`)) return;
     await supabase.from('orders').delete().eq('id', order.id);
@@ -394,6 +442,55 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
       setPostexInfo({ type: 'advice', error: err.message });
     }
     setPostexLoading('');
+  }
+
+  async function trackInstaworld() {
+    if (!order.instaworld_tracking) return;
+    setInstaworldLoading('track');
+    setInstaworldInfo(null);
+    try {
+      const res = await fetch('/api/instaworld', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'trackShipment',
+          data: { tracking_number: order.instaworld_tracking },
+        }),
+      });
+      const data = await res.json();
+      setInstaworldInfo({ type: 'track', data });
+    } catch (err) {
+      setInstaworldInfo({ type: 'track', error: err.message });
+    }
+    setInstaworldLoading('');
+  }
+
+  async function cancelInstaworld() {
+    if (!order.instaworld_tracking) return;
+    if (!window.confirm(`Cancel Insta World shipment ${order.instaworld_tracking}?`)) return;
+    setInstaworldLoading('cancel');
+    setInstaworldInfo(null);
+    try {
+      const res = await fetch('/api/instaworld', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'cancelShipment',
+          data: { tracking_number: order.instaworld_tracking },
+        }),
+      });
+      const data = await res.json();
+      if (data.status) {
+        await supabase.from('orders').update({ instaworld_tracking: null }).eq('id', order.id);
+        await insertEvent('status_change', `Insta World shipment cancelled: ${order.instaworld_tracking}`);
+        onStatusChange(order.id, { instaworld_tracking: null });
+        loadEvents();
+      }
+      setInstaworldInfo({ type: 'cancel', data });
+    } catch (err) {
+      setInstaworldInfo({ type: 'cancel', error: err.message });
+    }
+    setInstaworldLoading('');
   }
 
   async function fetchPaymentStatus() {
@@ -583,25 +680,48 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
           </div>
         )}
 
-        {/* Book on PostEx */}
-        {!order.postex_tracking && (
-          <div className="px-6 py-5 border-b border-gray-200">
-            <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-3">BOOK ON POSTEX</p>
-            <button
-              onClick={bookOnPostEx}
-              disabled={bookingPostex}
-              className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white text-xs uppercase tracking-[0.2em] py-3.5 rounded-lg hover:bg-black transition disabled:opacity-50"
-            >
-              {bookingPostex ? 'Booking…' : 'Book on PostEx'}
-            </button>
-            {postexInfo?.error && (
-              <p className="text-red-500 text-xs mt-2">{postexInfo.error}</p>
-            )}
-            {postexInfo?.data?.transactionStatus?.startsWith('Booked') && (
-              <p className="text-green-600 text-xs mt-2 font-medium">{postexInfo.data.transactionStatus}</p>
-            )}
-          </div>
-        )}
+        {/* Shipping Options */}
+        <div className="px-6 py-5 border-b border-gray-200 space-y-3">
+          {/* Book on PostEx */}
+          {!order.postex_tracking && (
+            <div>
+              <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-3">BOOK ON POSTEX</p>
+              <button
+                onClick={bookOnPostEx}
+                disabled={bookingPostex}
+                className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white text-xs uppercase tracking-[0.2em] py-3.5 rounded-lg hover:bg-black transition disabled:opacity-50"
+              >
+                {bookingPostex ? 'Booking…' : 'Book on PostEx'}
+              </button>
+              {postexInfo?.error && (
+                <p className="text-red-500 text-xs mt-2">{postexInfo.error}</p>
+              )}
+              {postexInfo?.data?.transactionStatus?.startsWith('Booked') && (
+                <p className="text-green-600 text-xs mt-2 font-medium">{postexInfo.data.transactionStatus}</p>
+              )}
+            </div>
+          )}
+
+          {/* Book on Insta World */}
+          {!order.instaworld_tracking && (
+            <div>
+              <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-3">BOOK ON INSTA WORLD</p>
+              <button
+                onClick={bookOnInstaworld}
+                disabled={bookingInstaworld}
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white text-xs uppercase tracking-[0.2em] py-3.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {bookingInstaworld ? 'Booking…' : 'Book on Insta World'}
+              </button>
+              {instaworldInfo?.error && (
+                <p className="text-red-500 text-xs mt-2">{instaworldInfo.error}</p>
+              )}
+              {instaworldInfo?.data?.transactionStatus?.startsWith('Booked') && (
+                <p className="text-green-600 text-xs mt-2 font-medium">{instaworldInfo.data.transactionStatus}</p>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Status update */}
         <div className="px-6 py-5 border-b border-gray-200">
@@ -662,6 +782,34 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
             </button>
           </div>
         </div>
+
+        {/* Insta World Actions */}
+        {order.instaworld_tracking && (
+          <div className="px-6 py-5 border-b border-gray-200">
+            <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-3">INSTA WORLD ACTIONS</p>
+            <p className="text-sm text-gray-700 mb-3 font-mono">{order.instaworld_tracking}</p>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={trackInstaworld} disabled={instaworldLoading === 'track'}
+                className="text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:border-gray-500 bg-white transition disabled:opacity-50">
+                {instaworldLoading === 'track' ? 'Tracking…' : 'Track'}
+              </button>
+              <button onClick={() => window.open(`https://one-be.instaworld.pk/logistics/v1/awb?tracking_number=${order.instaworld_tracking}&token=fa5olb3j8jcfthhaa51v`, '_blank')}
+                className="text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:border-gray-500 bg-white transition">
+                Download AWB
+              </button>
+              <button onClick={cancelInstaworld} disabled={instaworldLoading === 'cancel'}
+                className="text-xs uppercase tracking-[0.12em] font-medium px-3.5 py-2 border border-red-300 rounded-lg text-red-600 hover:text-red-800 hover:border-red-500 bg-white transition disabled:opacity-50">
+                {instaworldLoading === 'cancel' ? 'Cancelling…' : 'Cancel'}
+              </button>
+            </div>
+            {instaworldInfo?.error && (
+              <p className="text-red-500 text-xs mt-2">{instaworldInfo.error}</p>
+            )}
+            {instaworldInfo?.data?.status && (
+              <p className="text-green-600 text-xs mt-2 font-medium">✓ {instaworldInfo.data.message?.[0]?.['call courier'] || 'Success'}</p>
+            )}
+          </div>
+        )}
 
         {/* PostEx Actions */}
         {order.postex_tracking && (
