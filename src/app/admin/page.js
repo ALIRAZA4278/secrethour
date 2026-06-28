@@ -43,13 +43,19 @@ function exportCSV(orders) {
 }
 
 function exportInstaworldCSV(orders, itemsMap) {
+  function orderNum(id) {
+    let h = 0;
+    for (const c of (id || '').replace(/-/g, '')) h = ((h << 5) - h + parseInt(c, 16)) | 0;
+    return `SH-${Math.abs(h % 9000) + 1000}`;
+  }
+
   const rows = [
     ['ref_no', 'consignee_first_name', 'consignee_last_name', 'consignee_email', 'consignee_phone', 'consignee_city', 'consignee_address', 'amount', 'financial_status', 'remarks', 'item_title', 'item_detail', 'item_price', 'item_quantity', 'item_sku', 'item_kg', 'open_parcel'],
     ...orders.flatMap(o => {
       const items = itemsMap[o.id] || [];
       if (items.length === 0) {
         return [[
-          o.id,
+          orderNum(o.id),
           o.first_name || '',
           o.last_name || '',
           o.email || '',
@@ -69,7 +75,7 @@ function exportInstaworldCSV(orders, itemsMap) {
         ]];
       }
       return items.map((item, idx) => [
-        o.id,
+        orderNum(o.id),
         idx === 0 ? (o.first_name || '') : '',
         idx === 0 ? (o.last_name || '') : '',
         idx === 0 ? (o.email || '') : '',
@@ -406,7 +412,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
         body: JSON.stringify({
           action: 'createShipment',
           data: {
-            ref_no: order.id,
+            ref_no: orderNum(order.id),
             consignee_first_name: editForm.full_name?.split(' ')[0] || '',
             consignee_last_name: editForm.full_name?.split(' ').slice(1).join(' ') || '',
             consignee_email: editForm.email || '',
