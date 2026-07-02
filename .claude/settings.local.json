@@ -46,7 +46,23 @@
       "Bash(node test-postex.mjs)",
       "Bash(node get-pickup-address.mjs)",
       "Bash(node test-email2.mjs)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(Select-String -Path \"D:\\\\RABAH\\\\secrethour\\\\my-app\\\\src\\\\app\\\\product\\\\[slug]\\\\page.js\" -Pattern \"return \\\\\\(\")",
+      "Bash(Select-Object LineNumber, Line)",
+      "Bash(Select-String -Path \"D:\\\\RABAH\\\\secrethour\\\\my-app\\\\src\\\\app\\\\info\\\\[slug]\\\\page.js\" -Pattern \"return \\\\\\(\")",
+      "PowerShell(Get-Content \"D:\\\\RABAH\\\\secrethour\\\\my-app\\\\src\\\\app\\\\product\\\\[slug]\\\\page.js\" | Select-String \"return \\\\\\(\" | ForEach-Object { \"Line $\\($_.LineNumber\\): $\\($_.Line\\)\" })",
+      "PowerShell(Get-Content \"D:\\\\RABAH\\\\secrethour\\\\my-app\\\\src\\\\app\\\\info\\\\[slug]\\\\page.js\" | Select-String \"return \\\\\\(\" | ForEach-Object { \"Line $\\($_.LineNumber\\): $\\($_.Line\\)\" })",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "PowerShell(Start-Sleep -Seconds 5; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -TimeoutSec 5 -UseBasicParsing; $r.StatusCode } catch { \"not ready\" })",
+      "Bash(curl *)",
+      "Bash(grep -v \"//\\\\|export\\\\|WA_MSG\\\\|orderNum\\\\|fmt\")",
+      "Skill(run)",
+      "Bash(kill %1)",
+      "Bash(curl -s http://localhost:3000/product/the-midnight-deck)",
+      "Bash(pkill -f \"npm run dev\")",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(tee /tmp/devtest.log)",
+      "Bash(taskkill /PID 13200 /F)"
     ]
   }
 }
