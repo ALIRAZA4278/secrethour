@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Navbar from '../../components/Navbar';
 import MetaPixel from '../../components/MetaPixel';
 import Footer from '../../components/Footer';
-import { supabase } from '../../../lib/supabase';
+import { getServerSupabase } from '../../../lib/supabase-server';
 import ProductPageClient from './ProductPageClient';
 
 // Allow dynamic params for slugs not in generateStaticParams
@@ -12,6 +12,7 @@ export const dynamicParams = true;
 // Server-side data fetching — runs on server only
 export async function generateStaticParams() {
   try {
+    const supabase = getServerSupabase();
     const { data: products } = await supabase.from('products').select('slug').neq('hidden', true);
     return (products || []).map(p => ({ slug: p.slug }));
   } catch {
@@ -21,13 +22,32 @@ export async function generateStaticParams() {
 
 async function getProductData(slug) {
   try {
-    const [{ data: product }, { data: allProducts }, { data: reviews }] = await Promise.all([
+    const supabase = getServerSupabase();
+    const queries = await Promise.allSettled([
       supabase.from('products').select('*').eq('slug', slug).neq('hidden', true).single(),
       supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('hidden', true),
       supabase.from('product_reviews').select('id, reviewer_name, rating, body, created_at').eq('product_slug', slug).eq('approved', true).order('created_at', { ascending: false }),
     ]);
 
-    if (!product) return null;
+    const [productResult, allProductsResult, reviewsResult] = queries;
+
+    if (productResult.status === 'rejected') {
+      console.error(`Product query rejected:`, productResult.reason);
+      return null;
+    }
+
+    const { data: product, error: productError } = productResult.value;
+    if (productError) {
+      console.error(`Product query error: ${slug}`, productError);
+      return null;
+    }
+    if (!product) {
+      console.warn(`Product not found: ${slug}`);
+      return null;
+    }
+
+    const { data: allProducts = [] } = allProductsResult.status === 'fulfilled' ? allProductsResult.value : { data: [] };
+    const { data: reviews = [] } = reviewsResult.status === 'fulfilled' ? reviewsResult.value : { data: [] };
 
     return {
       product,
@@ -36,7 +56,7 @@ async function getProductData(slug) {
       reviews: reviews || [],
     };
   } catch (err) {
-    console.error(`Error fetching product ${slug}:`, err);
+    console.error(`Unexpected error fetching product ${slug}:`, err.message);
     return null;
   }
 }
