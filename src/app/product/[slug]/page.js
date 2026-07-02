@@ -6,6 +6,9 @@ import Footer from '../../components/Footer';
 import { supabase } from '../../../lib/supabase';
 import ProductPageClient from './ProductPageClient';
 
+// Allow dynamic params for slugs not in generateStaticParams
+export const dynamicParams = true;
+
 // Server-side data fetching — runs on server only
 export async function generateStaticParams() {
   try {
@@ -20,7 +23,7 @@ async function getProductData(slug) {
   try {
     const [{ data: product }, { data: allProducts }, { data: reviews }] = await Promise.all([
       supabase.from('products').select('*').eq('slug', slug).neq('hidden', true).single(),
-      supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('slug', slug).neq('hidden', true),
+      supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('hidden', true),
       supabase.from('product_reviews').select('id, reviewer_name, rating, body, created_at').eq('product_slug', slug).eq('approved', true).order('created_at', { ascending: false }),
     ]);
 
@@ -32,7 +35,8 @@ async function getProductData(slug) {
       upsell: allProducts?.find(x => x.slug === product.upsell_slug) || null,
       reviews: reviews || [],
     };
-  } catch {
+  } catch (err) {
+    console.error(`Error fetching product ${slug}:`, err);
     return null;
   }
 }
