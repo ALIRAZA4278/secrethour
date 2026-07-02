@@ -24,7 +24,7 @@ async function getProductData(slug) {
   try {
     const supabase = getServerSupabase();
     const queries = await Promise.allSettled([
-      supabase.from('products').select('*').eq('slug', slug).neq('hidden', true).single(),
+      supabase.from('products').select('*').eq('slug', slug).neq('hidden', true),
       supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('hidden', true),
       supabase.from('product_reviews').select('id, reviewer_name, rating, body, created_at').eq('product_slug', slug).eq('approved', true).order('created_at', { ascending: false }),
     ]);
@@ -32,19 +32,18 @@ async function getProductData(slug) {
     const [productResult, allProductsResult, reviewsResult] = queries;
 
     if (productResult.status === 'rejected') {
-      console.error(`Product query rejected:`, productResult.reason);
+      console.error(`Product query rejected for ${slug}:`, productResult.reason);
       return null;
     }
 
-    const { data: product, error: productError } = productResult.value;
+    const { data: productArray, error: productError } = productResult.value;
+    const product = Array.isArray(productArray) ? productArray[0] : productArray;
+
     if (productError) {
-      console.error(`Product query error: ${slug}`, productError);
+      console.error(`Product query error for ${slug}:`, productError);
       return null;
     }
-    if (!product) {
-      console.warn(`Product not found: ${slug}`);
-      return null;
-    }
+    if (!product) return null;
 
     const { data: allProducts = [] } = allProductsResult.status === 'fulfilled' ? allProductsResult.value : { data: [] };
     const { data: reviews = [] } = reviewsResult.status === 'fulfilled' ? reviewsResult.value : { data: [] };
@@ -56,7 +55,7 @@ async function getProductData(slug) {
       reviews: reviews || [],
     };
   } catch (err) {
-    console.error(`Unexpected error fetching product ${slug}:`, err.message);
+    console.error(`Error fetching product ${slug}:`, err.message);
     return null;
   }
 }
@@ -67,7 +66,7 @@ export const metadata = {
 };
 
 export default async function ProductPage({ params }) {
-  const { slug } = params;
+  const { slug } = await params;
   const data = await getProductData(slug);
 
   if (!data) {
