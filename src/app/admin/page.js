@@ -1011,6 +1011,14 @@ function OrdersChart({ orders, period = '30days', type = 'orders', status = null
   const [customFrom, setCustomFrom] = useState('');
   const [customTo,   setCustomTo]   = useState('');
 
+  useEffect(() => {
+    setMode(type);
+  }, [type]);
+
+  useEffect(() => {
+    setRange(period === '30days' ? '30d' : period === '3months' ? '3m' : period === '1year' ? '1y' : period === 'custom' ? 'custom' : 'all');
+  }, [period]);
+
   const W = 560, H = 160, PAD = { t: 12, r: 8, b: 36, l: 44 };
   const iW = W - PAD.l - PAD.r;
   const iH = H - PAD.t - PAD.b;
