@@ -31,7 +31,7 @@ export default function CartDrawer() {
       .then(({ data }) => {
         if (!data?.length) return;
         const filtered = data.filter((p) => !cartSlugs.has(p.slug));
-        const shuffled = filtered.sort(() => Math.random() - 0.5).slice(0, 2);
+        const shuffled = filtered.sort(() => Math.random() - 0.5).slice(0, 3);
         setSuggestions(shuffled);
       });
   }, [open, items]);
