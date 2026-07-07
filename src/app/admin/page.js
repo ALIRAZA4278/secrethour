@@ -1005,19 +1005,11 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
 /* ═══════════════════════════════════════════
    ORDERS CHART
 ═══════════════════════════════════════════ */
-function OrdersChart({ orders, period = '30days', type = 'orders', status = null }) {
-  const [mode,      setMode]      = useState(type);
-  const [range,     setRange]     = useState(period === '30days' ? '30d' : period === '3months' ? '3m' : period === '1year' ? '1y' : period === 'custom' ? 'custom' : 'all');
+function OrdersChart({ orders, status = null }) {
+  const [mode,      setMode]      = useState('orders');
+  const [range,     setRange]     = useState('30d');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo,   setCustomTo]   = useState('');
-
-  useEffect(() => {
-    setMode(type);
-  }, [type]);
-
-  useEffect(() => {
-    setRange(period === '30days' ? '30d' : period === '3months' ? '3m' : period === '1year' ? '1y' : period === 'custom' ? 'custom' : 'all');
-  }, [period]);
 
   const W = 560, H = 160, PAD = { t: 12, r: 8, b: 36, l: 44 };
   const iW = W - PAD.l - PAD.r;
@@ -1220,7 +1212,6 @@ function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [itemsMap,      setItemsMap]      = useState({});
   const [timePeriod,    setTimePeriod]    = useState('30days');
-  const [chartType,     setChartType]     = useState('orders');
   const [selectedStatus, setSelectedStatus] = useState(null);
 
   const getFilteredOrdersByPeriod = (orders, period) => {
@@ -1310,23 +1301,6 @@ function Dashboard() {
             {period.label}
           </button>
         ))}
-        <div className="flex-1" />
-        {[
-          { id: 'orders', label: 'Orders' },
-          { id: 'reviews', label: 'Reviews' },
-        ].map(chart => (
-          <button
-            key={chart.id}
-            onClick={() => setChartType(chart.id)}
-            className={`px-4 py-2 text-xs uppercase tracking-[0.2em] rounded-lg border transition ${
-              chartType === chart.id
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            {chart.label}
-          </button>
-        ))}
       </div>
 
       {/* Order Status Breakdown - Grid Layout */}
@@ -1358,7 +1332,7 @@ function Dashboard() {
       </div>
 
       {/* Timeline Chart */}
-      <OrdersChart orders={allOrders} period={timePeriod} type={chartType} status={selectedStatus} />
+      <OrdersChart orders={allOrders} status={selectedStatus} />
 
       <div>
         <h2 className="text-xl italic text-gray-800 mb-4" style={serif}>Recent Orders</h2>
