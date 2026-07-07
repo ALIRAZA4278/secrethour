@@ -105,7 +105,20 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  if (slug === 'faq')      return { title: 'FAQ — Secret Hour' };
+  if (slug === 'faq') {
+    return {
+      title: 'FAQ — Delivery, Packaging & Products | Secret Hour Pakistan',
+      description: 'Have questions about Secret Hour? Learn about our discreet packaging, delivery times across Pakistan, payment options, and product details. All answers here.',
+      openGraph: {
+        title: 'FAQ — Delivery, Packaging & Products | Secret Hour Pakistan',
+        description: 'Have questions about Secret Hour? Learn about our discreet packaging, delivery times across Pakistan, payment options, and product details. All answers here.',
+        url: 'https://secrethour.pk/info/faq',
+      },
+      alternates: {
+        canonical: 'https://secrethour.pk/info/faq',
+      },
+    };
+  }
   if (slug === 'referral') return { title: 'Share & Earn — Secret Hour' };
   const policy = POLICIES[slug];
   if (!policy) return {};

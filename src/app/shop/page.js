@@ -13,8 +13,16 @@ const LOGO = '/assets/logo-secret-hour-DN-hyC6c.png';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Shop — Secret Hour',
-  description: 'Quiet luxuries, made for the hours that belong only to the two of you.',
+  title: 'Shop Couple Gifts Online in Pakistan | Secret Hour',
+  description: 'Browse Pakistan\'s only curated collection of intimate gifts for married couples. Card games, candles, silk bonds & bridal bundles. Fast discreet delivery across Pakistan.',
+  openGraph: {
+    title: 'Shop Couple Gifts Online in Pakistan | Secret Hour',
+    description: 'Browse Pakistan\'s only curated collection of intimate gifts for married couples. Card games, candles, silk bonds & bridal bundles. Fast discreet delivery across Pakistan.',
+    url: 'https://secrethour.pk/shop',
+  },
+  alternates: {
+    canonical: 'https://secrethour.pk/shop',
+  },
 };
 
 export default async function ShopPage() {

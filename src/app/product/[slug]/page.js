@@ -60,10 +60,61 @@ async function getProductData(slug) {
   }
 }
 
-export const metadata = {
-  title: 'Product | Secret Hour',
-  description: 'Discover our curated collection of intimate experiences.',
-};
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const data = await getProductData(slug);
+
+  if (!data) {
+    return {
+      title: 'Product Not Found | Secret Hour',
+      description: 'This product could not be found.',
+    };
+  }
+
+  const { product } = data;
+
+  // Map product slug to SEO meta tags from the guide
+  const metaTags = {
+    'the-midnight-deck': {
+      title: 'Couples Card Game Pakistan — The Midnight Deck | Secret Hour',
+      description: 'The Midnight Deck is Pakistan\'s first couples card game designed for married partners. Spark deep conversations & connection. Order online with discreet delivery.',
+    },
+    'midnight-glow-candle': {
+      title: 'Romantic Scented Candle Pakistan | Midnight Glow — Secret Hour',
+      description: 'Set the mood with Midnight Glow — a handcrafted romantic scented candle for couples in Pakistan. Rich warm fragrance for intimate evenings. Order online today.',
+    },
+    'secret-note': {
+      title: 'Secret Note — Romantic Love Letter Envelope | Secret Hour Pakistan',
+      description: 'Write what you feel. Secret Note is a beautifully crafted envelope set for married couples to exchange heartfelt messages. The perfect intimate gift in Pakistan.',
+    },
+    'silk-bond': {
+      title: 'Silk Bond — Intimate Couples Accessory Pakistan | Secret Hour',
+      description: 'Silk Bond is a premium satin tie for couples — perfect for playful, intimate moments. Discreet packaging. Delivered across Pakistan. For married couples only.',
+    },
+    'bridal-bundle': {
+      title: 'Bridal Bundle Pakistan — Complete Couples Gift Box | Secret Hour',
+      description: 'The ultimate wedding night gift. Our Bridal Bundle includes the Midnight Deck, Midnight Glow Candle, Secret Note & Silk Bond. The perfect nikkah gift in Pakistan.',
+    },
+  };
+
+  const tags = metaTags[slug] || {
+    title: `${product.title} | Secret Hour`,
+    description: product.description || 'Intimate gifts for married couples in Pakistan. Order online with discreet delivery.',
+  };
+
+  return {
+    title: tags.title,
+    description: tags.description,
+    openGraph: {
+      title: tags.title,
+      description: tags.description,
+      url: `https://secrethour.pk/product/${slug}`,
+    },
+    alternates: {
+      canonical: `https://secrethour.pk/product/${slug}`,
+    },
+  };
+}
 
 export default async function ProductPage({ params }) {
   const { slug } = await params;

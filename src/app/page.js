@@ -1,3 +1,16 @@
+export const metadata = {
+  title: 'Secret Hour — Couple Gifts & Intimate Sets | Pakistan',
+  description: 'Pakistan\'s first intimate gifting brand for married couples. Shop couples card games, scented candles, romantic sets & the Bridal Bundle. Discreet delivery nationwide.',
+  openGraph: {
+    title: 'Secret Hour — Couple Gifts & Intimate Sets | Pakistan',
+    description: 'Pakistan\'s first intimate gifting brand for married couples. Shop couples card games, scented candles, romantic sets & the Bridal Bundle. Discreet delivery nationwide.',
+    url: 'https://secrethour.pk/',
+  },
+  alternates: {
+    canonical: 'https://secrethour.pk/',
+  },
+};
+
 'use client';
 
 import Image from 'next/image';
