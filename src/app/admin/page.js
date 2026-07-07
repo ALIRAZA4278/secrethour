@@ -1256,28 +1256,16 @@ function Dashboard() {
         <h1 className="text-4xl italic text-gray-900" style={serif}>Dashboard</h1>
       </div>
 
-      {/* Order Status Breakdown - Horizontal Scroll */}
+      {/* Order Status Breakdown - Grid Layout */}
       <div>
         <h2 className="text-lg italic text-gray-800 mb-4" style={serif}>Order Status Breakdown</h2>
-        <div className="relative">
-          <div className="overflow-x-auto pb-2 scrollbar-hide">
-            <div className="flex gap-4 min-w-min">
-              {STATUSES.map(status => (
-                <div key={status} className={`border p-5 rounded-xl shadow-sm flex-shrink-0 w-60 ${STATUS[status]?.cls || 'bg-gray-50 border-gray-200'}`}>
-                  <p className="text-xs uppercase tracking-[0.2em] mb-2 opacity-80">{STATUS[status]?.label || status}</p>
-                  <p className="text-3xl font-bold">{statusCounts[status] || 0}</p>
-                </div>
-              ))}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {STATUSES.map(status => (
+            <div key={status} className={`border p-5 rounded-xl shadow-sm cursor-pointer transition hover:shadow-md ${STATUS[status]?.cls || 'bg-gray-50 border-gray-200'}`}>
+              <p className="text-xs uppercase tracking-[0.2em] mb-2 opacity-80">{STATUS[status]?.label || status}</p>
+              <p className="text-3xl font-bold">{statusCounts[status] || 0}</p>
             </div>
-          </div>
-          {/* Left arrow */}
-          <button className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition" onClick={() => document.querySelector('.scrollbar-hide')?.scrollBy({left: -300, behavior: 'smooth'})}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-          </button>
-          {/* Right arrow */}
-          <button className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition" onClick={() => document.querySelector('.scrollbar-hide')?.scrollBy({left: 300, behavior: 'smooth'})}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-          </button>
+          ))}
         </div>
       </div>
 
