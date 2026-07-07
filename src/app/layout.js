@@ -21,11 +21,11 @@ const BASE_URL = 'https://secrethour.pk';
 export const metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'Couple Gifts in Pakistan — Card Games, Candles & Intimate Sets | Secret Hour',
-    template: '%s | Secret Hour',
+    default: 'Secret Hour — Couple Gifts & Intimate Sets | Pakistan',
+    template: '%s',
   },
   description:
-    'Secret Hour makes quiet luxuries for married couples in Pakistan — a couples card game, luxury candles, and intimate gift sets. Free delivery. Discreet packaging.',
+    'Pakistan\'s first intimate gifting brand for married couples. Shop couples card games, scented candles, romantic sets & the Bridal Bundle. Discreet delivery nationwide.',
   keywords: ['couple gifts pakistan', 'wedding night gift pakistan', 'intimacy gifts pakistan', 'bridal box pakistan', 'card game for couples', 'midnight deck', 'secret hour'],
   authors: [{ name: 'Secret Hour', url: BASE_URL }],
   creator: 'Secret Hour',
