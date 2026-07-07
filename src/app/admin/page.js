@@ -1210,6 +1210,8 @@ function Dashboard() {
   const [loading,       setLoading]       = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [itemsMap,      setItemsMap]      = useState({});
+  const [timePeriod,    setTimePeriod]    = useState('30days');
+  const [chartType,     setChartType]     = useState('orders');
 
   useEffect(() => {
     (async () => {
@@ -1248,11 +1250,38 @@ function Dashboard() {
   if (loading) return <Spinner />;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Admin</p>
         <h1 className="text-4xl italic text-gray-900" style={serif}>Dashboard</h1>
       </div>
+
+      {/* Order Status Breakdown - Horizontal Scroll */}
+      <div>
+        <h2 className="text-lg italic text-gray-800 mb-4" style={serif}>Order Status Breakdown</h2>
+        <div className="relative">
+          <div className="overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-4 min-w-min">
+              {STATUSES.map(status => (
+                <div key={status} className={`border p-5 rounded-xl shadow-sm flex-shrink-0 w-60 ${STATUS[status]?.cls || 'bg-gray-50 border-gray-200'}`}>
+                  <p className="text-xs uppercase tracking-[0.2em] mb-2 opacity-80">{STATUS[status]?.label || status}</p>
+                  <p className="text-3xl font-bold">{statusCounts[status] || 0}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Left arrow */}
+          <button className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition" onClick={() => document.querySelector('.scrollbar-hide')?.scrollBy({left: -300, behavior: 'smooth'})}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          </button>
+          {/* Right arrow */}
+          <button className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition" onClick={() => document.querySelector('.scrollbar-hide')?.scrollBy({left: 300, behavior: 'smooth'})}>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Stats */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {[
           { label: 'Total Orders',  value: stats.total },
@@ -1267,19 +1296,48 @@ function Dashboard() {
         ))}
       </div>
 
-      <div className="mt-8">
-        <h2 className="text-lg italic text-gray-800 mb-4" style={serif}>Order Status Breakdown</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-          {STATUSES.map(status => (
-            <div key={status} className={`border p-5 rounded-xl shadow-sm ${STATUS[status]?.cls || 'bg-gray-50 border-gray-200'}`}>
-              <p className="text-xs uppercase tracking-[0.2em] mb-2 opacity-80">{STATUS[status]?.label || status}</p>
-              <p className="text-3xl font-bold">{statusCounts[status] || 0}</p>
-            </div>
-          ))}
-        </div>
+      {/* Timeline Tabs */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-4">
+        {[
+          { id: '30days', label: '30 Days' },
+          { id: '3months', label: '3 Months' },
+          { id: '1year', label: '1 Year' },
+          { id: 'alltime', label: 'All Time' },
+          { id: 'custom', label: 'Custom' },
+        ].map(period => (
+          <button
+            key={period.id}
+            onClick={() => setTimePeriod(period.id)}
+            className={`px-4 py-2 text-xs uppercase tracking-[0.2em] rounded-lg border transition ${
+              timePeriod === period.id
+                ? 'bg-gray-900 text-white border-gray-900'
+                : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            {period.label}
+          </button>
+        ))}
+        <div className="flex-1" />
+        {[
+          { id: 'orders', label: 'Orders' },
+          { id: 'reviews', label: 'Reviews' },
+        ].map(chart => (
+          <button
+            key={chart.id}
+            onClick={() => setChartType(chart.id)}
+            className={`px-4 py-2 text-xs uppercase tracking-[0.2em] rounded-lg border transition ${
+              chartType === chart.id
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            {chart.label}
+          </button>
+        ))}
       </div>
 
-      <OrdersChart orders={allOrders} />
+      {/* Timeline Chart */}
+      <OrdersChart orders={allOrders} period={timePeriod} type={chartType} />
 
       <div>
         <h2 className="text-xl italic text-gray-800 mb-4" style={serif}>Recent Orders</h2>

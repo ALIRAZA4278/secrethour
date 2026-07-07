@@ -63,7 +63,9 @@
       "Bash(pkill -f \"next dev\")",
       "Bash(tee /tmp/devtest.log)",
       "Bash(taskkill /PID 13200 /F)",
-      "Bash(git commit -m 'feat: add order status breakdown to admin dashboard *)"
+      "Bash(git commit -m 'feat: add order status breakdown to admin dashboard *)",
+      "mcp__chrome-devtools__new_page",
+      "Bash(git commit -m 'refactor: reorganize admin dashboard layout with status cards carousel and timeline tabs *)"
     ]
   }
 }
