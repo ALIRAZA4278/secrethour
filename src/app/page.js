@@ -16,7 +16,6 @@ const IMG = {
 };
 
 const SLIDES = [
-  { desk: '/assets/hero-couple-CSWWAnnc.jpg', mob: '/assets/hero-couple-CSWWAnnc.jpg' },
   { desk: '/Banners/1.jpg.jpeg',              mob: '/Banners/1 mob.jpg.jpeg' },
   { desk: '/Banners/2.jpg.jpeg',              mob: '/Banners/2 mob.jpg.jpeg' },
 ];
