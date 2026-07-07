@@ -1223,31 +1223,54 @@ function Dashboard() {
   const [chartType,     setChartType]     = useState('orders');
   const [selectedStatus, setSelectedStatus] = useState(null);
 
+  const getFilteredOrdersByPeriod = (orders, period) => {
+    const now = new Date();
+    const filtered = orders.filter(o => {
+      if (!o.created_at) return false;
+      const oDate = new Date(o.created_at);
+      if (period === '30days') {
+        const thirtyDaysAgo = new Date(now); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        return oDate >= thirtyDaysAgo;
+      }
+      if (period === '3months') {
+        const threeMonthsAgo = new Date(now); threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        return oDate >= threeMonthsAgo;
+      }
+      if (period === '1year') {
+        const oneYearAgo = new Date(now); oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        return oDate >= oneYearAgo;
+      }
+      return true; // 'alltime' - all orders
+    });
+    return filtered;
+  };
+
   useEffect(() => {
     (async () => {
       const { data: orders } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
       if (orders) {
-        const delivered = orders.filter(o => o.status === 'delivered').length;
+        setAllOrders(orders);
+        const periodFiltered = getFilteredOrdersByPeriod(orders, timePeriod);
+        const delivered = periodFiltered.filter(o => o.status === 'delivered').length;
 
-        // Calculate status counts
+        // Calculate status counts for selected period
         const counts = {};
         STATUSES.forEach(s => {
-          counts[s] = orders.filter(o => o.status === s).length;
+          counts[s] = periodFiltered.filter(o => o.status === s).length;
         });
         setStatusCounts(counts);
 
         setStats({
-          total:        orders.length,
-          revenue:      orders.filter(o => !['cancelled','returned'].includes(o.status)).reduce((s, o) => s + (Number(o.total) || 0), 0),
-          pending:      orders.filter(o => o.status === 'pending').length,
-          deliveryRate: orders.length ? Math.round((delivered / orders.length) * 100) : 0,
+          total:        periodFiltered.length,
+          revenue:      periodFiltered.filter(o => !['cancelled','returned'].includes(o.status)).reduce((s, o) => s + (Number(o.total) || 0), 0),
+          pending:      periodFiltered.filter(o => o.status === 'pending').length,
+          deliveryRate: periodFiltered.length ? Math.round((delivered / periodFiltered.length) * 100) : 0,
         });
-        setAllOrders(orders);
-        setRecent(orders.slice(0, 8));
+        setRecent(periodFiltered.slice(0, 8));
       }
       setLoading(false);
     })();
-  }, []);
+  }, [timePeriod]);
 
   async function viewOrder(order) {
     setSelectedOrder(order);
@@ -1266,20 +1289,7 @@ function Dashboard() {
         <h1 className="text-4xl italic text-gray-900" style={serif}>Dashboard</h1>
       </div>
 
-      {/* Order Status Breakdown - Grid Layout */}
-      <div>
-        <h2 className="text-lg italic text-gray-800 mb-4" style={serif}>Order Status Breakdown</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {STATUSES.map(status => (
-            <div key={status} onClick={() => setSelectedStatus(selectedStatus === status ? null : status)} className={`border p-5 rounded-xl shadow-sm cursor-pointer transition ${selectedStatus === status ? 'ring-2 ring-blue-600 shadow-lg' : 'hover:shadow-md'} ${STATUS[status]?.cls || 'bg-gray-50 border-gray-200'}`}>
-              <p className="text-xs uppercase tracking-[0.2em] mb-2 opacity-80">{STATUS[status]?.label || status}</p>
-              <p className="text-3xl font-bold">{statusCounts[status] || 0}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Timeline Tabs */}
+      {/* Timeline Tabs - Above Status Breakdown */}
       <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-4">
         {[
           { id: '30days', label: '30 Days' },
@@ -1317,6 +1327,19 @@ function Dashboard() {
             {chart.label}
           </button>
         ))}
+      </div>
+
+      {/* Order Status Breakdown - Grid Layout */}
+      <div>
+        <h2 className="text-lg italic text-gray-800 mb-4" style={serif}>Order Status Breakdown</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {STATUSES.map(status => (
+            <div key={status} onClick={() => setSelectedStatus(selectedStatus === status ? null : status)} className={`border p-5 rounded-xl shadow-sm cursor-pointer transition ${selectedStatus === status ? 'ring-2 ring-blue-600 shadow-lg' : 'hover:shadow-md'} ${STATUS[status]?.cls || 'bg-gray-50 border-gray-200'}`}>
+              <p className="text-xs uppercase tracking-[0.2em] mb-2 opacity-80">{STATUS[status]?.label || status}</p>
+              <p className="text-3xl font-bold">{statusCounts[status] || 0}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Main Stats */}
