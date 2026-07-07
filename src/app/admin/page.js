@@ -1005,9 +1005,9 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
 /* ═══════════════════════════════════════════
    ORDERS CHART
 ═══════════════════════════════════════════ */
-function OrdersChart({ orders }) {
-  const [mode,      setMode]      = useState('orders');
-  const [range,     setRange]     = useState('30d');
+function OrdersChart({ orders, period = '30days', type = 'orders', status = null }) {
+  const [mode,      setMode]      = useState(type);
+  const [range,     setRange]     = useState(period === '30days' ? '30d' : period === '3months' ? '3m' : period === '1year' ? '1y' : period === 'custom' ? 'custom' : 'all');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo,   setCustomTo]   = useState('');
 
@@ -1016,6 +1016,7 @@ function OrdersChart({ orders }) {
   const iH = H - PAD.t - PAD.b;
 
   const skip = (o) => ['cancelled', 'returned'].includes(o.status);
+  const filteredOrders = status ? orders.filter(o => o.status === status) : orders;
 
   const { buckets, title } = (() => {
     const now = new Date();
@@ -1027,7 +1028,7 @@ function OrdersChart({ orders }) {
       });
       const map = {};
       for (const k of keys) map[k] = { label: k.slice(5), orders: 0, revenue: 0 };
-      for (const o of orders) {
+      for (const o of filteredOrders) {
         const k = o.created_at?.slice(0, 10);
         if (map[k]) { map[k].orders++; if (!skip(o)) map[k].revenue += Number(o.total) || 0; }
       }
@@ -1041,7 +1042,7 @@ function OrdersChart({ orders }) {
       });
       const map = {};
       for (const k of starts) map[k] = { label: k.slice(5), orders: 0, revenue: 0 };
-      for (const o of orders) {
+      for (const o of filteredOrders) {
         const oDate = o.created_at?.slice(0, 10);
         if (!oDate) continue;
         let bucket = null;
@@ -1063,7 +1064,7 @@ function OrdersChart({ orders }) {
       });
       const map = {};
       for (const k of months) map[k] = { label: k.slice(5), orders: 0, revenue: 0 };
-      for (const o of orders) {
+      for (const o of filteredOrders) {
         const k = o.created_at?.slice(0, 7);
         if (k && map[k]) { map[k].orders++; if (!skip(o)) map[k].revenue += Number(o.total) || 0; }
       }
@@ -1084,7 +1085,7 @@ function OrdersChart({ orders }) {
       }
       const map = {};
       for (const k of keys) map[k] = { label: k.slice(5), orders: 0, revenue: 0 };
-      for (const o of orders) {
+      for (const o of filteredOrders) {
         const k = o.created_at?.slice(0, 10);
         if (k && map[k]) { map[k].orders++; if (!skip(o)) map[k].revenue += Number(o.total) || 0; }
       }
@@ -1093,8 +1094,8 @@ function OrdersChart({ orders }) {
     }
 
     // 'all' — monthly from first order to today
-    if (!orders.length) return { buckets: [], title: 'All Time' };
-    const firstStr = orders.reduce((min, o) => (!min || o.created_at < min ? o.created_at : min), null);
+    if (!filteredOrders.length) return { buckets: [], title: 'All Time' };
+    const firstStr = filteredOrders.reduce((min, o) => (!min || o.created_at < min ? o.created_at : min), null);
     const months = [];
     const cur = new Date(firstStr.slice(0, 7) + '-01');
     const nowYM = now.toISOString().slice(0, 7);
@@ -1104,7 +1105,7 @@ function OrdersChart({ orders }) {
     }
     const map = {};
     for (const k of months) map[k] = { label: k.slice(5), orders: 0, revenue: 0 };
-    for (const o of orders) {
+    for (const o of filteredOrders) {
       const k = o.created_at?.slice(0, 7);
       if (k && map[k]) { map[k].orders++; if (!skip(o)) map[k].revenue += Number(o.total) || 0; }
     }
@@ -1212,6 +1213,7 @@ function Dashboard() {
   const [itemsMap,      setItemsMap]      = useState({});
   const [timePeriod,    setTimePeriod]    = useState('30days');
   const [chartType,     setChartType]     = useState('orders');
+  const [selectedStatus, setSelectedStatus] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -1261,7 +1263,7 @@ function Dashboard() {
         <h2 className="text-lg italic text-gray-800 mb-4" style={serif}>Order Status Breakdown</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {STATUSES.map(status => (
-            <div key={status} className={`border p-5 rounded-xl shadow-sm cursor-pointer transition hover:shadow-md ${STATUS[status]?.cls || 'bg-gray-50 border-gray-200'}`}>
+            <div key={status} onClick={() => setSelectedStatus(selectedStatus === status ? null : status)} className={`border p-5 rounded-xl shadow-sm cursor-pointer transition ${selectedStatus === status ? 'ring-2 ring-blue-600 shadow-lg' : 'hover:shadow-md'} ${STATUS[status]?.cls || 'bg-gray-50 border-gray-200'}`}>
               <p className="text-xs uppercase tracking-[0.2em] mb-2 opacity-80">{STATUS[status]?.label || status}</p>
               <p className="text-3xl font-bold">{statusCounts[status] || 0}</p>
             </div>
@@ -1325,7 +1327,7 @@ function Dashboard() {
       </div>
 
       {/* Timeline Chart */}
-      <OrdersChart orders={allOrders} period={timePeriod} type={chartType} />
+      <OrdersChart orders={allOrders} period={timePeriod} type={chartType} status={selectedStatus} />
 
       <div>
         <h2 className="text-xl italic text-gray-800 mb-4" style={serif}>Recent Orders</h2>
