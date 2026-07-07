@@ -1271,21 +1271,6 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Main Stats */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Orders',  value: stats.total },
-          { label: 'Revenue',       value: `Rs. ${stats.revenue.toLocaleString()}` },
-          { label: 'Pending',       value: stats.pending },
-          { label: 'Delivery Rate', value: `${stats.deliveryRate}%` },
-        ].map(s => (
-          <div key={s.label} className="border border-gray-200 p-5 bg-white rounded-xl shadow-sm">
-            <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-2">{s.label}</p>
-            <p className="text-3xl text-gray-900 font-bold">{s.value}</p>
-          </div>
-        ))}
-      </div>
-
       {/* Timeline Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-4">
         {[
@@ -1323,6 +1308,21 @@ function Dashboard() {
           >
             {chart.label}
           </button>
+        ))}
+      </div>
+
+      {/* Main Stats */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Orders',  value: stats.total },
+          { label: 'Revenue',       value: `Rs. ${stats.revenue.toLocaleString()}` },
+          { label: 'Pending',       value: stats.pending },
+          { label: 'Delivery Rate', value: `${stats.deliveryRate}%` },
+        ].map(s => (
+          <div key={s.label} className="border border-gray-200 p-5 bg-white rounded-xl shadow-sm">
+            <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-2">{s.label}</p>
+            <p className="text-3xl text-gray-900 font-bold">{s.value}</p>
+          </div>
         ))}
       </div>
 
