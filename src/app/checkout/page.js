@@ -257,6 +257,7 @@ export default function CheckoutPage() {
                   <div className="mt-4">
                     <label className={labelCls}>Address <span className="text-red-400">*</span></label>
                     <input type="text" required value={form.address} onChange={set('address')} className={inputCls} />
+                    <p className="text-gold/60 text-xs mt-1.5">Must mention House No., Shop No. or Office No.</p>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                     <div>
