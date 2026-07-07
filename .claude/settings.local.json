@@ -62,7 +62,8 @@
       "Bash(pkill -f \"npm run dev\")",
       "Bash(pkill -f \"next dev\")",
       "Bash(tee /tmp/devtest.log)",
-      "Bash(taskkill /PID 13200 /F)"
+      "Bash(taskkill /PID 13200 /F)",
+      "Bash(git commit -m 'feat: add order status breakdown to admin dashboard *)"
     ]
   }
 }

@@ -1204,6 +1204,7 @@ function OrdersChart({ orders }) {
 ═══════════════════════════════════════════ */
 function Dashboard() {
   const [stats,         setStats]         = useState({ total: 0, revenue: 0, pending: 0, deliveryRate: 0 });
+  const [statusCounts,  setStatusCounts]  = useState({});
   const [recent,        setRecent]        = useState([]);
   const [allOrders,     setAllOrders]     = useState([]);
   const [loading,       setLoading]       = useState(true);
@@ -1215,6 +1216,14 @@ function Dashboard() {
       const { data: orders } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
       if (orders) {
         const delivered = orders.filter(o => o.status === 'delivered').length;
+
+        // Calculate status counts
+        const counts = {};
+        STATUSES.forEach(s => {
+          counts[s] = orders.filter(o => o.status === s).length;
+        });
+        setStatusCounts(counts);
+
         setStats({
           total:        orders.length,
           revenue:      orders.filter(o => !['cancelled','returned'].includes(o.status)).reduce((s, o) => s + (Number(o.total) || 0), 0),
@@ -1256,6 +1265,18 @@ function Dashboard() {
             <p className="text-3xl text-gray-900 font-bold">{s.value}</p>
           </div>
         ))}
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-lg italic text-gray-800 mb-4" style={serif}>Order Status Breakdown</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          {STATUSES.map(status => (
+            <div key={status} className={`border p-5 rounded-xl shadow-sm ${STATUS[status]?.cls || 'bg-gray-50 border-gray-200'}`}>
+              <p className="text-xs uppercase tracking-[0.2em] mb-2 opacity-80">{STATUS[status]?.label || status}</p>
+              <p className="text-3xl font-bold">{statusCounts[status] || 0}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <OrdersChart orders={allOrders} />
