@@ -7,7 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${base}/`,                                   lastModified: now, changeFrequency: 'weekly',  priority: 1   },
     { url: `${base}/shop`,                               lastModified: now, changeFrequency: 'weekly',  priority: 0.9 },
-    { url: `${base}/product/the-midnight-deck`,          lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${base}/product/midnight-deck`,          lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${base}/product/bridal-box`,                 lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/product/intimate-night-set`,         lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/product/midnight-glow-candle`,       lastModified: now, changeFrequency: 'monthly', priority: 0.7 },

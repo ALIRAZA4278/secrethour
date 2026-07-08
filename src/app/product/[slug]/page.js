@@ -75,7 +75,7 @@ export async function generateMetadata({ params }) {
 
   // Map product slug to SEO meta tags from the guide
   const metaTags = {
-    'the-midnight-deck': {
+    'midnight-deck': {
       title: 'Couples Card Game Pakistan — The Midnight Deck | Secret Hour',
       description: 'The Midnight Deck is Pakistan\'s first couples card game designed for married partners. Spark deep conversations & connection. Order online with discreet delivery.',
     },
