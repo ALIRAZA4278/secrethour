@@ -108,10 +108,11 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
           </div>
 
           {/* Article Content */}
-          <div className="prose prose-invert max-w-none mb-16">
-            <div className="whitespace-pre-wrap text-cream/80 leading-relaxed text-base md:text-lg">
-              {blog.content}
-            </div>
+          <div className="prose prose-invert max-w-none mb-16 prose-headings:text-cream prose-headings:italic prose-p:text-cream/80 prose-p:leading-relaxed prose-p:text-base md:prose-p:text-lg prose-strong:text-gold prose-em:text-cream/90">
+            <div
+              className="text-cream/80 leading-relaxed text-base md:text-lg"
+              dangerouslySetInnerHTML={{ __html: blog.content }}
+            />
           </div>
 
           {/* Divider */}
