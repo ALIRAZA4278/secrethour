@@ -2,7 +2,10 @@
 
 import { useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { createBlog, updateBlog, uploadBlogImage } from '@/app/admin/blog-actions';
+
+const RichTextEditor = dynamic(() => import('./rich-text-editor'), { ssr: false });
 
 interface BlogFormProps {
   blog?: {
@@ -245,7 +248,7 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
           )}
         </div>
 
-        {/* Content Textarea */}
+        {/* Content with Rich Text Editor */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className={labelCls}>Blog Content *</label>
@@ -268,17 +271,10 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
               )}
             </div>
           </div>
-          <textarea
+          <RichTextEditor
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your blog content here..."
-            className={textareaCls}
-            rows={14}
-            required
-            style={{
-              fontFamily: 'var(--font-inter), monospace',
-              lineHeight: '1.5',
-            }}
+            onChange={setContent}
+            placeholder="Write your blog content here with rich formatting..."
           />
         </div>
 
