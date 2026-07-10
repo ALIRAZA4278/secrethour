@@ -2,6 +2,11 @@
 const nextConfig = {
   reactCompiler: true,
   serverExternalPackages: ['nodemailer'],
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
   images: {
     remotePatterns: [
       {
