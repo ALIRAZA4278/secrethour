@@ -71,12 +71,12 @@ export default function Home() {
         if (!data) return;
         const visible = data;
 
-        // Midnight deck for featured section
-        const deck = visible.find(p => p.slug.toLowerCase() === 'the-midnight-deck');
-        if (deck) setProducts({ 'the-midnight-deck': deck });
+        // Card game for featured section (search by category, not slug)
+        const deck = visible.find(p => p.category === 'Card Game');
+        if (deck) setProducts({ cardGame: deck });
 
-        // All visible products that are NOT the midnight deck (for slider)
-        setBundles(visible.filter(p => p.slug.toLowerCase() !== 'the-midnight-deck'));
+        // All visible products that are NOT the card game (for slider)
+        setBundles(visible.filter(p => p.category !== 'Card Game'));
       });
 
     // Fetch real reviews from both tables
@@ -199,7 +199,7 @@ export default function Home() {
 
           {/* Image slider — manual arrows only */}
           {(() => {
-            const deck = products['the-midnight-deck'];
+            const deck = products.cardGame;
             const imgs = deck?.images?.length ? deck.images : [deck?.img || IMG.cardGame];
             return (
               <div className="relative aspect-square w-full overflow-hidden border border-gold-border/40 group">
@@ -266,13 +266,13 @@ export default function Home() {
             </ul>
 
             <div>
-              <p className="text-3xl md:text-4xl text-gold" style={serif}>{products['the-midnight-deck']?.price || 'Rs. 2,999'}</p>
+              <p className="text-3xl md:text-4xl text-gold" style={serif}>{products.cardGame?.price || 'Rs. 2,999'}</p>
               <p className="text-cream/30 text-[9px] uppercase tracking-[0.2em] mt-1">Including all taxes · Available in small batches</p>
               <p className="text-gold/60 text-[9px] uppercase tracking-[0.2em] mt-1">🚚 Free Delivery across Pakistan</p>
             </div>
 
             <Link
-              href="/product/midnight-deck"
+              href={`/product/${products.cardGame?.slug || 'the-midnight-deck'}`}
               className="inline-block w-full sm:w-auto text-center bg-sh-bg border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-10 py-4 btn-glow transition-all duration-300 hover:bg-burgundy"
             >
               Open the Box
