@@ -3,14 +3,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { createClient } from '@supabase/supabase-js';
 
-const BASE_NAV_LINKS = [
+const NAV_LINKS = [
   { label: 'Home',         href: '/' },
   { label: 'Shop',         href: '/shop' },
-  { label: 'Card Game', href: null }, // Will be set dynamically
+  { label: 'Card Game', href: '/product/the-midnight-deck' },
   { label: 'Blog',         href: '/blogs' },
   { label: 'Testimonials', href: '/testimonials' },
   { label: 'About',        href: '/about' },
@@ -24,40 +23,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [navLinks, setNavLinks] = useState(BASE_NAV_LINKS);
   const { setOpen, totalItems }  = useCart();
-
-  // Fetch card game slug dynamically from database
-  useEffect(() => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-    );
-
-    supabase
-      .from('products')
-      .select('slug')
-      .eq('category', 'Card Game')
-      .neq('hidden', true)
-      .single()
-      .then(({ data }) => {
-        if (data?.slug) {
-          setNavLinks(
-            BASE_NAV_LINKS.map(link =>
-              link.label === 'Card Game' ? { ...link, href: `/product/${data.slug}` } : link
-            )
-          );
-        }
-      })
-      .catch(() => {
-        // Fallback if fetch fails
-        setNavLinks(
-          BASE_NAV_LINKS.map(link =>
-            link.label === 'Card Game' ? { ...link, href: '/product/the-midnight-deck' } : link
-          )
-        );
-      });
-  }, []);
 
 
   return (
@@ -79,7 +45,7 @@ export default function Navbar() {
         </Link>
 
         <ul className="hidden lg:flex items-center gap-8">
-          {navLinks.map((l) => (
+          {NAV_LINKS.map((l) => (
             <li key={l.href}>
               <Link
                 href={l.href}
@@ -161,7 +127,7 @@ export default function Navbar() {
       {menuOpen && (
         <div className="lg:hidden bg-black/95 border-t border-gold-border/30 px-6 py-5">
           <ul className="flex flex-col gap-5">
-            {navLinks.map((l) => (
+            {NAV_LINKS.map((l) => (
               <li key={l.href}>
                 <Link
                   href={l.href}
