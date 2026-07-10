@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
+import BlogsList from '@/components/admin/blogs-list';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -2903,6 +2904,7 @@ export default function AdminPage() {
     { id: 'products',  label: 'Products' },
     { id: 'reviews',   label: 'Reviews' },
     { id: 'promos',    label: 'Promos' },
+    { id: 'blogs',     label: 'Blogs' },
     { id: 'settings',  label: 'Settings' },
     { id: 'dashboard', label: 'Dashboard' },
   ];
@@ -2943,6 +2945,7 @@ export default function AdminPage() {
         {tab === 'products'  && <ProductsTab />}
         {tab === 'reviews'   && <ReviewsTab />}
         {tab === 'promos'    && <PromoCodesTab />}
+        {tab === 'blogs'     && <BlogsList />}
         {tab === 'settings'  && <SettingsTab />}
         {tab === 'dashboard' && <Dashboard />}
       </main>
