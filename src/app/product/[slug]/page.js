@@ -1,10 +1,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import Navbar from '../../components/Navbar';
 import MetaPixel from '../../components/MetaPixel';
 import Footer from '../../components/Footer';
 import { getServerSupabase } from '../../../lib/supabase-server';
 import ProductPageClient from './ProductPageClient';
+
+// Slug redirects mapping — for old URLs that have changed
+const slugRedirects = {
+  'the-midnight-deck': 'midnight-deck',
+  'the-secret-note': 'secret-note',
+};
 
 // Allow dynamic params for slugs not in generateStaticParams
 export const dynamicParams = true;
@@ -118,6 +125,12 @@ export async function generateMetadata({ params }) {
 
 export default async function ProductPage({ params }) {
   const { slug } = await params;
+
+  // Check if this is an old slug that needs redirecting
+  if (slugRedirects[slug]) {
+    redirect(`/product/${slugRedirects[slug]}`);
+  }
+
   const data = await getProductData(slug);
 
   if (!data) {
