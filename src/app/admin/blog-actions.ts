@@ -113,7 +113,7 @@ export async function createBlog(input: {
       return { id: null, slug: null, error: error.message };
     }
 
-    return { id: data?.[0]?.id, slug, error: null };
+    return { id: (data as any)?.[0]?.id || null, slug, error: null };
   } catch (err) {
     return { id: null, slug: null, error: (err as Error).message };
   }
