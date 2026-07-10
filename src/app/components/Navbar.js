@@ -9,7 +9,7 @@ import { useCart } from '../context/CartContext';
 const NAV_LINKS = [
   { label: 'Home',         href: '/' },
   { label: 'Shop',         href: '/shop' },
-  { label: 'Card Game', href: '/product/midnight-deck' },
+  { label: 'Card Game', href: '/product/the-midnight-deck' },
   { label: 'Blog',         href: '/blogs' },
   { label: 'Testimonials', href: '/testimonials' },
   { label: 'About',        href: '/about' },

@@ -70,13 +70,13 @@ const QUESTIONS = [
 
 const MAX_SCORE = 18;
 
-const RESULT_SLUGS = ['midnight-deck', 'intimate-night-set', 'bridal-box'];
+const RESULT_SLUGS = ['the-midnight-deck', 'intimate-night-set', 'bridal-box'];
 const UPSELL_SLUG  = 'midnight-glow-candle';
 
 function getResultMeta(pct) {
   if (pct <= 35) return {
     note: 'Every great love story starts with intention. Begin gently — let curiosity lead. There is no rush tonight.',
-    slug: 'midnight-deck',
+    slug: 'the-midnight-deck',
     desc: 'Gentle prompts designed to open conversations and deepen connection — one card at a time.',
   };
   if (pct <= 65) return {
