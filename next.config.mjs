@@ -8,6 +8,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'secrethour.lovable.app',
       },
+      {
+        protocol: 'https',
+        hostname: 'bazyygvvewedhnyxetrx.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
     ],
   },
   async redirects() {
