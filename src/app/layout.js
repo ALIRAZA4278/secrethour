@@ -16,7 +16,7 @@ const playfair = Playfair_Display({
   variable: '--font-playfair',
 });
 
-const BASE_URL = 'https://secrethour.pk';
+const BASE_URL = 'https://www.secrethour.pk';
 
 export const metadata = {
   metadataBase: new URL(BASE_URL),
@@ -47,6 +47,9 @@ export const metadata = {
   icons: {
     icon: '/logo.png',
     apple: '/logo.png',
+  },
+  alternates: {
+    canonical: BASE_URL,
   },
   robots: {
     index: true,

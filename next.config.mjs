@@ -10,6 +10,22 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        // 301 redirect: non-www to www
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'secrethour.pk',
+          },
+        ],
+        destination: 'https://www.secrethour.pk/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
