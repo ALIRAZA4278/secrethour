@@ -53,60 +53,99 @@ export default function BlogsList() {
 
   if (showForm) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg text-cream" style={serif}>{editingBlog ? 'Edit Blog' : 'New Blog'}</h3>
+          <div>
+            <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">BLOG</p>
+            <h3 className="text-2xl text-cream" style={serif}>{editingBlog ? 'Edit Blog' : 'Create New Blog'}</h3>
+          </div>
+          <button
+            onClick={() => {
+              setShowForm(false);
+              setEditingBlog(null);
+            }}
+            className="text-gray-400 hover:text-gray-300 transition"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-        <BlogForm
-          blog={editingBlog || undefined}
-          onSuccess={() => {
-            setShowForm(false);
-            setEditingBlog(null);
-            loadBlogs();
-          }}
-          onClose={() => {
-            setShowForm(false);
-            setEditingBlog(null);
-          }}
-        />
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+          <BlogForm
+            blog={editingBlog || undefined}
+            onSuccess={() => {
+              setShowForm(false);
+              setEditingBlog(null);
+              loadBlogs();
+            }}
+            onClose={() => {
+              setShowForm(false);
+              setEditingBlog(null);
+            }}
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg text-cream" style={serif}>Blogs</h3>
+        <div>
+          <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">BLOG MANAGEMENT</p>
+          <h3 className="text-2xl text-cream" style={serif}>All Blog Posts</h3>
+        </div>
         <button
           onClick={() => {
             setEditingBlog(null);
             setShowForm(true);
           }}
-          className="px-4 py-2 bg-gold text-gray-900 rounded font-semibold text-sm hover:bg-yellow-400 transition"
+          className="px-4 py-2.5 bg-gold text-gray-900 rounded-lg font-semibold text-sm hover:bg-yellow-400 transition uppercase tracking-[0.12em]"
         >
           + New Blog
         </button>
       </div>
 
       {loading ? (
-        <div className="text-gray-400 text-center py-8">Loading blogs...</div>
+        <div className="text-center py-12">
+          <div className="inline-block">
+            <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mb-3" />
+            <p className="text-gray-400 text-sm">Loading blogs...</p>
+          </div>
+        </div>
       ) : blogs.length === 0 ? (
-        <div className="text-gray-400 text-center py-8">No blogs yet. Create one to get started!</div>
+        <div className="border-2 border-dashed border-gray-700 rounded-lg px-6 py-12 text-center">
+          <svg className="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p className="text-gray-400 mb-2">No blogs yet</p>
+          <p className="text-gray-500 text-xs mb-4">Create your first blog post to get started</p>
+          <button
+            onClick={() => {
+              setEditingBlog(null);
+              setShowForm(true);
+            }}
+            className="inline-block px-4 py-2 bg-gold text-gray-900 rounded-lg font-semibold text-xs hover:bg-yellow-400 transition uppercase tracking-[0.12em]"
+          >
+            + Create Blog
+          </button>
+        </div>
       ) : (
         <div className="space-y-3">
           {blogs.map(blog => (
             <div
               key={blog.id}
-              className="flex items-center gap-4 p-4 bg-gray-800 rounded border border-gray-700 hover:border-gray-600 transition"
+              className="flex items-start gap-4 p-4 bg-gray-800/50 border border-gray-700 rounded-lg hover:border-gray-600 hover:bg-gray-800/70 transition"
             >
               {/* Cover Image */}
               {blog.cover_image && (
-                <div className="relative w-16 h-16 flex-shrink-0 bg-gray-700 rounded">
+                <div className="relative w-20 h-20 flex-shrink-0 bg-gray-700 rounded-lg overflow-hidden">
                   <Image
                     src={blog.cover_image}
                     alt={blog.title}
                     fill
-                    className="object-cover rounded"
+                    className="object-cover"
                     unoptimized
                   />
                 </div>
@@ -114,33 +153,41 @@ export default function BlogsList() {
 
               {/* Blog Info */}
               <div className="flex-1 min-w-0">
-                <h4 className="text-cream font-semibold truncate">{blog.title}</h4>
-                <div className="flex items-center gap-3 mt-1 text-gray-400 text-xs">
-                  <span className={`px-2 py-1 rounded ${blog.status === 'published' ? 'bg-green-900/30 text-green-400' : 'bg-gray-900/30 text-gray-400'}`}>
-                    {blog.status}
+                <h4 className="text-cream font-semibold text-sm mb-2">{blog.title}</h4>
+                <div className="flex flex-wrap items-center gap-3 text-xs">
+                  <span className={`px-2.5 py-1 rounded-full font-medium ${
+                    blog.status === 'published'
+                      ? 'bg-green-900/30 text-green-300 border border-green-700/30'
+                      : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/30'
+                  }`}>
+                    {blog.status === 'published' ? '✓ Published' : '● Draft'}
                   </span>
-                  <span>{blog.word_count} words</span>
-                  <span>{new Date(blog.created_at).toLocaleDateString()}</span>
+                  <span className="text-gray-400">
+                    <span className="font-semibold text-cream">{blog.word_count}</span> words
+                  </span>
+                  <span className="text-gray-500">
+                    {new Date(blog.created_at).toLocaleDateString('en-PK', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   onClick={() => {
                     setEditingBlog(blog);
                     setShowForm(true);
                   }}
-                  className="px-3 py-1 text-xs text-gold bg-gray-700 rounded hover:bg-gray-600 transition"
+                  className="px-3 py-1.5 text-xs text-gold bg-gray-700/50 border border-gray-600 rounded-lg hover:bg-gray-700 hover:border-gold transition uppercase tracking-[0.08em] font-medium"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(blog.id)}
                   disabled={deleting === blog.id}
-                  className="px-3 py-1 text-xs text-red-400 bg-red-900/20 rounded hover:bg-red-900/40 transition disabled:opacity-50"
+                  className="px-3 py-1.5 text-xs text-red-400 bg-red-900/20 border border-red-700/30 rounded-lg hover:bg-red-900/40 hover:border-red-600/50 transition disabled:opacity-50 uppercase tracking-[0.08em] font-medium"
                 >
-                  {deleting === blog.id ? 'Deleting...' : 'Delete'}
+                  {deleting === blog.id ? '...' : 'Delete'}
                 </button>
               </div>
             </div>

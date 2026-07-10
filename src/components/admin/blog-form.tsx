@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { createBlog, updateBlog, uploadBlogImage } from '@/app/admin/blog-actions';
 
@@ -17,9 +17,9 @@ interface BlogFormProps {
   onClose: () => void;
 }
 
-const labelCls = 'block text-gray-400 text-xs uppercase tracking-[0.2em] mb-2';
-const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-cream focus:border-gold outline-none transition';
-const textareaCls = 'w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-cream focus:border-gold outline-none transition resize-none';
+const labelCls = 'block text-gray-400 text-xs uppercase tracking-[0.25em] font-medium mb-2.5';
+const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3.5 py-2.5 text-cream focus:border-gold focus:ring-1 focus:ring-gold outline-none transition';
+const quillCls = 'bg-gray-800 border border-gray-700 rounded-lg overflow-hidden';
 
 export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
   const [title, setTitle] = useState(blog?.title || '');
@@ -30,14 +30,35 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const wordCount = content.trim().split(/\s+/).length;
+  // Calculate word count from HTML content
+  const getPlainText = (html: string) => {
+    const div = typeof document !== 'undefined' ? document.createElement('div') : null;
+    if (!div) return '';
+    div.innerHTML = html;
+    return div.textContent || '';
+  };
+
+  const plainContent = getPlainText(content);
+  const wordCount = plainContent.trim().split(/\s+/).filter(w => w.length > 0).length;
   const isOverLimit = wordCount > 2000;
   const wordCountColor = wordCount > 2000 ? 'text-red-500' : wordCount > 1500 ? 'text-yellow-500' : 'text-green-500';
 
   const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Please upload an image file' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Image must be less than 5MB' });
+      return;
+    }
 
     setUploading(true);
     const formData = new FormData();
@@ -47,12 +68,39 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
     setUploading(false);
 
     if (result.error) {
-      setMessage({ type: 'error', text: result.error });
+      setMessage({ type: 'error', text: `Upload failed: ${result.error}` });
     } else {
       setCoverImage(result.url!);
-      setMessage({ type: 'success', text: 'Image uploaded successfully' });
+      setMessage({ type: 'success', text: 'Cover image uploaded successfully!' });
+      setTimeout(() => setMessage(null), 3000);
     }
   }, []);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const files = e.dataTransfer.files;
+    if (files?.[0]) {
+      if (fileInputRef.current) {
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(files[0]);
+        fileInputRef.current.files = dataTransfer.files;
+        handleImageUpload({ target: fileInputRef.current } as any);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,14 +161,14 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="max-w-4xl mx-auto">
       {message && (
-        <div className={`text-sm px-4 py-2 rounded ${message.type === 'error' ? 'bg-red-900/30 text-red-400' : 'bg-green-900/30 text-green-400'}`}>
+        <div className={`mb-4 px-4 py-3 rounded-lg text-sm font-medium ${message.type === 'error' ? 'bg-red-900/30 text-red-300 border border-red-700/50' : 'bg-green-900/30 text-green-300 border border-green-700/50'}`}>
           {message.text}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Title */}
         <div>
           <label className={labelCls}>Blog Title *</label>
@@ -128,61 +176,124 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter blog title"
+            placeholder="e.g. Intimate Moments - Couples Ka Secret Time"
             className={inputCls}
             required
           />
         </div>
 
-        {/* Cover Image */}
+        {/* Cover Image Upload */}
         <div>
           <label className={labelCls}>Cover Image *</label>
-          {coverImage && (
-            <div className="mb-3 relative w-full h-40 bg-gray-800 rounded border border-gray-700">
-              <Image
-                src={coverImage}
-                alt="Cover preview"
-                fill
-                className="object-cover rounded"
-                unoptimized
-              />
+
+          {coverImage ? (
+            <div className="mb-4 space-y-3">
+              <div className="relative w-full h-48 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                <Image
+                  src={coverImage}
+                  alt="Cover preview"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setCoverImage('');
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}
+                className="text-xs text-gold hover:text-yellow-300 font-medium uppercase tracking-[0.12em]"
+              >
+                ✕ Remove Image
+              </button>
+            </div>
+          ) : (
+            <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-lg px-6 py-8 text-center cursor-pointer transition ${
+                dragActive
+                  ? 'border-gold bg-gold/5'
+                  : 'border-gray-600 bg-gray-800/50 hover:bg-gray-700/50'
+              }`}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <svg className="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 16v-4m0 0V8m0 4H8m0 0h4m0 0h4" />
+              </svg>
+              <p className="text-gray-400 text-sm mb-1">Drop your image here or click to browse</p>
+              <p className="text-gray-500 text-xs">JPG, PNG • Max 5MB</p>
             </div>
           )}
+
           <input
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={handleImageUpload}
             disabled={uploading}
-            className="w-full text-cream text-sm"
+            className="hidden"
           />
-          {uploading && <p className="text-gold text-xs mt-1">Uploading...</p>}
+          {uploading && (
+            <div className="mt-3 flex items-center gap-2 text-gold text-xs font-medium">
+              <div className="w-3 h-3 bg-gold rounded-full animate-pulse" />
+              Uploading image...
+            </div>
+          )}
         </div>
 
-        {/* Content */}
+        {/* Content Textarea */}
         <div>
-          <label className={labelCls}>Blog Content * ({wordCount} words)</label>
+          <div className="flex items-center justify-between mb-2.5">
+            <label className={labelCls}>Blog Content * ({wordCount} words)</label>
+            <div className={`text-xs font-medium flex items-center gap-2 ${wordCountColor}`}>
+              {isOverLimit ? (
+                <>
+                  <span className="text-red-500">⚠</span>
+                  <span>Exceeds limit ({wordCount}/2000)</span>
+                </>
+              ) : wordCount > 1500 ? (
+                <>
+                  <span className="text-yellow-500">!</span>
+                  <span>Getting close ({wordCount}/2000)</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-green-500">✓</span>
+                  <span>{wordCount} / 2000 words</span>
+                </>
+              )}
+            </div>
+          </div>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your blog content here..."
-            className={textareaCls}
-            rows={10}
+            placeholder="Write your blog content here... Paragraphs, formatting, etc."
+            className={`${inputCls} resize-vertical`}
+            rows={14}
             required
+            style={{
+              fontFamily: 'var(--font-inter), monospace',
+              lineHeight: '1.5',
+            }}
           />
-          <div className={`text-xs mt-1 ${wordCountColor}`}>
-            {isOverLimit ? `⚠ Word count exceeds limit (${wordCount}/2000)` : `${wordCount} / 2000 words`}
-          </div>
+          <p className="text-gray-500 text-xs mt-2">
+            Tip: Write in plain text. Use line breaks for paragraphs. You can add <strong>formatting</strong> with *asterisks* for bold, _underscores_ for italic.
+          </p>
         </div>
 
         {/* Meta Description */}
         <div>
           <label className={labelCls}>Meta Description (SEO)</label>
-          <textarea
+          <input
+            type="text"
             value={metaDescription}
-            onChange={(e) => setMetaDescription(e.target.value)}
-            placeholder="Brief description for search engines (optional)"
-            className={textareaCls}
-            rows={3}
+            onChange={(e) => setMetaDescription(e.target.value.slice(0, 160))}
+            placeholder="Brief description for search engines (optional, auto-filled from content if empty)"
+            className={inputCls}
             maxLength={160}
           />
           <p className="text-gray-500 text-xs mt-1">{metaDescription.length}/160 characters</p>
@@ -190,46 +301,51 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
 
         {/* Status */}
         <div>
-          <label className={labelCls}>Status *</label>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="draft"
-                checked={status === 'draft'}
-                onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
-                className="accent-gold"
-              />
-              <span className="text-cream text-sm">Draft</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="published"
-                checked={status === 'published'}
-                onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
-                className="accent-gold"
-              />
-              <span className="text-cream text-sm">Published</span>
-            </label>
+          <label className={labelCls}>Publication Status *</label>
+          <div className="flex gap-3">
+            {[
+              { value: 'draft', label: 'Draft', desc: 'Visible only to admin' },
+              { value: 'published', label: 'Published', desc: 'Visible to everyone' },
+            ].map((option) => (
+              <label
+                key={option.value}
+                className={`flex-1 flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition ${
+                  status === option.value
+                    ? 'border-gold bg-gold/5'
+                    : 'border-gray-600 bg-gray-800/50 hover:border-gray-500'
+                }`}
+              >
+                <input
+                  type="radio"
+                  value={option.value}
+                  checked={status === option.value}
+                  onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
+                  className="accent-gold"
+                />
+                <div>
+                  <p className="text-cream text-sm font-medium">{option.label}</p>
+                  <p className="text-gray-400 text-xs">{option.desc}</p>
+                </div>
+              </label>
+            ))}
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 pt-4 border-t border-gray-700">
+        <div className="flex gap-3 pt-6 border-t border-gray-700">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 text-gray-400 bg-gray-800 border border-gray-700 rounded hover:bg-gray-700 transition"
+            className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 hover:text-gray-300 transition font-medium text-sm uppercase tracking-[0.12em]"
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={saving || uploading || isOverLimit}
-            className="flex-1 px-4 py-2 bg-gold text-gray-900 rounded font-semibold hover:bg-yellow-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={saving || uploading || isOverLimit || !title.trim() || !content.trim() || !coverImage}
+            className="flex-1 px-4 py-2.5 bg-gold text-gray-900 rounded-lg font-semibold hover:bg-yellow-400 transition disabled:opacity-40 disabled:cursor-not-allowed text-sm uppercase tracking-[0.12em]"
           >
-            {saving ? 'Saving...' : blog ? 'Update Blog' : 'Create Blog'}
+            {saving ? 'Saving...' : blog ? 'Update Blog' : '+ Create Blog'}
           </button>
         </div>
       </form>
