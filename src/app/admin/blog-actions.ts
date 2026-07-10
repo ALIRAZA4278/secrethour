@@ -49,13 +49,23 @@ export async function uploadBlogImage(formData: FormData) {
       .upload(filePath, file, { upsert: false });
 
     if (error) {
+      console.error('Upload error:', error);
       return { url: null, error: error.message };
+    }
+
+    if (!data?.path) {
+      return { url: null, error: 'Upload failed - no file path returned' };
     }
 
     const { data: publicData } = supabase.storage
       .from('blogs')
-      .getPublicUrl(filePath);
+      .getPublicUrl(data.path);
 
+    if (!publicData?.publicUrl) {
+      return { url: null, error: 'Could not generate public URL' };
+    }
+
+    console.log('Upload successful:', publicData.publicUrl);
     return { url: publicData.publicUrl, error: null };
   } catch (err) {
     return { url: null, error: (err as Error).message };
