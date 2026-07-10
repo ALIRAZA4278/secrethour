@@ -17,9 +17,9 @@ interface BlogFormProps {
   onClose: () => void;
 }
 
-const labelCls = 'block text-gray-400 text-xs uppercase tracking-[0.25em] font-medium mb-2.5';
-const inputCls = 'w-full bg-gray-800 border border-gray-700 rounded-lg px-3.5 py-2.5 text-cream focus:border-gold focus:ring-1 focus:ring-gold outline-none transition';
-const quillCls = 'bg-gray-800 border border-gray-700 rounded-lg overflow-hidden';
+const labelCls = 'block text-gray-500 text-xs uppercase tracking-[0.18em] font-medium mb-1.5';
+const inputCls = 'w-full px-3.5 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-100 transition placeholder:text-gray-400';
+const textareaCls = 'w-full px-3.5 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-100 transition placeholder:text-gray-400 resize-vertical';
 
 export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
   const [title, setTitle] = useState(blog?.title || '');
@@ -161,9 +161,9 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div>
       {message && (
-        <div className={`mb-4 px-4 py-3 rounded-lg text-sm font-medium ${message.type === 'error' ? 'bg-red-900/30 text-red-300 border border-red-700/50' : 'bg-green-900/30 text-green-300 border border-green-700/50'}`}>
+        <div className={`mb-4 px-4 py-3 rounded-lg text-sm font-medium border ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
           {message.text}
         </div>
       )}
@@ -188,7 +188,7 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
 
           {coverImage ? (
             <div className="mb-4 space-y-3">
-              <div className="relative w-full h-48 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+              <div className="relative w-full h-48 bg-gray-100 rounded-lg border border-gray-300 overflow-hidden">
                 <Image
                   src={coverImage}
                   alt="Cover preview"
@@ -203,7 +203,7 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
                   setCoverImage('');
                   if (fileInputRef.current) fileInputRef.current.value = '';
                 }}
-                className="text-xs text-gold hover:text-yellow-300 font-medium uppercase tracking-[0.12em]"
+                className="text-xs text-red-600 hover:text-red-800 font-medium uppercase tracking-[0.08em]"
               >
                 ✕ Remove Image
               </button>
@@ -216,15 +216,15 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
               onDrop={handleDrop}
               className={`border-2 border-dashed rounded-lg px-6 py-8 text-center cursor-pointer transition ${
                 dragActive
-                  ? 'border-gold bg-gold/5'
-                  : 'border-gray-600 bg-gray-800/50 hover:bg-gray-700/50'
+                  ? 'border-gray-400 bg-gray-50'
+                  : 'border-gray-300 bg-gray-50 hover:bg-white'
               }`}
               onClick={() => fileInputRef.current?.click()}
             >
               <svg className="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 16v-4m0 0V8m0 4H8m0 0h4m0 0h4" />
               </svg>
-              <p className="text-gray-400 text-sm mb-1">Drop your image here or click to browse</p>
+              <p className="text-gray-700 text-sm mb-1">Drop your image here or click to browse</p>
               <p className="text-gray-500 text-xs">JPG, PNG • Max 5MB</p>
             </div>
           )}
@@ -238,8 +238,8 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
             className="hidden"
           />
           {uploading && (
-            <div className="mt-3 flex items-center gap-2 text-gold text-xs font-medium">
-              <div className="w-3 h-3 bg-gold rounded-full animate-pulse" />
+            <div className="mt-3 flex items-center gap-2 text-gray-700 text-xs font-medium">
+              <div className="w-3 h-3 bg-gray-400 rounded-full animate-pulse" />
               Uploading image...
             </div>
           )}
@@ -247,23 +247,23 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
 
         {/* Content Textarea */}
         <div>
-          <div className="flex items-center justify-between mb-2.5">
-            <label className={labelCls}>Blog Content * ({wordCount} words)</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className={labelCls}>Blog Content *</label>
             <div className={`text-xs font-medium flex items-center gap-2 ${wordCountColor}`}>
               {isOverLimit ? (
                 <>
-                  <span className="text-red-500">⚠</span>
-                  <span>Exceeds limit ({wordCount}/2000)</span>
+                  <span className="text-red-600">⚠</span>
+                  <span className="text-red-600">Exceeds limit ({wordCount}/2000)</span>
                 </>
               ) : wordCount > 1500 ? (
                 <>
-                  <span className="text-yellow-500">!</span>
-                  <span>Getting close ({wordCount}/2000)</span>
+                  <span className="text-yellow-600">!</span>
+                  <span className="text-yellow-600">Getting close ({wordCount}/2000)</span>
                 </>
               ) : (
                 <>
-                  <span className="text-green-500">✓</span>
-                  <span>{wordCount} / 2000 words</span>
+                  <span className="text-green-600">✓</span>
+                  <span className="text-gray-600">{wordCount} / 2000 words</span>
                 </>
               )}
             </div>
@@ -271,8 +271,8 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your blog content here... Paragraphs, formatting, etc."
-            className={`${inputCls} resize-vertical`}
+            placeholder="Write your blog content here..."
+            className={textareaCls}
             rows={14}
             required
             style={{
@@ -280,9 +280,6 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
               lineHeight: '1.5',
             }}
           />
-          <p className="text-gray-500 text-xs mt-2">
-            Tip: Write in plain text. Use line breaks for paragraphs. You can add <strong>formatting</strong> with *asterisks* for bold, _underscores_ for italic.
-          </p>
         </div>
 
         {/* Meta Description */}
@@ -292,7 +289,7 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
             type="text"
             value={metaDescription}
             onChange={(e) => setMetaDescription(e.target.value.slice(0, 160))}
-            placeholder="Brief description for search engines (optional, auto-filled from content if empty)"
+            placeholder="Brief description for search engines (optional)"
             className={inputCls}
             maxLength={160}
           />
@@ -309,10 +306,10 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
             ].map((option) => (
               <label
                 key={option.value}
-                className={`flex-1 flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition ${
+                className={`flex-1 flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition ${
                   status === option.value
-                    ? 'border-gold bg-gold/5'
-                    : 'border-gray-600 bg-gray-800/50 hover:border-gray-500'
+                    ? 'border-gray-500 bg-gray-50'
+                    : 'border-gray-300 bg-white hover:border-gray-400'
                 }`}
               >
                 <input
@@ -320,11 +317,11 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
                   value={option.value}
                   checked={status === option.value}
                   onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
-                  className="accent-gold"
+                  className="accent-gray-900"
                 />
                 <div>
-                  <p className="text-cream text-sm font-medium">{option.label}</p>
-                  <p className="text-gray-400 text-xs">{option.desc}</p>
+                  <p className="text-gray-900 text-sm font-medium">{option.label}</p>
+                  <p className="text-gray-600 text-xs">{option.desc}</p>
                 </div>
               </label>
             ))}
@@ -332,18 +329,18 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 pt-6 border-t border-gray-700">
+        <div className="flex gap-3 pt-6 border-t border-gray-300">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 text-gray-400 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 hover:text-gray-300 transition font-medium text-sm uppercase tracking-[0.12em]"
+            className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 hover:border-gray-400 transition font-medium text-sm uppercase tracking-[0.12em]"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving || uploading || isOverLimit || !title.trim() || !content.trim() || !coverImage}
-            className="flex-1 px-4 py-2.5 bg-gold text-gray-900 rounded-lg font-semibold hover:bg-yellow-400 transition disabled:opacity-40 disabled:cursor-not-allowed text-sm uppercase tracking-[0.12em]"
+            className="flex-1 px-4 py-2.5 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition disabled:opacity-40 disabled:cursor-not-allowed text-sm uppercase tracking-[0.12em]"
           >
             {saving ? 'Saving...' : blog ? 'Update Blog' : '+ Create Blog'}
           </button>

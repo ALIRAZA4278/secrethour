@@ -56,22 +56,22 @@ export default function BlogsList() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">BLOG</p>
-            <h3 className="text-2xl text-cream" style={serif}>{editingBlog ? 'Edit Blog' : 'Create New Blog'}</h3>
+            <p className="text-gray-500 text-xs uppercase tracking-[0.18em] mb-1 font-medium">BLOG</p>
+            <h3 className="text-2xl text-gray-900" style={serif}>{editingBlog ? 'Edit Blog' : 'Create New Blog'}</h3>
           </div>
           <button
             onClick={() => {
               setShowForm(false);
               setEditingBlog(null);
             }}
-            className="text-gray-400 hover:text-gray-300 transition"
+            className="text-gray-400 hover:text-gray-600 transition"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18 18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
           <BlogForm
             blog={editingBlog || undefined}
             onSuccess={() => {
@@ -93,15 +93,15 @@ export default function BlogsList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">BLOG MANAGEMENT</p>
-          <h3 className="text-2xl text-cream" style={serif}>All Blog Posts</h3>
+          <p className="text-gray-500 text-xs uppercase tracking-[0.18em] mb-1 font-medium">BLOG MANAGEMENT</p>
+          <h3 className="text-2xl text-gray-900" style={serif}>All Blog Posts</h3>
         </div>
         <button
           onClick={() => {
             setEditingBlog(null);
             setShowForm(true);
           }}
-          className="px-4 py-2.5 bg-gold text-gray-900 rounded-lg font-semibold text-sm hover:bg-yellow-400 transition uppercase tracking-[0.12em]"
+          className="px-4 py-2.5 bg-gray-900 text-white rounded-lg font-semibold text-sm hover:bg-black transition uppercase tracking-[0.12em]"
         >
           + New Blog
         </button>
@@ -115,18 +115,18 @@ export default function BlogsList() {
           </div>
         </div>
       ) : blogs.length === 0 ? (
-        <div className="border-2 border-dashed border-gray-700 rounded-lg px-6 py-12 text-center">
-          <svg className="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="border-2 border-dashed border-gray-300 rounded-lg px-6 py-12 text-center bg-gray-50">
+          <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <p className="text-gray-400 mb-2">No blogs yet</p>
-          <p className="text-gray-500 text-xs mb-4">Create your first blog post to get started</p>
+          <p className="text-gray-700 mb-2 font-medium">No blogs yet</p>
+          <p className="text-gray-600 text-xs mb-4">Create your first blog post to get started</p>
           <button
             onClick={() => {
               setEditingBlog(null);
               setShowForm(true);
             }}
-            className="inline-block px-4 py-2 bg-gold text-gray-900 rounded-lg font-semibold text-xs hover:bg-yellow-400 transition uppercase tracking-[0.12em]"
+            className="inline-block px-4 py-2 bg-gray-900 text-white rounded-lg font-semibold text-xs hover:bg-black transition uppercase tracking-[0.12em]"
           >
             + Create Blog
           </button>
@@ -136,11 +136,11 @@ export default function BlogsList() {
           {blogs.map(blog => (
             <div
               key={blog.id}
-              className="flex items-start gap-4 p-4 bg-gray-800/50 border border-gray-700 rounded-lg hover:border-gray-600 hover:bg-gray-800/70 transition"
+              className="flex items-start gap-4 p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition"
             >
               {/* Cover Image */}
               {blog.cover_image && (
-                <div className="relative w-20 h-20 flex-shrink-0 bg-gray-700 rounded-lg overflow-hidden">
+                <div className="relative w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
                   <Image
                     src={blog.cover_image}
                     alt={blog.title}
@@ -153,17 +153,17 @@ export default function BlogsList() {
 
               {/* Blog Info */}
               <div className="flex-1 min-w-0">
-                <h4 className="text-cream font-semibold text-sm mb-2">{blog.title}</h4>
+                <h4 className="text-gray-900 font-semibold text-sm mb-2">{blog.title}</h4>
                 <div className="flex flex-wrap items-center gap-3 text-xs">
-                  <span className={`px-2.5 py-1 rounded-full font-medium ${
+                  <span className={`px-2.5 py-1 rounded-full font-medium border ${
                     blog.status === 'published'
-                      ? 'bg-green-900/30 text-green-300 border border-green-700/30'
-                      : 'bg-yellow-900/30 text-yellow-300 border border-yellow-700/30'
+                      ? 'bg-green-50 text-green-700 border-green-200'
+                      : 'bg-yellow-50 text-yellow-700 border-yellow-200'
                   }`}>
                     {blog.status === 'published' ? '✓ Published' : '● Draft'}
                   </span>
-                  <span className="text-gray-400">
-                    <span className="font-semibold text-cream">{blog.word_count}</span> words
+                  <span className="text-gray-600">
+                    <span className="font-semibold text-gray-900">{blog.word_count}</span> words
                   </span>
                   <span className="text-gray-500">
                     {new Date(blog.created_at).toLocaleDateString('en-PK', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -178,14 +178,14 @@ export default function BlogsList() {
                     setEditingBlog(blog);
                     setShowForm(true);
                   }}
-                  className="px-3 py-1.5 text-xs text-gold bg-gray-700/50 border border-gray-600 rounded-lg hover:bg-gray-700 hover:border-gold transition uppercase tracking-[0.08em] font-medium"
+                  className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 hover:border-gray-400 transition uppercase tracking-[0.08em] font-medium"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(blog.id)}
                   disabled={deleting === blog.id}
-                  className="px-3 py-1.5 text-xs text-red-400 bg-red-900/20 border border-red-700/30 rounded-lg hover:bg-red-900/40 hover:border-red-600/50 transition disabled:opacity-50 uppercase tracking-[0.08em] font-medium"
+                  className="px-3 py-1.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition disabled:opacity-50 uppercase tracking-[0.08em] font-medium"
                 >
                   {deleting === blog.id ? '...' : 'Delete'}
                 </button>
