@@ -76,14 +76,12 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
 
           {/* Cover Image */}
           {blog.cover_image && (
-            <div className="relative w-full h-96 md:h-[500px] bg-sh-card rounded-lg overflow-hidden mb-8">
-              <Image
+            <div className="relative w-full mb-8 rounded-lg overflow-hidden">
+              <img
                 src={blog.cover_image}
                 alt={blog.title}
-                fill
-                className="object-cover"
-                priority
-                unoptimized
+                className="w-full h-auto object-cover rounded-lg"
+                loading="eager"
               />
             </div>
           )}

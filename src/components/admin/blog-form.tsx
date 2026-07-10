@@ -67,13 +67,20 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
     const formData = new FormData();
     formData.append('file', file);
 
+    console.log('Starting upload...');
     const result = await uploadBlogImage(formData);
+    console.log('Upload result:', result);
     setUploading(false);
 
     if (result.error) {
+      console.error('Upload error:', result.error);
       setMessage({ type: 'error', text: `Upload failed: ${result.error}` });
+    } else if (!result.url) {
+      console.error('No URL returned from upload');
+      setMessage({ type: 'error', text: 'Upload failed: No URL returned' });
     } else {
-      setCoverImage(result.url!);
+      console.log('Setting cover image:', result.url);
+      setCoverImage(result.url);
       setMessage({ type: 'success', text: 'Cover image uploaded successfully!' });
       setTimeout(() => setMessage(null), 3000);
     }
