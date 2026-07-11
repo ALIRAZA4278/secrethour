@@ -26,6 +26,12 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        // 301 redirect: old midnight-deck slug to new
+        source: '/product/the-midnight-deck',
+        destination: '/product/midnight-deck',
+        permanent: true,
+      },
+      {
         // 301 redirect: non-www to www
         source: '/:path*',
         has: [
