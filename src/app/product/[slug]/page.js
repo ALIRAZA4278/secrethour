@@ -24,7 +24,7 @@ async function getProductData(slug) {
   try {
     // Slug mapping for backwards compatibility
     const slugMap = {
-      'the-midnight-deck': 'midnight-deck',
+      'midnight-deck': 'the-midnight-deck',
     };
     const actualSlug = slugMap[slug] || slug;
 
@@ -71,7 +71,7 @@ export async function generateMetadata({ params }) {
 
   // Slug mapping for backwards compatibility
   const slugMap = {
-    'the-midnight-deck': 'midnight-deck',
+    'midnight-deck': 'the-midnight-deck',
   };
   const actualSlug = slugMap[slug] || slug;
 
