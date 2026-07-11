@@ -22,11 +22,17 @@ export async function generateStaticParams() {
 
 async function getProductData(slug) {
   try {
+    // Slug mapping for backwards compatibility
+    const slugMap = {
+      'the-midnight-deck': 'midnight-deck',
+    };
+    const actualSlug = slugMap[slug] || slug;
+
     const supabase = getServerSupabase();
     const queries = await Promise.allSettled([
-      supabase.from('products').select('*').eq('slug', slug).neq('hidden', true),
+      supabase.from('products').select('*').eq('slug', actualSlug).neq('hidden', true),
       supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('hidden', true),
-      supabase.from('product_reviews').select('id, reviewer_name, rating, body, created_at').eq('product_slug', slug).eq('approved', true).order('created_at', { ascending: false }),
+      supabase.from('product_reviews').select('id, reviewer_name, rating, body, created_at').eq('product_slug', actualSlug).eq('approved', true).order('created_at', { ascending: false }),
     ]);
 
     const [productResult, allProductsResult, reviewsResult] = queries;
@@ -62,6 +68,13 @@ async function getProductData(slug) {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
+
+  // Slug mapping for backwards compatibility
+  const slugMap = {
+    'the-midnight-deck': 'midnight-deck',
+  };
+  const actualSlug = slugMap[slug] || slug;
+
   const data = await getProductData(slug);
 
   if (!data) {
@@ -97,7 +110,7 @@ export async function generateMetadata({ params }) {
     },
   };
 
-  const tags = metaTags[slug] || {
+  const tags = metaTags[actualSlug] || {
     title: `${product.title} | Secret Hour`,
     description: product.description || 'Intimate gifts for married couples in Pakistan. Order online with discreet delivery.',
   };
@@ -108,10 +121,10 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title: tags.title,
       description: tags.description,
-      url: `https://secrethour.pk/product/${slug}`,
+      url: `https://secrethour.pk/product/${actualSlug}`,
     },
     alternates: {
-      canonical: `https://secrethour.pk/product/${slug}`,
+      canonical: `https://secrethour.pk/product/${actualSlug}`,
     },
   };
 }
