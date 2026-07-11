@@ -6,15 +6,26 @@ import Footer from '../../components/Footer';
 import { getServerSupabase } from '../../../lib/supabase-server';
 import ProductPageClient from './ProductPageClient';
 
-// Allow dynamic params for slugs not in generateStaticParams
 export const dynamicParams = true;
 
-// Server-side data fetching — runs on server only
+// Slug aliases mapping
+const SLUG_ALIASES = {
+  'midnight-deck': 'the-midnight-deck',
+};
+
+function resolveSlug(slug) {
+  return SLUG_ALIASES[slug] || slug;
+}
+
 export async function generateStaticParams() {
   try {
     const supabase = getServerSupabase();
     const { data: products } = await supabase.from('products').select('slug').neq('hidden', true);
-    return (products || []).map(p => ({ slug: p.slug }));
+    const staticSlugs = (products || []).map(p => ({ slug: p.slug }));
+
+    const aliasSlugs = Object.keys(SLUG_ALIASES).map(alias => ({ slug: alias }));
+
+    return [...staticSlugs, ...aliasSlugs];
   } catch {
     return [];
   }
@@ -22,43 +33,29 @@ export async function generateStaticParams() {
 
 async function getProductData(slug) {
   try {
-    // Slug mapping for backwards compatibility
-    const slugMap = {
-      'midnight-deck': 'the-midnight-deck',
-    };
-    const actualSlug = slugMap[slug] || slug;
-
+    const actualSlug = resolveSlug(slug);
     const supabase = getServerSupabase();
-    const queries = await Promise.allSettled([
-      supabase.from('products').select('*').eq('slug', actualSlug).neq('hidden', true),
+
+    const [productRes, allProductsRes, reviewsRes] = await Promise.all([
+      supabase.from('products').select('*').eq('slug', actualSlug).neq('hidden', true).single(),
       supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('hidden', true),
       supabase.from('product_reviews').select('id, reviewer_name, rating, body, created_at').eq('product_slug', actualSlug).eq('approved', true).order('created_at', { ascending: false }),
     ]);
 
-    const [productResult, allProductsResult, reviewsResult] = queries;
-
-    if (productResult.status === 'rejected') {
-      console.error(`Product query rejected for ${slug}:`, productResult.reason);
+    if (productRes.error || !productRes.data) {
+      console.error(`Product not found for slug: ${slug} (resolved: ${actualSlug})`);
       return null;
     }
 
-    const { data: productArray, error: productError } = productResult.value;
-    const product = Array.isArray(productArray) ? productArray[0] : productArray;
-
-    if (productError) {
-      console.error(`Product query error for ${slug}:`, productError);
-      return null;
-    }
-    if (!product) return null;
-
-    const { data: allProducts = [] } = allProductsResult.status === 'fulfilled' ? allProductsResult.value : { data: [] };
-    const { data: reviews = [] } = reviewsResult.status === 'fulfilled' ? reviewsResult.value : { data: [] };
+    const product = productRes.data;
+    const allProducts = allProductsRes.data || [];
+    const reviews = reviewsRes.data || [];
 
     return {
       product,
-      related: (allProducts || []).filter(p => p.slug !== slug).slice(0, 3),
-      upsell: allProducts?.find(x => x.slug === product.upsell_slug) || null,
-      reviews: reviews || [],
+      related: allProducts.filter(p => p.slug !== actualSlug).slice(0, 3),
+      upsell: allProducts.find(x => x.slug === product.upsell_slug) || null,
+      reviews,
     };
   } catch (err) {
     console.error(`Error fetching product ${slug}:`, err.message);
@@ -68,12 +65,7 @@ async function getProductData(slug) {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-
-  // Slug mapping for backwards compatibility
-  const slugMap = {
-    'midnight-deck': 'the-midnight-deck',
-  };
-  const actualSlug = slugMap[slug] || slug;
+  const actualSlug = resolveSlug(slug);
 
   const data = await getProductData(slug);
 
@@ -86,7 +78,6 @@ export async function generateMetadata({ params }) {
 
   const { product } = data;
 
-  // Map product slug to SEO meta tags from the guide
   const metaTags = {
     'the-midnight-deck': {
       title: 'Couples Card Game Pakistan — The Midnight Deck | Secret Hour',

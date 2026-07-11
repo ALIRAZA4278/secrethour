@@ -69,7 +69,8 @@
       "Skill(claude-in-chrome)",
       "Bash(taskkill *)",
       "PowerShell(Stop-Process *)",
-      "PowerShell(Get-Process *)"
+      "PowerShell(Get-Process *)",
+      "WebFetch(domain:localhost)"
     ]
   }
 }
