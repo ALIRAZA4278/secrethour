@@ -10,7 +10,7 @@ export const dynamicParams = true;
 
 // Slug aliases mapping
 const SLUG_ALIASES = {
-  'midnight-deck': 'the-midnight-deck',
+  'the-midnight-deck': 'midnight-deck',
 };
 
 function resolveSlug(slug) {

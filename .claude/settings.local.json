@@ -70,7 +70,9 @@
       "Bash(taskkill *)",
       "PowerShell(Stop-Process *)",
       "PowerShell(Get-Process *)",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "Bash(cat)",
+      "Bash(node --input-type=module /tmp/check_products.js)"
     ]
   }
 }
