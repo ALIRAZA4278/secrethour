@@ -113,6 +113,14 @@ export async function generateMetadata({ params }) {
       title: tags.title,
       description: tags.description,
       url: `https://secrethour.pk/product/${actualSlug}`,
+      images: product.img ? [
+        {
+          url: product.img,
+          width: 1200,
+          height: 630,
+          alt: product.title,
+        }
+      ] : [],
     },
     alternates: {
       canonical: `https://secrethour.pk/product/${actualSlug}`,
