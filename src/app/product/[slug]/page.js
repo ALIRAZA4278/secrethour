@@ -7,6 +7,7 @@ import { getServerSupabase } from '../../../lib/supabase-server';
 import ProductPageClient from './ProductPageClient';
 
 export const dynamicParams = true;
+export const dynamic = 'force-dynamic';
 
 // Slug aliases mapping
 const SLUG_ALIASES = {

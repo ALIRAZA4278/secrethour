@@ -72,7 +72,9 @@
       "PowerShell(Get-Process *)",
       "WebFetch(domain:localhost)",
       "Bash(cat)",
-      "Bash(node --input-type=module /tmp/check_products.js)"
+      "Bash(node --input-type=module /tmp/check_products.js)",
+      "Bash(node /tmp/test.mjs)",
+      "Read(//tmp/**)"
     ]
   }
 }
