@@ -631,15 +631,15 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
         </div>
 
         {/* Customer details */}
-        <div className="px-6 py-5 border-b border-gray-200 space-y-3">
-          <div className="flex items-center justify-between mb-1">
+        <div className="px-4 md:px-6 py-5 border-b border-gray-200 space-y-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-1">
             <span className="text-gray-400 text-xs uppercase tracking-[0.2em]">Customer Details</span>
             {!editing ? (
-              <button onClick={() => setEditing(true)} className="text-xs text-blue-600 hover:text-blue-800 transition font-medium uppercase tracking-[0.12em]">Edit</button>
+              <button onClick={() => setEditing(true)} className="text-xs text-blue-600 hover:text-blue-800 transition font-medium uppercase tracking-[0.12em] whitespace-nowrap">Edit</button>
             ) : (
-              <div className="flex gap-3">
-                <button onClick={() => setEditing(false)} className="text-xs text-gray-400 hover:text-gray-700 transition uppercase tracking-[0.12em]">Cancel</button>
-                <button onClick={saveOrder} disabled={savingOrder} className="text-xs text-white bg-gray-900 hover:bg-black px-3 py-1 rounded transition disabled:opacity-50 uppercase tracking-[0.12em]">{savingOrder ? 'Saving…' : 'Save'}</button>
+              <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+                <button onClick={() => setEditing(false)} className="flex-1 sm:flex-none text-xs text-gray-400 hover:text-gray-700 transition uppercase tracking-[0.12em] px-2 py-1 rounded border border-gray-300">Cancel</button>
+                <button onClick={saveOrder} disabled={savingOrder} className="flex-1 sm:flex-none text-xs text-white bg-gray-900 hover:bg-black px-3 py-1 rounded transition disabled:opacity-50 uppercase tracking-[0.12em]">{savingOrder ? 'Saving…' : 'Save'}</button>
               </div>
             )}
           </div>
@@ -700,9 +700,9 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
                 ['POSTEX STATUS',   order.postex_status],
                 ['POSTEX UPDATED',  order.postex_updated_at ? new Date(order.postex_updated_at).toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null],
               ].map(([l, v]) => v ? (
-                <div key={l} className="flex justify-between gap-4">
+                <div key={l} className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4">
                   <span className="text-gray-400 text-xs uppercase tracking-[0.2em] shrink-0">{l}</span>
-                  <span className="text-gray-800 text-sm text-right">{v}</span>
+                  <span className="text-gray-800 text-sm break-words">{v}</span>
                 </div>
               ) : null)}
             </>
@@ -862,13 +862,13 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
             <textarea
               value={newComment}
               onChange={e => setNewComment(e.target.value)}
-              rows={2}
+              rows={3}
               placeholder="Add a note (e.g. Called customer, confirmed address)…"
-              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg outline-none focus:border-gray-500 transition placeholder:text-gray-400 resize-none"
-              onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) addComment(); }}
+              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg outline-none focus:border-gray-500 transition placeholder:text-gray-400 resize-vertical min-h-[80px]"
+              onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) addComment(); }}
             />
             <button onClick={addComment} disabled={addingComment || !newComment.trim()}
-              className="text-xs uppercase tracking-[0.15em] font-medium px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-black transition disabled:opacity-40">
+              className="w-full sm:w-auto text-xs uppercase tracking-[0.15em] font-medium px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-black transition disabled:opacity-40">
               {addingComment ? 'Adding…' : '+ Add Note'}
             </button>
           </div>
