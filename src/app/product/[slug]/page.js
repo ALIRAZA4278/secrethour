@@ -51,9 +51,12 @@ async function getProductData(slug) {
     const allProducts = allProductsRes.data || [];
     const reviews = reviewsRes.data || [];
 
+    const relatedFiltered = allProducts.filter(p => p.slug !== product.slug);
+    console.log(`[Product] Slug: ${product.slug}, AllProducts: ${allProducts.map(p => p.slug).join(', ')}, Related: ${relatedFiltered.map(p => p.slug).join(', ')}`);
+
     return {
       product,
-      related: allProducts.filter(p => p.slug !== product.slug).slice(0, 3),
+      related: relatedFiltered.slice(0, 3),
       upsell: allProducts.find(x => x.slug === product.upsell_slug) || null,
       reviews,
     };
