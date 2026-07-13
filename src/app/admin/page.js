@@ -105,22 +105,26 @@ function exportInstaworldCSV(orders, itemsMap) {
   URL.revokeObjectURL(url);
 }
 
-function fmtItems(items, total) {
+function fmtItems(items, total, paymentMethod, status) {
   if (!items?.length) return '';
+  if (status === 'delivered') return '';
+
   const lines = items.map(i =>
     `• ${i.product_title}${i.variation ? ` (${i.variation})` : ''} x${i.quantity} — Rs. ${((i.price || 0) * (i.quantity || 1)).toLocaleString()}`
   ).join('\n');
-  return `\n\n*Order Details:*\n${lines}\n\n*Total: Rs. ${(total || 0).toLocaleString()}*`;
+
+  const totalLabel = paymentMethod === 'bank' ? `*Total: PAID — Rs. ${(total || 0).toLocaleString()}*` : `*Total: Rs. ${(total || 0).toLocaleString()}*`;
+  return `\n\n*Order Details:*\n${lines}\n\n${totalLabel}`;
 }
 
 const WA_MSG = {
-  pending:          (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nWe have received your Secret Hour order *${num}*. We will confirm it shortly.${fmtItems(items, total)}\n\nThank you!\nSecretHour.pk`,
-  confirmed:        (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nGreat news! Your Secret Hour order *${num}* has been confirmed. We are preparing your package.${fmtItems(items, total)}\n\nThank you!\nSecretHour.pk`,
-  shipped:          (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been shipped! You will receive it within 2-3 business days.${fmtItems(items, total)}\n\nFor tracking, feel free to contact us.\n\nThank you!\nSecretHour.pk`,
-  out_for_delivery: (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* is out for delivery today! Our courier is on the way to you.${fmtItems(items, total)}\n\nPlease keep your phone available.\n\nThank you!\nSecretHour.pk`,
-  delivered:        (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been delivered! We hope you love it.${fmtItems(items, total)}\n\nWe would love to hear your feedback!\n\nThank you!\nSecretHour.pk`,
-  cancelled:        (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nUnfortunately, your Secret Hour order *${num}* has been cancelled. Please contact us if you have any questions.${fmtItems(items, total)}\n\nThank you!\nSecretHour.pk`,
-  attempt:          (name, num, items, total) => `Assalam o Alaikum ${name}!\n\nWe attempted delivery of your Secret Hour order *${num}* but were unable to reach you.${fmtItems(items, total)}\n\nPlease contact us to reschedule.\n\nThank you!\nSecretHour.pk`,
+  pending:          (name, num, items, total, paymentMethod, status) => `Assalam o Alaikum ${name}!\n\nWe have received your Secret Hour order *${num}*. We will confirm it shortly.${fmtItems(items, total, paymentMethod, status)}\n\nThank you!\nSecretHour.pk`,
+  confirmed:        (name, num, items, total, paymentMethod, status) => `Assalam o Alaikum ${name}!\n\nGreat news! Your Secret Hour order *${num}* has been confirmed. We are preparing your package.${fmtItems(items, total, paymentMethod, status)}\n\nThank you!\nSecretHour.pk`,
+  shipped:          (name, num, items, total, paymentMethod, status) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been shipped! You will receive it within 2-3 business days.${fmtItems(items, total, paymentMethod, status)}\n\nFor tracking, feel free to contact us.\n\nThank you!\nSecretHour.pk`,
+  out_for_delivery: (name, num, items, total, paymentMethod, status) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* is out for delivery today! Our courier is on the way to you.${fmtItems(items, total, paymentMethod, status)}\n\nPlease keep your phone available.\n\nThank you!\nSecretHour.pk`,
+  delivered:        (name, num, items, total, paymentMethod, status) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been delivered! We hope you love it.\n\nWe would love to hear your feedback!\n\nThank you!\nSecretHour.pk`,
+  cancelled:        (name, num, items, total, paymentMethod, status) => `Assalam o Alaikum ${name}!\n\nUnfortunately, your Secret Hour order *${num}* has been cancelled. Please contact us if you have any questions.${fmtItems(items, total, paymentMethod, status)}\n\nThank you!\nSecretHour.pk`,
+  attempt:          (name, num, items, total, paymentMethod, status) => `Assalam o Alaikum ${name}!\n\nWe attempted delivery of your Secret Hour order *${num}* but were unable to reach you.${fmtItems(items, total, paymentMethod, status)}\n\nPlease contact us to reschedule.\n\nThank you!\nSecretHour.pk`,
 };
 
 function sendWhatsApp(order, status, items, total) {
@@ -128,7 +132,8 @@ function sendWhatsApp(order, status, items, total) {
   const phone = raw.startsWith('92') ? raw : raw.startsWith('0') ? '92' + raw.slice(1) : '92' + raw;
   const name  = `${order.first_name || ''} ${order.last_name || ''}`.trim();
   const num   = orderNum(order.id);
-  const text  = WA_MSG[status]?.(name, num, items, total) || '';
+  const paymentMethod = order.payment_method || '';
+  const text  = WA_MSG[status]?.(name, num, items, total, paymentMethod, status) || '';
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
 }
 
@@ -1219,8 +1224,10 @@ function Dashboard() {
   const [itemsMap,      setItemsMap]      = useState({});
   const [timePeriod,    setTimePeriod]    = useState('30days');
   const [selectedStatus, setSelectedStatus] = useState(null);
+  const [fromDate,      setFromDate]      = useState('');
+  const [toDate,        setToDate]        = useState('');
 
-  const getFilteredOrdersByPeriod = (orders, period) => {
+  const getFilteredOrdersByPeriod = (orders, period, customFrom, customTo) => {
     const now = new Date();
     const filtered = orders.filter(o => {
       if (!o.created_at) return false;
@@ -1237,6 +1244,14 @@ function Dashboard() {
         const oneYearAgo = new Date(now); oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
         return oDate >= oneYearAgo;
       }
+      if (period === 'custom') {
+        if (customFrom && customTo) {
+          const from = new Date(customFrom); from.setHours(0, 0, 0, 0);
+          const to = new Date(customTo); to.setHours(23, 59, 59, 999);
+          return oDate >= from && oDate <= to;
+        }
+        return false;
+      }
       return true; // 'alltime' - all orders
     });
     return filtered;
@@ -1247,7 +1262,7 @@ function Dashboard() {
       const { data: orders } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
       if (orders) {
         setAllOrders(orders);
-        const periodFiltered = getFilteredOrdersByPeriod(orders, timePeriod);
+        const periodFiltered = getFilteredOrdersByPeriod(orders, timePeriod, fromDate, toDate);
         const delivered = periodFiltered.filter(o => o.status === 'delivered').length;
 
         // Calculate status counts for selected period
@@ -1267,7 +1282,7 @@ function Dashboard() {
       }
       setLoading(false);
     })();
-  }, [timePeriod]);
+  }, [timePeriod, fromDate, toDate]);
 
   async function viewOrder(order) {
     setSelectedOrder(order);
@@ -1308,6 +1323,36 @@ function Dashboard() {
           </button>
         ))}
       </div>
+
+      {/* Custom Date Range Filter */}
+      {timePeriod === 'custom' && (
+        <div className="flex flex-col sm:flex-row gap-3 items-end border border-gray-200 p-4 rounded-lg bg-gray-50">
+          <div className="flex-1">
+            <label className="block text-xs uppercase tracking-[0.15em] text-gray-600 mb-2">From Date</label>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-gray-500"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block text-xs uppercase tracking-[0.15em] text-gray-600 mb-2">To Date</label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-gray-500"
+            />
+          </div>
+          <button
+            onClick={() => { setFromDate(''); setToDate(''); }}
+            className="px-4 py-2 text-xs uppercase tracking-[0.2em] text-gray-600 border border-gray-300 rounded-lg hover:border-gray-400 transition whitespace-nowrap"
+          >
+            Clear
+          </button>
+        </div>
+      )}
 
       {/* Order Status Breakdown - Grid Layout */}
       <div>
