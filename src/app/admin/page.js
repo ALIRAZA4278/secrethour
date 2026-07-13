@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 import BlogsList from '@/components/admin/blogs-list';
+import SearchableSelect from '@/components/admin/SearchableSelect';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -663,12 +664,13 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
               </div>
               <div>
                 <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">City</p>
-                <select value={editForm.city} onChange={e => setEditForm(f => ({...f, city: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 outline-none focus:border-gray-500 bg-white cursor-pointer">
-                  <option value="">Select City</option>
-                  {cities.map(c => (
-                    <option key={c.id || c.name} value={c.name}>{c.name}</option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  value={editForm.city}
+                  onChange={val => setEditForm(f => ({...f, city: val}))}
+                  options={cities}
+                  placeholder="Search city..."
+                  loading={citiesLoading}
+                />
               </div>
               <div>
                 <p className="text-gray-400 text-[10px] uppercase tracking-[0.18em] mb-1">Payment Method</p>
