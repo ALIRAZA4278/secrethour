@@ -248,7 +248,10 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
         body: JSON.stringify({ action: 'cities' }),
       });
       const data = await res.json();
-      setCities(Array.isArray(data) ? data : []);
+      const sortedCities = Array.isArray(data)
+        ? data.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+        : [];
+      setCities(sortedCities);
     } catch (err) {
       console.error('Failed to load cities:', err);
     }
