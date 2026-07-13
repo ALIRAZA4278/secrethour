@@ -53,7 +53,7 @@ async function getProductData(slug) {
 
     return {
       product,
-      related: allProducts.filter(p => p.slug !== actualSlug).slice(0, 3),
+      related: allProducts.filter(p => p.slug !== product.slug).slice(0, 3),
       upsell: allProducts.find(x => x.slug === product.upsell_slug) || null,
       reviews,
     };
