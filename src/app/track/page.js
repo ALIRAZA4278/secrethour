@@ -83,12 +83,13 @@ export default function TrackPage() {
                 <p className="text-cream/30 text-[10px] mt-1.5">You can find this in your order confirmation email.</p>
               </div>
               <div>
-                <label className={labelCls}>Email or Phone Number (Optional)</label>
+                <label className={labelCls}>Email or Phone Number</label>
                 <input
                   value={contact}
                   onChange={e => setContact(e.target.value)}
-                  placeholder="Email or WhatsApp number (for verification)"
+                  placeholder="Email or WhatsApp number"
                   className={inputCls}
+                  required
                 />
               </div>
               <button type="submit" disabled={loading}

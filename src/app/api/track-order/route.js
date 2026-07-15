@@ -33,8 +33,11 @@ export async function GET(req) {
   const orderId = (searchParams.get('orderId') || '').trim().toUpperCase();
   const contact = (searchParams.get('contact') || '').trim().toLowerCase();
 
-  if (!orderId || !contact) {
-    return NextResponse.json({ error: 'Order ID and contact required' }, { status: 400 });
+  if (!orderId) {
+    return NextResponse.json({ error: 'Order ID required' }, { status: 400 });
+  }
+  if (!contact) {
+    return NextResponse.json({ error: 'Email or Phone required' }, { status: 400 });
   }
 
   // Fetch all orders and find matching one
