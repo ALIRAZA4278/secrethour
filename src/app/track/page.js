@@ -82,15 +82,6 @@ export default function TrackPage() {
                 />
                 <p className="text-cream/30 text-[10px] mt-1.5">You can find this in your order confirmation email.</p>
               </div>
-              <div>
-                <label className={labelCls}>Email or Phone Number (Optional)</label>
-                <input
-                  value={contact}
-                  onChange={e => setContact(e.target.value)}
-                  placeholder="Email or WhatsApp number (for verification)"
-                  className={inputCls}
-                />
-              </div>
               <button type="submit" disabled={loading}
                 className="w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] uppercase tracking-[0.2em] py-4 btn-glow transition-all duration-300 disabled:opacity-60">
                 {loading ? 'Finding Order…' : 'Track Order'}
@@ -111,6 +102,9 @@ export default function TrackPage() {
                 {/* Status badge */}
                 <div className="text-center space-y-2">
                   <p className="text-4xl">{cfg.icon}</p>
+                  {result.customerName && (
+                    <p className="text-sm text-cream/80">{result.customerName}</p>
+                  )}
                   <p className={`text-xl font-medium italic ${cfg.color}`} style={serif}>{status || 'In Transit'}</p>
                   {result.updatedDate && (
                     <p className="text-cream/40 text-xs">Last updated: {result.updatedDate}</p>
