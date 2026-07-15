@@ -113,7 +113,7 @@ function fmtItems(items, total, paymentMethod, status) {
     `• ${i.product_title}${i.variation ? ` (${i.variation})` : ''} x${i.quantity} — Rs. ${((i.price || 0) * (i.quantity || 1)).toLocaleString()}`
   ).join('\n');
 
-  const totalLabel = paymentMethod === 'bank' ? `*Total: PAID — Rs. ${(total || 0).toLocaleString()}*` : `*Total: Rs. ${(total || 0).toLocaleString()}*`;
+  const totalLabel = paymentMethod === 'bank' ? `*Total: Rs. ${(total || 0).toLocaleString()} (PAID)*` : `*Total: Rs. ${(total || 0).toLocaleString()}*`;
   return `\n\n*Order Details:*\n${lines}\n\n${totalLabel}`;
 }
 
