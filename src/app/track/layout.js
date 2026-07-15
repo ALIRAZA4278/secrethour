@@ -8,10 +8,10 @@ export const metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://secrethour.pk/logo.png',
+        url: 'https://secrethour.pk/og-track-image.svg',
         width: 1200,
         height: 630,
-        alt: 'Track Secret Hour Order',
+        alt: 'Track Your Secret Hour Order',
       }
     ],
   },

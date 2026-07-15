@@ -1,0 +1,62 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a1319;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0b0a09;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+
+  <!-- Logo area -->
+  <circle cx="150" cy="150" r="80" fill="rgba(212, 175, 55, 0.1)"/>
+  <text x="150" y="140" font-family="Georgia, serif" font-size="120" font-weight="bold" fill="#d4af37" text-anchor="middle">◐</text>
+
+  <!-- Main heading -->
+  <text x="600" y="120" font-family="Georgia, serif" font-size="72" font-weight="bold" fill="#d4af37" text-anchor="middle">
+    TRACK YOUR ORDER
+  </text>
+
+  <!-- Subheading -->
+  <text x="600" y="200" font-family="Arial, sans-serif" font-size="32" fill="#c9a961" text-anchor="middle">
+    Real-time Delivery Updates
+  </text>
+
+  <!-- Form preview -->
+  <rect x="200" y="280" width="800" height="200" fill="rgba(255, 255, 255, 0.05)" rx="8" stroke="#d4af37" stroke-width="2"/>
+
+  <!-- Form label 1 -->
+  <text x="240" y="320" font-family="Arial, sans-serif" font-size="18" fill="#a0a0a0" font-weight="bold">
+    ORDER ID
+  </text>
+  <rect x="240" y="335" width="300" height="45" fill="rgba(0, 0, 0, 0.3)" rx="4" stroke="#d4af37" stroke-width="1"/>
+  <text x="260" y="368" font-family="monospace" font-size="20" fill="#d4af37" font-weight="bold">
+    SH-XXXX
+  </text>
+
+  <!-- Form label 2 -->
+  <text x="660" y="320" font-family="Arial, sans-serif" font-size="18" fill="#a0a0a0" font-weight="bold">
+    PHONE
+  </text>
+  <rect x="660" y="335" width="300" height="45" fill="rgba(0, 0, 0, 0.3)" rx="4" stroke="#d4af37" stroke-width="1"/>
+  <text x="680" y="368" font-family="Arial, sans-serif" font-size="20" fill="#888888">
+    03XX XXXXXXX
+  </text>
+
+  <!-- Button -->
+  <rect x="400" y="420" width="400" height="50" fill="#d4af37" rx="6"/>
+  <text x="600" y="453" font-family="Arial, sans-serif" font-size="24" fill="#0b0a09" font-weight="bold" text-anchor="middle">
+    TRACK ORDER
+  </text>
+
+  <!-- Footer -->
+  <text x="600" y="590" font-family="Arial, sans-serif" font-size="20" fill="#888888" text-anchor="middle">
+    Discreet Packaging • Fast Delivery • 100% Secure
+  </text>
+
+  <!-- Brand name bottom right -->
+  <text x="1120" y="610" font-family="Georgia, serif" font-size="24" fill="#d4af37" text-anchor="end">
+    secrethour.pk
+  </text>
+</svg>
