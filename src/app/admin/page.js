@@ -1266,12 +1266,16 @@ function Dashboard() {
         const periodFiltered = getFilteredOrdersByPeriod(orders, timePeriod, fromDate, toDate);
         const delivered = periodFiltered.filter(o => o.status === 'delivered').length;
 
-        // Calculate status counts for selected period
+        // Calculate status counts and revenue for selected period
         const counts = {};
+        const revenue = {};
         STATUSES.forEach(s => {
-          counts[s] = periodFiltered.filter(o => o.status === s).length;
+          const statusOrders = periodFiltered.filter(o => o.status === s);
+          counts[s] = statusOrders.length;
+          revenue[s] = statusOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
         });
         setStatusCounts(counts);
+        setStatusRevenue(revenue);
 
         setStats({
           total:        periodFiltered.length,
@@ -1362,7 +1366,8 @@ function Dashboard() {
           {STATUSES.map(status => (
             <div key={status} onClick={() => setSelectedStatus(selectedStatus === status ? null : status)} className={`border p-5 rounded-xl shadow-sm cursor-pointer transition ${selectedStatus === status ? 'ring-2 ring-blue-600 shadow-lg' : 'hover:shadow-md'} ${STATUS[status]?.cls || 'bg-gray-50 border-gray-200'}`}>
               <p className="text-xs uppercase tracking-[0.2em] mb-3 opacity-80">{STATUS[status]?.label || status}</p>
-              <p className="text-4xl font-bold text-gray-900">{statusCounts[status] || 0}</p>
+              <p className="text-4xl font-bold text-gray-900 mb-2">{statusCounts[status] || 0}</p>
+              <p className="text-sm text-gray-600">Rs. {(statusRevenue[status] || 0).toLocaleString()}</p>
             </div>
           ))}
         </div>
