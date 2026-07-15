@@ -10,20 +10,21 @@ const inputCls = 'w-full px-4 py-3 bg-black/30 border border-gold-border/40 roun
 const labelCls = 'block text-[10px] uppercase tracking-[0.2em] text-cream/50 mb-1.5';
 
 const STATUS_CONFIG = {
-  'At Merchant Warehouse':  { icon: '📦', color: 'text-amber-400',  bar: 1 },
-  'At PostEx Warehouse':    { icon: '🏭', color: 'text-blue-400',   bar: 2 },
-  'Out for Delivery':       { icon: '🚚', color: 'text-green-400',  bar: 3 },
-  'Delivered':              { icon: '✅', color: 'text-emerald-400', bar: 4 },
-  'Attempt Made':           { icon: '🔔', color: 'text-yellow-400', bar: 2 },
-  'Delivery Under Review':  { icon: '🔍', color: 'text-purple-400', bar: 2 },
-  'Returned':               { icon: '↩️', color: 'text-red-400',    bar: 0 },
+  'pending':          { icon: '🛍️', color: 'text-amber-400',  bar: 1, label: 'Pending' },
+  'confirmed':        { icon: '📦', color: 'text-blue-400',   bar: 1, label: 'Confirmed' },
+  'shipped':          { icon: '🏭', color: 'text-purple-400', bar: 2, label: 'Shipped' },
+  'out_for_delivery': { icon: '🚚', color: 'text-green-400',  bar: 3, label: 'Out for Delivery' },
+  'attempt':          { icon: '🔔', color: 'text-yellow-400', bar: 2, label: 'Attempt' },
+  'delivered':        { icon: '✅', color: 'text-emerald-400', bar: 4, label: 'Delivered' },
+  'cancelled':        { icon: '❌', color: 'text-red-400',    bar: 0, label: 'Cancelled' },
+  'returned':         { icon: '↩️', color: 'text-red-400',    bar: 0, label: 'Returned' },
 };
 
 const STEPS = [
-  { label: 'Order Placed',        icon: '🛍️' },
-  { label: 'At Warehouse',        icon: '📦' },
-  { label: 'Out for Delivery',    icon: '🚚' },
-  { label: 'Delivered',           icon: '✅' },
+  { label: 'Pending',         icon: '🛍️' },
+  { label: 'Shipped',         icon: '🏭' },
+  { label: 'Out for Delivery', icon: '🚚' },
+  { label: 'Delivered',       icon: '✅' },
 ];
 
 export default function TrackPage() {
@@ -48,9 +49,10 @@ export default function TrackPage() {
     setLoading(false);
   }
 
-  const status  = result?.orderStatus || result?.transactionStatusMessage || '';
-  const cfg     = STATUS_CONFIG[status] || { icon: '📬', color: 'text-gold', bar: 1 };
+  const statusKey = result?.statusKey || result?.orderStatus || '';
+  const cfg     = STATUS_CONFIG[statusKey] || { icon: '📬', color: 'text-gold', bar: 1, label: statusKey };
   const barStep = cfg.bar;
+  const displayStatus = cfg.label || statusKey;
 
   return (
     <div className="min-h-screen flex flex-col text-cream" style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>
@@ -105,7 +107,7 @@ export default function TrackPage() {
                   {result.customerName && (
                     <p className="text-sm text-cream/80">{result.customerName}</p>
                   )}
-                  <p className={`text-xl font-medium italic ${cfg.color}`} style={serif}>{status || 'In Transit'}</p>
+                  <p className={`text-xl font-medium italic ${cfg.color}`} style={serif}>{displayStatus || 'Pending'}</p>
                   {result.updatedDate && (
                     <p className="text-cream/40 text-xs">Last updated: {result.updatedDate}</p>
                   )}

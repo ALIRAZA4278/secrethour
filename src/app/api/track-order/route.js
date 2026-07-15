@@ -14,19 +14,6 @@ function orderNum(id) {
   return `SH-${Math.abs(h % 9000) + 1000}`;
 }
 
-function getDisplayStatus(adminStatus) {
-  const statusMap = {
-    'pending': 'At Merchant Warehouse',
-    'confirmed': 'At Merchant Warehouse',
-    'shipped': 'At PostEx Warehouse',
-    'out_for_delivery': 'Out for Delivery',
-    'delivered': 'Delivered',
-    'cancelled': 'Cancelled',
-    'returned': 'Returned',
-    'attempt': 'Attempt Made',
-  };
-  return statusMap[adminStatus] || adminStatus;
-}
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
@@ -80,8 +67,9 @@ export async function GET(req) {
       customerPhone: order.phone,
       cityName: order.city,
       deliveryAddress: order.address,
-      orderStatus: getDisplayStatus(order.status),
-      transactionStatusMessage: getDisplayStatus(order.status),
+      statusKey: order.status,
+      orderStatus: order.status,
+      transactionStatusMessage: order.status,
       invoicePayment: order.total,
       email: order.email,
     });
@@ -108,8 +96,9 @@ export async function GET(req) {
       customerPhone: order.phone,
       cityName: order.city,
       deliveryAddress: order.address,
-      orderStatus: getDisplayStatus(order.status),
-      transactionStatusMessage: getDisplayStatus(order.status),
+      statusKey: order.status,
+      orderStatus: order.status,
+      transactionStatusMessage: order.status,
       invoicePayment: order.total,
       email: order.email,
     });
