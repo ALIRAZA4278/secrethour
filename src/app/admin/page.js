@@ -612,10 +612,10 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   return (
     <>
       <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
-      <div className="fixed right-0 top-0 bottom-0 w-full max-w-md z-50 flex flex-col overflow-y-auto bg-white shadow-2xl border-l border-gray-200">
+      <div className="fixed right-0 top-0 bottom-0 w-full md:max-w-md z-50 flex flex-col overflow-y-auto bg-white shadow-2xl border-l border-gray-200">
 
         {/* Header */}
-        <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-gray-200">
+        <div className="flex items-start justify-between px-4 md:px-6 pt-6 pb-4 border-b border-gray-200">
           <div>
             <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Order</p>
             <h2 className="text-3xl font-mono font-bold text-gray-900" style={{fontFamily: 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'}}>{num}</h2>
@@ -636,7 +636,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
         </div>
 
         {/* Customer details */}
-        <div className="px-4 md:px-6 py-5 border-b border-gray-200 space-y-3">
+        <div className="px-4 py-5 border-b border-gray-200 space-y-3">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-1">
             <span className="text-gray-400 text-xs uppercase tracking-[0.2em]">Customer Details</span>
             {!editing ? (
@@ -820,7 +820,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
         </div>
 
         {/* Status update */}
-        <div className="px-6 py-5 border-b border-gray-200">
+        <div className="px-4 py-5 border-b border-gray-200">
           <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-4">UPDATE STATUS</p>
           <div className="flex flex-wrap gap-2">
             {STATUSES.map(s => (
