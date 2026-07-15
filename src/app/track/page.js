@@ -27,32 +27,15 @@ const STEPS = [
 ];
 
 export default function TrackPage() {
-  const [tab,      setTab]      = useState('tracking'); // 'tracking' | 'order'
-  const [tracking, setTracking] = useState('');
   const [orderId,  setOrderId]  = useState('');
   const [contact,  setContact]  = useState('');
   const [loading,  setLoading]  = useState(false);
   const [result,   setResult]   = useState(null);
   const [error,    setError]    = useState('');
 
-  async function trackByNumber(e) {
-    e.preventDefault();
-    if (!tracking.trim()) return;
-    setLoading(true); setError(''); setResult(null);
-    try {
-      const res  = await fetch(`/api/postex/track?tracking=${encodeURIComponent(tracking.trim())}`);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setResult({ tracking: tracking.trim(), ...data });
-    } catch (err) {
-      setError(err.message || 'Could not find tracking information.');
-    }
-    setLoading(false);
-  }
-
   async function trackByOrder(e) {
     e.preventDefault();
-    if (!orderId.trim() || !contact.trim()) return;
+    if (!orderId.trim()) return;
     setLoading(true); setError(''); setResult(null);
     try {
       const res  = await fetch(`/api/track-order?orderId=${encodeURIComponent(orderId.trim())}&contact=${encodeURIComponent(contact.trim())}`);
@@ -60,7 +43,7 @@ export default function TrackPage() {
       if (data.error) throw new Error(data.error);
       setResult(data);
     } catch (err) {
-      setError(err.message || 'Order not found. Please check your details.');
+      setError(err.message || 'Order not found. Please check your Order ID.');
     }
     setLoading(false);
   }
@@ -84,72 +67,35 @@ export default function TrackPage() {
             <p className="text-cream/45 text-sm italic" style={serif}>Enter your tracking number or order details below.</p>
           </div>
 
-          {/* Tab toggle */}
-          <div className="flex border border-gold-border/30 rounded mb-6 overflow-hidden">
-            {[
-              { id: 'tracking', label: 'Tracking Number' },
-              { id: 'order',    label: 'Order ID + Contact' },
-            ].map(t => (
-              <button key={t.id} onClick={() => { setTab(t.id); setError(''); setResult(null); }}
-                className={`flex-1 py-3 text-[11px] uppercase tracking-[0.2em] transition-colors ${
-                  tab === t.id
-                    ? 'bg-burgundy text-gold-btn-text'
-                    : 'text-cream/50 hover:text-cream/80'
-                }`}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-
           {/* Form */}
           <div className="border border-gold-border/25 rounded-lg p-6 md:p-8" style={{ background: 'rgba(11,10,9,0.6)' }}>
 
-            {tab === 'tracking' ? (
-              <form onSubmit={trackByNumber} className="space-y-5">
-                <div>
-                  <label className={labelCls}>PostEx Tracking Number</label>
-                  <input
-                    value={tracking}
-                    onChange={e => setTracking(e.target.value)}
-                    placeholder="e.g. 28628390000001"
-                    className={inputCls}
-                    required
-                  />
-                  <p className="text-cream/30 text-[10px] mt-1.5">You can find this in your order confirmation email.</p>
-                </div>
-                <button type="submit" disabled={loading}
-                  className="w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] uppercase tracking-[0.2em] py-4 btn-glow transition-all duration-300 disabled:opacity-60">
-                  {loading ? 'Tracking…' : 'Track Order'}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={trackByOrder} className="space-y-5">
-                <div>
-                  <label className={labelCls}>Order ID</label>
-                  <input
-                    value={orderId}
-                    onChange={e => setOrderId(e.target.value)}
-                    placeholder="e.g. 7EF981BA (from your email)"
-                    className={inputCls}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className={labelCls}>Email or Phone Number</label>
-                  <input
-                    value={contact}
-                    onChange={e => setContact(e.target.value)}
-                    placeholder="Email or WhatsApp number"
-                    className={inputCls}
-                    required
-                  />
-                </div>
-                <button type="submit" disabled={loading}
-                  className="w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] uppercase tracking-[0.2em] py-4 btn-glow transition-all duration-300 disabled:opacity-60">
-                  {loading ? 'Finding Order…' : 'Track Order'}
-                </button>
-              </form>
-            )}
+            <form onSubmit={trackByOrder} className="space-y-5">
+              <div>
+                <label className={labelCls}>Order ID</label>
+                <input
+                  value={orderId}
+                  onChange={e => setOrderId(e.target.value)}
+                  placeholder="e.g. SH-8658 (from your email)"
+                  className={inputCls}
+                  required
+                />
+                <p className="text-cream/30 text-[10px] mt-1.5">You can find this in your order confirmation email.</p>
+              </div>
+              <div>
+                <label className={labelCls}>Email or Phone Number (Optional)</label>
+                <input
+                  value={contact}
+                  onChange={e => setContact(e.target.value)}
+                  placeholder="Email or WhatsApp number (for verification)"
+                  className={inputCls}
+                />
+              </div>
+              <button type="submit" disabled={loading}
+                className="w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] uppercase tracking-[0.2em] py-4 btn-glow transition-all duration-300 disabled:opacity-60">
+                {loading ? 'Finding Order…' : 'Track Order'}
+              </button>
+            </form>
 
             {/* Error */}
             {error && (

@@ -14,6 +14,20 @@ function orderNum(id) {
   return `SH-${Math.abs(h % 9000) + 1000}`;
 }
 
+function getDisplayStatus(adminStatus) {
+  const statusMap = {
+    'pending': 'At Merchant Warehouse',
+    'confirmed': 'At Merchant Warehouse',
+    'shipped': 'At PostEx Warehouse',
+    'out_for_delivery': 'Out for Delivery',
+    'delivered': 'Delivered',
+    'cancelled': 'Cancelled',
+    'returned': 'Returned',
+    'attempt': 'Attempt Made',
+  };
+  return statusMap[adminStatus] || adminStatus;
+}
+
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const orderId = (searchParams.get('orderId') || '').trim().toUpperCase();
@@ -26,7 +40,7 @@ export async function GET(req) {
   // Fetch all orders and find matching one
   const { data: orders, error } = await supabase
     .from('orders')
-    .select('id, first_name, email, phone, postex_tracking, postex_status, city, total')
+    .select('id, first_name, email, phone, postex_tracking, postex_status, status, address, city, total')
     .order('created_at', { ascending: false });
 
   if (error || !orders) {
@@ -53,11 +67,16 @@ export async function GET(req) {
 
   if (!order.postex_tracking) {
     return NextResponse.json({
+      tracking: null,
       orderRefNumber: `#${order.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`,
       customerName: order.first_name,
+      customerPhone: order.phone,
       cityName: order.city,
-      orderStatus: order.postex_status || 'At Merchant Warehouse',
-      transactionStatusMessage: order.postex_status || 'At Merchant Warehouse',
+      deliveryAddress: order.address,
+      orderStatus: getDisplayStatus(order.status),
+      transactionStatusMessage: getDisplayStatus(order.status),
+      invoicePayment: order.total,
+      email: order.email,
     });
   }
 
@@ -77,10 +96,15 @@ export async function GET(req) {
   } catch {
     return NextResponse.json({
       tracking: order.postex_tracking,
-      orderRefNumber: orderNum(order.id),
+      orderRefNumber: `#${order.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`,
       customerName: order.first_name,
+      customerPhone: order.phone,
       cityName: order.city,
-      orderStatus: order.postex_status || 'In Transit',
+      deliveryAddress: order.address,
+      orderStatus: getDisplayStatus(order.status),
+      transactionStatusMessage: getDisplayStatus(order.status),
+      invoicePayment: order.total,
+      email: order.email,
     });
   }
 }
