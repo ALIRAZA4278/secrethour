@@ -8,7 +8,7 @@ export const metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://secrethour.pk/og-image.png',
+        url: 'https://secrethour.pk/logo.png',
         width: 1200,
         height: 630,
         alt: 'Track Secret Hour Order',

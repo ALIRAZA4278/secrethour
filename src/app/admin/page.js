@@ -1217,6 +1217,7 @@ function OrdersChart({ orders, status = null }) {
 function Dashboard() {
   const [stats,         setStats]         = useState({ total: 0, revenue: 0, pending: 0, deliveryRate: 0 });
   const [statusCounts,  setStatusCounts]  = useState({});
+  const [statusRevenue, setStatusRevenue] = useState({});
   const [recent,        setRecent]        = useState([]);
   const [allOrders,     setAllOrders]     = useState([]);
   const [loading,       setLoading]       = useState(true);
@@ -1360,8 +1361,8 @@ function Dashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {STATUSES.map(status => (
             <div key={status} onClick={() => setSelectedStatus(selectedStatus === status ? null : status)} className={`border p-5 rounded-xl shadow-sm cursor-pointer transition ${selectedStatus === status ? 'ring-2 ring-blue-600 shadow-lg' : 'hover:shadow-md'} ${STATUS[status]?.cls || 'bg-gray-50 border-gray-200'}`}>
-              <p className="text-xs uppercase tracking-[0.2em] mb-2 opacity-80">{STATUS[status]?.label || status}</p>
-              <p className="text-3xl font-bold">{statusCounts[status] || 0}</p>
+              <p className="text-xs uppercase tracking-[0.2em] mb-3 opacity-80">{STATUS[status]?.label || status}</p>
+              <p className="text-4xl font-bold text-gray-900">{statusCounts[status] || 0}</p>
             </div>
           ))}
         </div>
