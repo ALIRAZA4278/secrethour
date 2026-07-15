@@ -618,7 +618,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
         <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-gray-200">
           <div>
             <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Order</p>
-            <h2 className="text-3xl italic text-gray-900" style={serif}>{num}</h2>
+            <h2 className="text-3xl font-mono font-bold text-gray-900" style={{fontFamily: 'SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace'}}>{num}</h2>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <p className="text-gray-400 text-xs uppercase tracking-[0.15em]">{custId}</p>
               {isRepeat && (
