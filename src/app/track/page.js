@@ -21,7 +21,7 @@ const STATUS_CONFIG = {
 };
 
 const STEPS = [
-  { label: 'Pending',         icon: '🛍️' },
+  { label: 'Confirmed',       icon: '📦' },
   { label: 'Shipped',         icon: '🏭' },
   { label: 'Out for Delivery', icon: '🚚' },
   { label: 'Delivered',       icon: '✅' },
