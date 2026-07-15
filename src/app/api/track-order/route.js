@@ -36,9 +36,6 @@ export async function GET(req) {
   if (!orderId) {
     return NextResponse.json({ error: 'Order ID required' }, { status: 400 });
   }
-  if (!contact) {
-    return NextResponse.json({ error: 'Email or Phone required' }, { status: 400 });
-  }
 
   // Fetch all orders and find matching one
   const { data: orders, error } = await supabase
@@ -57,11 +54,18 @@ export async function GET(req) {
     const shNum      = orderNum(o.id).toUpperCase();
     const idMatch    = uuidPrefix === cleanInput || shNum === cleanInput;
 
-    const phone        = (o.phone || '').replace(/\D/g, '');
-    const contactClean = contact.replace(/\D/g, '');
-    const emailMatch   = (o.email || '').toLowerCase() === contact;
-    const phoneMatch   = phone.endsWith(contactClean) && contactClean.length >= 7;
-    return idMatch && (emailMatch || phoneMatch);
+    // If contact is provided, verify it matches
+    if (contact.trim()) {
+      const phone        = (o.phone || '').replace(/\D/g, '');
+      const contactClean = contact.replace(/\D/g, '');
+      const contactLower = contact.toLowerCase();
+      const emailMatch   = (o.email || '').toLowerCase() === contactLower;
+      const phoneMatch   = phone.includes(contactClean) || contactClean.includes(phone.slice(-4));
+      return idMatch && (emailMatch || phoneMatch);
+    }
+
+    // If no contact provided, just match Order ID
+    return idMatch;
   });
 
   if (!order) {
