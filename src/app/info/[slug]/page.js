@@ -112,10 +112,10 @@ export async function generateMetadata({ params }) {
       openGraph: {
         title: 'FAQ — Delivery, Packaging & Products | Secret Hour Pakistan',
         description: 'Have questions about Secret Hour? Learn about our discreet packaging, delivery times across Pakistan, payment options, and product details. All answers here.',
-        url: 'https://secrethour.pk/info/faq',
+        url: 'https://www.secrethour.pk/info/faq',
       },
       alternates: {
-        canonical: 'https://secrethour.pk/info/faq',
+        canonical: 'https://www.secrethour.pk/info/faq',
       },
     };
   }

@@ -4,10 +4,10 @@ export const metadata = {
   openGraph: {
     title: 'Contact Secret Hour — Get in Touch',
     description: 'Get in touch with Secret Hour for orders, gifting advice, or support. We reply within 24 hours.',
-    url: 'https://secrethour.pk/contact',
+    url: 'https://www.secrethour.pk/contact',
     images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
   },
-  alternates: { canonical: 'https://secrethour.pk/contact' },
+  alternates: { canonical: 'https://www.secrethour.pk/contact' },
 };
 
 export default function ContactLayout({ children }) {

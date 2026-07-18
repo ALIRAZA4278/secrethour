@@ -18,10 +18,10 @@ export const metadata = {
   openGraph: {
     title: 'Shop Couple Gifts Online in Pakistan | Secret Hour',
     description: 'Browse Pakistan\'s only curated collection of intimate gifts for married couples. Card games, candles, silk bonds & bridal bundles. Fast discreet delivery across Pakistan.',
-    url: 'https://secrethour.pk/shop',
+    url: 'https://www.secrethour.pk/shop',
   },
   alternates: {
-    canonical: 'https://secrethour.pk/shop',
+    canonical: 'https://www.secrethour.pk/shop',
   },
 };
 

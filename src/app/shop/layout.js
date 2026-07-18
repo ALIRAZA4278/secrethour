@@ -4,7 +4,7 @@ export const metadata = {
   openGraph: {
     title: 'Shop Couple Gifts Pakistan — Secret Hour Collection',
     description: 'Browse the full Secret Hour collection — couples card games, luxury candles, bridal boxes, and intimate sets. Free delivery across Pakistan.',
-    url: 'https://secrethour.pk/shop',
+    url: 'https://www.secrethour.pk/shop',
     images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Secret Hour product collection' }],
   },
   twitter: {
@@ -13,7 +13,7 @@ export const metadata = {
     description: 'The full Secret Hour collection. Free delivery across Pakistan.',
     images: ['/og-image.jpg'],
   },
-  alternates: { canonical: 'https://secrethour.pk/shop' },
+  alternates: { canonical: 'https://www.secrethour.pk/shop' },
 };
 
 export default function ShopLayout({ children }) {

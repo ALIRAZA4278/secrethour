@@ -116,7 +116,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title: tags.title,
       description: tags.description,
-      url: `https://secrethour.pk/product/${actualSlug}`,
+      url: `https://www.secrethour.pk/product/${actualSlug}`,
       images: product.img ? [
         {
           url: product.img,
@@ -127,7 +127,7 @@ export async function generateMetadata({ params }) {
       ] : [],
     },
     alternates: {
-      canonical: `https://secrethour.pk/product/${actualSlug}`,
+      canonical: `https://www.secrethour.pk/product/${actualSlug}`,
     },
   };
 }

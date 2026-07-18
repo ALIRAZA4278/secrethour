@@ -68,7 +68,7 @@ export default function RootLayout({ children }) {
           "@type": "Organization",
           "name": "Secret Hour",
           "url": "https://secrethour.pk",
-          "logo": "https://secrethour.pk/logo.png",
+          "logo": "https://www.secrethour.pk/logo.png",
           "description": "Quietly luxurious gifts crafted for married couples in Pakistan — card games, candles, and intimate sets to slow down, come closer, and reconnect.",
           "foundingLocation": { "@type": "Place", "name": "Pakistan" },
           "contactPoint": { "@type": "ContactPoint", "contactType": "customer service", "email": "info@secrethour.pk", "availableLanguage": ["English", "Urdu"] },
@@ -81,7 +81,7 @@ export default function RootLayout({ children }) {
           "@type": "WebSite",
           "name": "Secret Hour",
           "url": "https://secrethour.pk",
-          "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://secrethour.pk/shop?q={search_term_string}" }, "query-input": "required name=search_term_string" }
+          "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://www.secrethour.pk/shop?q={search_term_string}" }, "query-input": "required name=search_term_string" }
         }) }} />
         {/* Google Tag Manager */}
         <Script id="gtm" strategy="afterInteractive">{`

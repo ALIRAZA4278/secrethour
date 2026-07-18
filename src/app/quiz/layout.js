@@ -4,10 +4,10 @@ export const metadata = {
   openGraph: {
     title: 'Find the Perfect Gift for Your Partner | Secret Hour Quiz',
     description: 'Not sure what to get? Take our 60-second couples gift quiz and we\'ll recommend the perfect Secret Hour product for your partner. Made for married couples in Pakistan.',
-    url: 'https://secrethour.pk/quiz',
+    url: 'https://www.secrethour.pk/quiz',
   },
   alternates: {
-    canonical: 'https://secrethour.pk/quiz',
+    canonical: 'https://www.secrethour.pk/quiz',
   },
 };
 

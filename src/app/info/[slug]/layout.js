@@ -44,8 +44,8 @@ export async function generateMetadata({ params }) {
   return {
     title: meta.title,
     description: meta.description,
-    alternates: { canonical: `https://secrethour.pk/info/${slug}` },
-    openGraph: { title: meta.title, description: meta.description, url: `https://secrethour.pk/info/${slug}` },
+    alternates: { canonical: `https://www.secrethour.pk/info/${slug}` },
+    openGraph: { title: meta.title, description: meta.description, url: `https://www.secrethour.pk/info/${slug}` },
   };
 }
 
@@ -57,8 +57,8 @@ export default async function InfoLayout({ children, params }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://secrethour.pk/" },
-      { "@type": "ListItem", "position": 2, "name": PAGE_META[slug]?.title?.split(' —')[0] || slug.toUpperCase(), "item": `https://secrethour.pk/info/${slug}` }
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.secrethour.pk/" },
+      { "@type": "ListItem", "position": 2, "name": PAGE_META[slug]?.title?.split(' —')[0] || slug.toUpperCase(), "item": `https://www.secrethour.pk/info/${slug}` }
     ]
   };
 

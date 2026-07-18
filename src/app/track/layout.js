@@ -4,18 +4,18 @@ export const metadata = {
   openGraph: {
     title: 'Track Your Order — Secret Hour',
     description: 'Check the live status of your Secret Hour delivery. Fast & discreet shipping across Pakistan.',
-    url: 'https://secrethour.pk/track',
+    url: 'https://www.secrethour.pk/track',
     type: 'website',
     images: [
       {
-        url: 'https://secrethour.pk/og-track-image.svg',
+        url: 'https://www.secrethour.pk/og-track-image.svg',
         width: 1200,
         height: 630,
         alt: 'Track Your Secret Hour Order',
       }
     ],
   },
-  alternates: { canonical: 'https://secrethour.pk/track' },
+  alternates: { canonical: 'https://www.secrethour.pk/track' },
   robots: { index: false },
 };
 

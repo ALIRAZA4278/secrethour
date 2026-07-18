@@ -19,7 +19,7 @@ export async function generateMetadata({ params }) {
   const description = product.description
     ? product.description.slice(0, 155)
     : `${title} — ${product.price}. A quiet luxury crafted for married couples by Secret Hour. Free delivery across Pakistan. Discreet packaging.`;
-  const url = `https://secrethour.pk/product/${slug}`;
+  const url = `https://www.secrethour.pk/product/${slug}`;
   const image = product.img?.startsWith('http') ? product.img : `https://secrethour.pk${product.img}`;
 
   return {
@@ -51,7 +51,7 @@ export default async function ProductLayout({ children, params }) {
     .eq('slug', slug)
     .single();
 
-  const url = `https://secrethour.pk/product/${slug}`;
+  const url = `https://www.secrethour.pk/product/${slug}`;
   const image = product?.img?.startsWith('http') ? product.img : `https://secrethour.pk${product?.img}`;
 
   const productSchema = product ? {
@@ -87,8 +87,8 @@ export default async function ProductLayout({ children, params }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://secrethour.pk/" },
-      { "@type": "ListItem", "position": 2, "name": "Shop", "item": "https://secrethour.pk/shop" },
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.secrethour.pk/" },
+      { "@type": "ListItem", "position": 2, "name": "Shop", "item": "https://www.secrethour.pk/shop" },
       { "@type": "ListItem", "position": 3, "name": product?.title || slug, "item": url }
     ]
   };

@@ -4,10 +4,10 @@ export const metadata = {
   openGraph: {
     title: 'What Pakistani Couples Say About Secret Hour | Reviews',
     description: 'Read real reviews from married couples across Pakistan who\'ve experienced Secret Hour\'s intimate gift collection. Trusted by hundreds of couples nationwide.',
-    url: 'https://secrethour.pk/testimonials',
+    url: 'https://www.secrethour.pk/testimonials',
   },
   alternates: {
-    canonical: 'https://secrethour.pk/testimonials',
+    canonical: 'https://www.secrethour.pk/testimonials',
   },
 };
 

@@ -36,11 +36,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: `${blog.title} — Secret Hour`,
       description: blog.meta_description || blog.content.slice(0, 160),
-      url: `https://secrethour.pk/blogs/${blog.slug}`,
+      url: `https://www.secrethour.pk/blogs/${blog.slug}`,
       images: blog.cover_image ? [{ url: blog.cover_image, width: 1200, height: 630 }] : [],
     },
     alternates: {
-      canonical: `https://secrethour.pk/blogs/${blog.slug}`,
+      canonical: `https://www.secrethour.pk/blogs/${blog.slug}`,
     },
   };
 }
