@@ -71,8 +71,6 @@ export default function Footer() {
             {[
               ['All Products',  '/shop'],
               ['Take the Quiz', '/quiz'],
-              ['Bridal Box',    '/product/bridal-box'],
-              ['Night Set',     '/product/intimate-night-set'],
             ].map(([label, href]) => (
               <li key={href}>
                 <Link href={href} className="text-cream/55 hover:text-gold text-sm transition-colors">
