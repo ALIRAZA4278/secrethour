@@ -118,7 +118,7 @@ function fmtItems(items, total, paymentMethod, status) {
 }
 
 const WA_MSG = {
-  pending:          (name, num, items, total, paymentMethod, status) => `We have received your Secret Hour order *${num}*. Please confirm if you have placed this order.${fmtItems(items, total, paymentMethod, status)}\n\nThank you!\nSecretHour.pk`,
+  pending:          (name, num, items, total, paymentMethod, status) => `Assalam o Alaikum ${name}!\n\nWe have received your Secret Hour order *${num}*. Please confirm if you have placed this order.${fmtItems(items, total, paymentMethod, status)}\n\nThank you!\nSecretHour.pk`,
   confirmed:        (name, num, items, total, paymentMethod, status) => `Assalam o Alaikum ${name}!\n\nGreat news! Your Secret Hour order *${num}* has been confirmed. We are preparing your package.${fmtItems(items, total, paymentMethod, status)}\n\nThank you!\nSecretHour.pk`,
   shipped:          (name, num, items, total, paymentMethod, status) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* has been shipped! You will receive it within 2-3 business days.${fmtItems(items, total, paymentMethod, status)}\n\nFor tracking, feel free to contact us.\n\nThank you!\nSecretHour.pk`,
   out_for_delivery: (name, num, items, total, paymentMethod, status) => `Assalam o Alaikum ${name}!\n\nYour Secret Hour order *${num}* is out for delivery today! Our courier is on the way to you.${fmtItems(items, total, paymentMethod, status)}\n\nPlease keep your phone available.\n\nThank you!\nSecretHour.pk`,
