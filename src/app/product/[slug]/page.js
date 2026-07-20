@@ -89,7 +89,7 @@ export async function generateMetadata({ params }) {
     },
     'midnight-glow-candle': {
       title: 'Romantic Scented Candle Pakistan | Midnight Glow — Secret Hour',
-      description: 'Set the mood with Midnight Glow — a handcrafted romantic scented candle for couples in Pakistan. Rich warm fragrance for intimate evenings. Order online today.',
+      description: 'Set the mood with Midnight Glow — a handcrafted romantic scented candle for couples in Pakistan. Rich sandalwood and oud fragrance for intimate evenings. Order online today.',
     },
     'secret-note': {
       title: 'Secret Note — Romantic Love Letter Envelope | Secret Hour Pakistan',
