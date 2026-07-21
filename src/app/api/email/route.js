@@ -1,10 +1,23 @@
 import { NextResponse } from 'next/server';
-import { sendEmail, orderConfirmationHtml, adminOrderNotificationHtml, orderStatusHtml } from '../../../lib/email';
+import { sendEmail, orderConfirmationHtml, adminOrderNotificationHtml, orderStatusHtml, abandonedCartHtml } from '../../../lib/email';
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { type, to, name, phone, orderId, items, total, payment, city, address, trackingNumber, status } = body;
+    const { type, to, name, phone, orderId, items, total, payment, city, address, trackingNumber, status, promoCode, discountPct } = body;
+
+    // Abandoned cart recovery email (sent manually from admin panel)
+    if (type === 'abandoned_cart') {
+      if (!to) {
+        return NextResponse.json({ error: 'This cart has no email address' }, { status: 400 });
+      }
+      await sendEmail({
+        to,
+        subject: 'You left something unforgettable behind... ❤️',
+        html: abandonedCartHtml({ name, items, total, promoCode, discountPct }),
+      });
+      return NextResponse.json({ ok: true });
+    }
 
     if (!orderId) {
       return NextResponse.json({ error: 'Missing orderId' }, { status: 400 });

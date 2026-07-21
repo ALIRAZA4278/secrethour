@@ -325,6 +325,110 @@ export function orderStatusHtml({ name, orderId, status, items = [], total }) {
 </html>`;
 }
 
+export function abandonedCartHtml({ name, items = [], total, promoCode = 'MIDNIGHTHOUR', discountPct = 10 }) {
+  const itemRows = items.map(i =>
+    `<tr>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0ece4;color:#2c1a0e;font-size:14px;">${i.title}${i.variation ? `<br><span style="color:#a08060;font-size:12px;">${i.variation}</span>` : ''}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0ece4;color:#6b4c2a;font-size:14px;text-align:center;">x${i.qty || 1}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0ece4;color:#2c1a0e;font-size:14px;text-align:right;">Rs. ${((i.price || 0) * (i.qty || 1)).toLocaleString()}</td>
+    </tr>`
+  ).join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f7f4ef;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7f4ef;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e8ddd0;max-width:560px;width:100%;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#1a0a04;padding:32px 40px;text-align:center;">
+            <p style="color:#c9a96e;font-size:10px;letter-spacing:4px;text-transform:uppercase;margin:0 0 6px;">Secret Hour</p>
+            <h1 style="color:#c9a96e;font-size:23px;font-style:italic;margin:0;">You left something unforgettable behind… ❤️</h1>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px 40px;">
+            <p style="color:#2c1a0e;font-size:15px;line-height:1.7;margin:0 0 8px;">
+              Hi <strong>${name || 'there'}</strong>,
+            </p>
+            <p style="color:#2c1a0e;font-size:15px;line-height:1.7;margin:0 0 24px;">
+              Looks like you left something special in your cart.
+            </p>
+
+            ${items.length > 0 ? `
+            <p style="color:#6b4c2a;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Your Cart</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+              <tbody>${itemRows}</tbody>
+            </table>` : ''}
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf7f2;border:1px solid #e8ddd0;margin-bottom:24px;">
+              <tr>
+                <td style="padding:12px 16px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a6a4a;">Total</td>
+                <td style="padding:12px 16px;font-size:16px;color:#1a0a04;text-align:right;font-weight:700;">Rs. ${(total || 0).toLocaleString()}</td>
+              </tr>
+            </table>
+
+            <p style="color:#2c1a0e;font-size:14px;line-height:1.7;margin:0 0 24px;">
+              At <strong>Secret Hour</strong>, we create thoughtful experiences that help couples reconnect,
+              create meaningful moments, and make ordinary nights feel extraordinary.
+            </p>
+
+            <!-- Promo -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a0a04;margin-bottom:24px;">
+              <tr>
+                <td style="padding:22px 20px;text-align:center;">
+                  <p style="color:#e8ddd0;font-size:14px;margin:0 0 10px;">
+                    Complete your order today and enjoy <strong style="color:#c9a96e;">${discountPct}% OFF</strong> with the code:
+                  </p>
+                  <p style="color:#c9a96e;font-size:22px;letter-spacing:5px;font-weight:700;margin:0;">${promoCode}</p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <tr>
+                <td align="center">
+                  <a href="https://www.secrethour.pk/shop"
+                     style="display:inline-block;background:#5a1a24;border:1px solid #c9a96e;color:#e8c98a;font-size:12px;letter-spacing:3px;text-transform:uppercase;text-decoration:none;padding:16px 40px;">
+                    Complete Your Order
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="color:#6b4c2a;font-size:13px;line-height:1.6;margin:0 0 20px;text-align:center;">
+              If you have any questions, simply reply to this email — we're always happy to help.
+            </p>
+
+            <p style="color:#2c1a0e;font-size:14px;line-height:1.7;margin:0;">
+              Warm regards,<br>
+              <strong>Team Secret Hour</strong><br>
+              <span style="color:#8a6a4a;font-size:13px;font-style:italic;">Creating unforgettable moments for couples.</span>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f7f4ef;padding:20px 40px;text-align:center;border-top:1px solid #e8ddd0;">
+            <p style="color:#8a6a4a;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 4px;">Discreet Packaging · No Brand Name Outside</p>
+            <p style="color:#a08060;font-size:11px;margin:0;">secrethour.pk · info@secrethour.pk</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export async function sendEmail({ to, subject, html }) {
   const transporter = getTransporter();
   await transporter.sendMail({

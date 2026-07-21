@@ -2791,6 +2791,8 @@ function AbandonedCartsTab() {
   const [carts,   setCarts]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState('');
+  const [sendingId, setSendingId] = useState(null);
+  const [sentIds, setSentIds] = useState([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -2820,6 +2822,31 @@ function AbandonedCartsTab() {
     const itemsList = (cart.items || []).map(i => `• ${i.title} x${i.qty}`).join('\n');
     const text = `Assalam o Alaikum ${name}!\n\nWe noticed you were checking out on SecretHour.pk but didn't complete your order.\n\nYour cart:\n${itemsList}\n\nTotal: Rs. ${(cart.total || 0).toLocaleString()}\n\nCan we help? We'd love to get your order to you. 😊\n\nSecretHour.pk`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+  }
+
+  async function emailFollowUp(cart) {
+    if (!cart.email) return;
+    if (!window.confirm(`Send recovery email to ${cart.email}?`)) return;
+    setSendingId(cart.id);
+    try {
+      const res  = await fetch('/api/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type:  'abandoned_cart',
+          to:    cart.email,
+          name:  cart.name || '',
+          items: Array.isArray(cart.items) ? cart.items : [],
+          total: cart.total || 0,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || data?.error) throw new Error(data?.error || `HTTP ${res.status}`);
+      setSentIds(prev => [...prev, cart.id]);
+    } catch (err) {
+      window.alert(`Failed to send email: ${err.message}`);
+    }
+    setSendingId(null);
   }
 
   return (
@@ -2865,6 +2892,17 @@ function AbandonedCartsTab() {
                       <button onClick={() => waFollowUp(c)}
                         className="text-xs font-medium px-3 py-1.5 border border-green-300 text-green-700 hover:bg-green-50 rounded-lg transition">
                         WA
+                      </button>
+                    )}
+                    {c.email && c.status !== 'converted' && (
+                      <button onClick={() => emailFollowUp(c)}
+                        disabled={sendingId === c.id}
+                        className={`text-xs font-medium px-3 py-1.5 border rounded-lg transition disabled:opacity-50 ${
+                          sentIds.includes(c.id)
+                            ? 'border-gray-300 text-gray-500 bg-gray-50'
+                            : 'border-blue-300 text-blue-700 hover:bg-blue-50'
+                        }`}>
+                        {sendingId === c.id ? 'Sending…' : sentIds.includes(c.id) ? 'Sent ✓' : 'Email'}
                       </button>
                     )}
                     <button onClick={() => del(c.id)}
