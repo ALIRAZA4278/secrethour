@@ -2820,7 +2820,7 @@ function AbandonedCartsTab() {
     if (!phone) return;
     const name = cart.name || 'there';
     const itemsList = (cart.items || []).map(i => `• ${i.title} x${i.qty}`).join('\n');
-    const text = `Assalam o Alaikum ${name}!\n\nWe noticed you were checking out on SecretHour.pk but didn't complete your order.\n\nYour cart:\n${itemsList}\n\nTotal: Rs. ${(cart.total || 0).toLocaleString()}\n\nCan we help? We'd love to get your order to you. 😊\n\nSecretHour.pk`;
+    const text = `Assalam o Alaikum ${name}!\n\nWe noticed you were checking out on SecretHour.pk but didn't complete your order.\n\n*Your cart:*\n${itemsList}\n\nTotal: Rs. ${(cart.total || 0).toLocaleString()}\n\nAs a little thank you, here's an exclusive *10% OFF* just for you.\n\nCode: *MIDNIGHTHOUR*\n\nIf you have any questions or need any assistance, simply reply to this message—we're happy to help. ❤️\nSecretHour.pk`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   }
 
