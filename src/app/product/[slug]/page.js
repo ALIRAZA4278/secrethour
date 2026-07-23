@@ -83,7 +83,7 @@ export async function generateMetadata({ params }) {
   const { product } = data;
 
   const metaTags = {
-    'the-midnight-deck': {
+    'midnight-deck': {
       title: 'Couples Card Game Pakistan — The Midnight Deck | Secret Hour',
       description: 'The Midnight Deck is Pakistan\'s first couples card game designed for married partners. Spark deep conversations & connection. Order online with discreet delivery.',
     },
@@ -91,7 +91,7 @@ export async function generateMetadata({ params }) {
       title: 'Romantic Scented Candle Pakistan | Midnight Glow — Secret Hour',
       description: 'Set the mood with Midnight Glow — a handcrafted romantic scented candle for couples in Pakistan. Rich sandalwood and oud fragrance for intimate evenings. Order online today.',
     },
-    'secret-note': {
+    'the-secret-note': {
       title: 'Secret Note — Romantic Love Letter Envelope | Secret Hour Pakistan',
       description: 'Write what you feel. Secret Note is a beautifully crafted envelope set for married couples to exchange heartfelt messages. The perfect intimate gift in Pakistan.',
     },
