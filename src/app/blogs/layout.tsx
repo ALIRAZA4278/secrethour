@@ -1,9 +1,9 @@
 export const metadata = {
-  title: 'Blogs — Secret Hour',
-  description: 'Read insights, stories, and tips for married couples on intimacy, connection, and relationships.',
+  title: 'Couples Blog — Relationship Tips & Gift Ideas | Secret Hour',
+  description: "Explore Secret Hour's blog for date night ideas, anniversary gift guides, intimacy tips for married couples in Pakistan, and product spotlights. New posts weekly.",
   openGraph: {
-    title: 'Blogs — Secret Hour',
-    description: 'Read insights, stories, and tips for married couples on intimacy, connection, and relationships.',
+    title: 'Couples Blog — Relationship Tips & Gift Ideas | Secret Hour',
+    description: "Explore Secret Hour's blog for date night ideas, anniversary gift guides, intimacy tips for married couples in Pakistan, and product spotlights. New posts weekly.",
     url: 'https://www.secrethour.pk/blogs',
   },
   alternates: {

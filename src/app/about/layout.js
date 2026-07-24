@@ -1,9 +1,9 @@
 export const metadata = {
-  title: 'About Secret Hour — Quiet Luxuries for Married Couples in Pakistan',
-  description: 'Secret Hour was born from a belief that married couples deserve beautiful rituals. We make quiet luxuries for couples in Pakistan — designed to slow down and reconnect.',
+  title: "About Secret Hour — Pakistan's First Intimate Gifting Brand",
+  description: "Secret Hour is Pakistan's first brand built exclusively for married couples. Learn our story, our mission, and why thousands of couples across Pakistan trust us.",
   openGraph: {
-    title: 'About Secret Hour — Quiet Luxuries for Married Couples in Pakistan',
-    description: 'Secret Hour was born from a belief that married couples deserve beautiful rituals. We make quiet luxuries for couples — designed to slow down and reconnect.',
+    title: "About Secret Hour — Pakistan's First Intimate Gifting Brand",
+    description: "Secret Hour is Pakistan's first brand built exclusively for married couples. Learn our story, our mission, and why thousands of couples across Pakistan trust us.",
     url: 'https://www.secrethour.pk/about',
     images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
   },

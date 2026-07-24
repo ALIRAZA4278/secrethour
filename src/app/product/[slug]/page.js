@@ -92,7 +92,7 @@ export async function generateMetadata({ params }) {
       description: 'Set the mood with Midnight Glow — a handcrafted romantic scented candle for couples in Pakistan. Rich sandalwood and oud fragrance for intimate evenings. Order online today.',
     },
     'the-secret-note': {
-      title: 'Secret Note — Romantic Love Letter Envelope | Secret Hour Pakistan',
+      title: 'Secret Note — Love Letter Envelope for Couples | Secret Hour',
       description: 'Write what you feel. Secret Note is a beautifully crafted envelope set for married couples to exchange heartfelt messages. The perfect intimate gift in Pakistan.',
     },
     'silk-bond': {
@@ -102,6 +102,10 @@ export async function generateMetadata({ params }) {
     'bridal-bundle': {
       title: 'Bridal Bundle Pakistan — Complete Couples Gift Box | Secret Hour',
       description: 'The ultimate wedding night gift. Our Bridal Bundle includes the Midnight Deck, Midnight Glow Candle, Secret Note & Silk Bond. The perfect nikkah gift in Pakistan.',
+    },
+    'midnight-bow': {
+      title: 'Midnight Bow — Premium Satin Bow Tie | Secret Hour Pakistan',
+      description: 'The Midnight Bow is a premium satin bow tie for married couples — perfect for date nights, anniversaries & intimate evenings. Pairs beautifully with The Midnight Deck.',
     },
   };
 
