@@ -6,8 +6,8 @@ import Footer from '../components/Footer';
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 
 export const metadata = {
-  title: 'About — Secret Hour',
-  description: 'Secret Hour was born from a quiet realization — that even the strongest marriages can fall into routine.',
+  title: "About Secret Hour — Pakistan's First Intimate Gifting Brand",
+  description: "Secret Hour is Pakistan's first brand built exclusively for married couples. Learn our story, our mission, and why thousands of couples across Pakistan trust us.",
 };
 
 const VALUES = [
