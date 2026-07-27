@@ -6,6 +6,11 @@ export const metadata = {
     description: "Explore Secret Hour's blog for date night ideas, anniversary gift guides, intimacy tips for married couples in Pakistan, and product spotlights. New posts weekly.",
     url: 'https://www.secrethour.pk/blogs',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Couples Blog — Relationship Tips & Gift Ideas | Secret Hour',
+    description: "Explore Secret Hour's blog for date night ideas, anniversary gift guides, intimacy tips for married couples in Pakistan, and product spotlights. New posts weekly.",
+  },
   alternates: {
     canonical: 'https://www.secrethour.pk/blogs',
   },

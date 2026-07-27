@@ -8,6 +8,11 @@ const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, s
 export const metadata = {
   title: "About Secret Hour — Pakistan's First Intimate Gifting Brand",
   description: "Secret Hour is Pakistan's first brand built exclusively for married couples. Learn our story, our mission, and why thousands of couples across Pakistan trust us.",
+  twitter: {
+    card: 'summary_large_image',
+    title: "About Secret Hour — Pakistan's First Intimate Gifting Brand",
+    description: "Secret Hour is Pakistan's first brand built exclusively for married couples. Learn our story, our mission, and why thousands of couples across Pakistan trust us.",
+  },
 };
 
 const VALUES = [
