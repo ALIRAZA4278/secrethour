@@ -31,7 +31,7 @@ export default function Navbar() {
     {/* Announcement Bar */}
     <div className="w-full overflow-hidden py-1.5" style={{ background: 'hsl(350 80% 5%)' }}>
       <div className="flex whitespace-nowrap animate-marquee">
-        {[...Array(4)].map((_, i) => (
+        {[...Array(2)].map((_, i) => (
           <span key={i} className="text-gold text-[10px] md:text-xs uppercase tracking-[0.25em] font-medium px-16">
             Get 10% Off on Online Payment — Pay via Bank Transfer &nbsp;&nbsp;•&nbsp;&nbsp; Free Delivery Across Pakistan
           </span>
