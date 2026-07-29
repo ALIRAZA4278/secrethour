@@ -24,9 +24,10 @@ export async function generateStaticParams() {
     const { data: products } = await supabase.from('products').select('slug').neq('hidden', true);
     const staticSlugs = (products || []).map(p => ({ slug: p.slug }));
 
-    const aliasSlugs = Object.keys(SLUG_ALIASES).map(alias => ({ slug: alias }));
-
-    return [...staticSlugs, ...aliasSlugs];
+    // Alias slugs (e.g. the-midnight-deck) are NOT pre-generated — a permanent
+    // redirect in next.config.mjs 301s them to the canonical product URL, so
+    // pre-generating them would only create duplicate phantom pages for Google.
+    return staticSlugs;
   } catch {
     return [];
   }

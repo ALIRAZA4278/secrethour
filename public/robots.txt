@@ -3,6 +3,7 @@ Allow: /
 Disallow: /api/
 Disallow: /admin/
 Disallow: /checkout/confirm
+Disallow: /_next/static/media/
 
 # AI crawlers
 User-agent: GPTBot
