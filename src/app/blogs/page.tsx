@@ -57,7 +57,6 @@ export default async function BlogsPage({ searchParams }: { searchParams: Promis
                           alt={blog.title}
                           fill
                           className="object-cover group-hover:scale-105 transition duration-300"
-                          unoptimized
                         />
                       </div>
                     )}

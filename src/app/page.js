@@ -111,10 +111,8 @@ export default function Home() {
             key={i}
             className={`absolute inset-0 transition-opacity duration-700 ${i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={slide.mob} alt="" className="absolute inset-0 w-full h-full object-cover object-top md:hidden" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={slide.desk} alt="" className="absolute inset-0 w-full h-full object-cover object-top hidden md:block" />
+            <Image src={slide.mob} alt="" fill priority={i === 0} sizes="100vw" className="object-cover object-top md:hidden" />
+            <Image src={slide.desk} alt="" fill priority={i === 0} sizes="100vw" className="object-cover object-top hidden md:block" />
           </div>
         ))}
 
@@ -191,8 +189,7 @@ export default function Home() {
 
       {/* ─── Featured Product ────────────────────────────────── */}
       <section className="relative min-h-screen px-4 md:px-6 overflow-hidden flex items-center bg-black">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={IMG.silk} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50 pointer-events-none" />
+        <Image src={IMG.silk} alt="" fill sizes="100vw" className="object-cover opacity-50 pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent pointer-events-none" />
 
         <div className="relative z-10 max-w-6xl mx-auto w-full grid md:grid-cols-2 gap-10 md:gap-16 items-center py-16 md:py-20">
@@ -208,7 +205,6 @@ export default function Home() {
                   alt="The Midnight Deck"
                   fill
                   className="object-cover transition-opacity duration-500"
-                  unoptimized
                 />
                 {imgs.length > 1 && (
                   <>
@@ -307,7 +303,7 @@ export default function Home() {
                     </span>
                   )}
                   <div className="relative aspect-4/3 overflow-hidden">
-                    <Image src={p.img} alt={p.title} fill className="object-cover" unoptimized />
+                    <Image src={p.img} alt={p.title} fill className="object-cover" />
                   </div>
                   <div className="p-4 space-y-1.5 bg-black/40 text-center">
                     <h3 className="text-sm md:text-base italic text-cream" style={serif}>{p.title}</h3>
@@ -368,7 +364,7 @@ export default function Home() {
         `}</style>
 
         <div className="absolute inset-0 opacity-40 pointer-events-none">
-          <Image src={IMG.silk} alt="" fill className="object-cover" unoptimized />
+          <Image src={IMG.silk} alt="" fill className="object-cover" />
         </div>
 
         <div className="relative z-10">

@@ -41,7 +41,7 @@ export default function Navbar() {
     <nav className="w-full bg-black/90 backdrop-blur-sm border-b border-gold-border/40">
       <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
         <Link href="/" className="relative w-40 h-11 shrink-0">
-          <Image src={LOGO} alt="Secret Hour" fill className="object-contain object-left" priority unoptimized />
+          <Image src={LOGO} alt="Secret Hour" fill className="object-contain object-left" priority />
         </Link>
 
         <ul className="hidden lg:flex items-center gap-8">

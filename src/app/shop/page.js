@@ -45,8 +45,7 @@ export default async function ShopPage() {
       <Navbar />
 
       <div className="relative flex-1" style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={SILK} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 rotate-180 pointer-events-none z-0" loading="lazy" />
+        <Image src={SILK} alt="" fill sizes="100vw" className="object-cover opacity-10 rotate-180 pointer-events-none z-0" />
 
         {/* Header */}
         <section className="relative z-10 py-12 md:py-20 text-center px-6">
@@ -85,7 +84,6 @@ export default async function ShopPage() {
                       alt={p.title}
                       fill
                       className="object-cover"
-                      unoptimized
                     />
                     {p.tag && (
                       <span className={`absolute top-2 left-2 text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-1 ${

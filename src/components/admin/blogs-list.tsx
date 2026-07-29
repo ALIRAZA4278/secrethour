@@ -146,7 +146,6 @@ export default function BlogsList() {
                     alt={blog.title}
                     fill
                     className="object-cover"
-                    unoptimized
                   />
                 </div>
               )}

@@ -204,7 +204,6 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
                   alt="Cover preview"
                   fill
                   className="object-cover"
-                  unoptimized
                 />
               </div>
               <button

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
 import MetaPixel from '../components/MetaPixel';
@@ -103,8 +104,7 @@ export default function TestimonialsPage() {
       <Navbar />
 
       <div className="relative flex-1">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={SILK} alt="" className="absolute inset-0 w-full h-full object-cover opacity-8 rotate-180 pointer-events-none" />
+        <Image src={SILK} alt="" fill sizes="100vw" className="object-cover opacity-8 rotate-180 pointer-events-none" />
 
         {/* Header */}
         <section className="relative z-10 pt-10 pb-12 px-6 text-center">

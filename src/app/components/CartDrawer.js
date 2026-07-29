@@ -74,7 +74,7 @@ export default function CartDrawer() {
               {items.map((item) => (
                 <div key={item.slug} className="flex gap-4 border-b border-gold-border/30 pb-4">
                   <div className="relative w-20 h-20 shrink-0 rounded overflow-hidden bg-sh-bg">
-                    <Image src={item.img} alt={item.title} fill className="object-cover" unoptimized />
+                    <Image src={item.img} alt={item.title} fill className="object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-cream text-sm leading-snug" style={serif}>{item.title}</h3>
@@ -142,7 +142,7 @@ export default function CartDrawer() {
                       return (
                         <div key={u.slug} className="flex items-center gap-3 border border-gold-border/30 p-3" style={{ background: 'rgba(11,10,9,0.5)' }}>
                           <div className="relative w-14 h-14 shrink-0 bg-burgundy/30">
-                            {img && <Image src={img} alt={u.title} fill className="object-cover" unoptimized />}
+                            {img && <Image src={img} alt={u.title} fill className="object-cover" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-cream text-sm leading-snug" style={serif}>{u.title}</p>

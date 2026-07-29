@@ -759,7 +759,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
                   <div className="flex items-center gap-2.5">
                     {item.product_img && (
                       <div className="relative w-9 h-9 shrink-0 bg-gray-100 border border-gray-200 rounded">
-                        <Image src={item.product_img} alt="" fill className="object-contain" unoptimized />
+                        <Image src={item.product_img} alt="" fill className="object-contain" />
                       </div>
                     )}
                     <span className="text-gray-700 text-sm">{item.product_title}{item.variation ? <span className="text-orange-500 text-xs ml-1">({item.variation})</span> : ''} <span className="text-gray-400">× {item.quantity}</span>
@@ -1808,7 +1808,7 @@ function ImgSlot({ label, file, preview, required, onChange, onClear }) {
       <div className="flex items-center gap-3">
         {preview ? (
           <div className="relative w-16 h-16 border border-gray-200 bg-gray-50 rounded-lg shrink-0 group">
-            <Image src={preview} alt="" fill className="object-contain" unoptimized />
+            <Image src={preview} alt="" fill className="object-contain" />
             <button type="button" onClick={onClear}
               className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
               ×
@@ -2326,7 +2326,7 @@ function ProductsTab() {
               <div className="hidden md:grid grid-cols-[32px_64px_1fr_100px_80px_200px] gap-x-4 items-center px-5 py-4">
                 <input type="checkbox" checked={selectedProds.has(p.id)} onChange={() => toggleOneProd(p.id)} className="accent-gray-800 cursor-pointer" />
                 <div className="relative w-12 h-12 border border-gray-200 bg-gray-50 rounded-lg">
-                  {p.img ? <Image src={p.img} alt="" fill className="object-contain" unoptimized />
+                  {p.img ? <Image src={p.img} alt="" fill className="object-contain" />
                     : <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">📦</div>}
                 </div>
                 <div className="min-w-0">
@@ -2368,7 +2368,7 @@ function ProductsTab() {
                 <div className="flex items-center gap-3 mb-3">
                   <input type="checkbox" checked={selectedProds.has(p.id)} onChange={() => toggleOneProd(p.id)} className="accent-gray-800 cursor-pointer shrink-0" />
                   <div className="relative w-14 h-14 shrink-0 border border-gray-200 bg-gray-50 rounded-lg">
-                    {p.img ? <Image src={p.img} alt="" fill className="object-contain" unoptimized />
+                    {p.img ? <Image src={p.img} alt="" fill className="object-contain" />
                       : <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">📦</div>}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -2921,7 +2921,7 @@ function AbandonedCartsTab() {
                       <div key={idx} className="flex items-center gap-3 bg-gray-50 rounded-lg px-3 py-2">
                         {item.img && (
                           <div className="relative w-8 h-8 shrink-0 rounded overflow-hidden bg-gray-100 border border-gray-200">
-                            <Image src={item.img} alt={item.title || ''} fill className="object-cover" unoptimized />
+                            <Image src={item.img} alt={item.title || ''} fill className="object-cover" />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">

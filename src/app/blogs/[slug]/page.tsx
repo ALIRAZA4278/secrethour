@@ -138,7 +138,6 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
                             alt={relBlog.title}
                             fill
                             className="object-cover group-hover:scale-105 transition duration-300"
-                            unoptimized
                           />
                         </div>
                       )}
