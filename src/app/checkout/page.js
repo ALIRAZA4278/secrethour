@@ -383,7 +383,7 @@ export default function CheckoutPage() {
                   {items.map((item) => (
                     <div key={item.slug} className="flex gap-3 items-center border-b border-gold-border/20 pb-4">
                       <div className="relative w-16 h-16 shrink-0 rounded overflow-hidden bg-sh-bg">
-                        <Image src={item.img} alt={item.title} fill className="object-cover" />
+                        <Image src={item.img} alt={`${item.title} Secret Hour`} fill className="object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-cream text-sm leading-snug" style={serif}>{item.title}</p>

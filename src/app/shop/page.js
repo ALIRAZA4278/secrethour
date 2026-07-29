@@ -45,7 +45,7 @@ export default async function ShopPage() {
       <Navbar />
 
       <div className="relative flex-1" style={{ background: 'radial-gradient(at center top, rgb(57,19,26) 0%, rgb(11,10,9) 60%)' }}>
-        <Image src={SILK} alt="" fill sizes="100vw" className="object-cover opacity-10 rotate-180 pointer-events-none z-0" />
+        <Image src={SILK} alt="Secret Hour" fill sizes="100vw" className="object-cover opacity-10 rotate-180 pointer-events-none z-0" />
 
         {/* Header */}
         <section className="relative z-10 py-12 md:py-20 text-center px-6">
@@ -81,7 +81,7 @@ export default async function ShopPage() {
                   <div className="relative aspect-square overflow-hidden">
                     <Image
                       src={p.img}
-                      alt={p.title}
+                      alt={`${p.title} Secret Hour`}
                       fill
                       className="object-cover"
                     />

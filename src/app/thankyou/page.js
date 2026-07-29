@@ -110,7 +110,7 @@ export default function ThankYouPage() {
                   <div key={i} className="flex items-center gap-4">
                     {item.img && (
                       <div className="relative w-14 h-14 shrink-0 bg-burgundy/20 border border-gold-border/20">
-                        <Image src={item.img} alt={item.title} fill className="object-cover" />
+                        <Image src={item.img} alt={`${item.title} Secret Hour`} fill className="object-cover" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">

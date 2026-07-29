@@ -79,7 +79,7 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
             <div className="relative w-full mb-8 rounded-lg overflow-hidden">
               <img
                 src={blog.cover_image}
-                alt={blog.title}
+                alt={`${blog.title} Secret Hour`}
                 className="w-full h-auto object-cover rounded-lg"
                 loading="eager"
               />
@@ -135,7 +135,7 @@ export default async function BlogPage({ params }: { params: Promise<{ slug: str
                         <div className="relative w-full h-40 bg-sh-card rounded-lg overflow-hidden">
                           <Image
                             src={relBlog.cover_image}
-                            alt={relBlog.title}
+                            alt={`${relBlog.title} Secret Hour`}
                             fill
                             className="object-cover group-hover:scale-105 transition duration-300"
                           />

@@ -99,7 +99,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
 
       {/* ── Main product section ── */}
       <section className="relative py-8 md:py-12">
-        <Image src={SILK} alt="" fill sizes="100vw" className="object-cover opacity-15 pointer-events-none" />
+        <Image src={SILK} alt="Secret Hour" fill sizes="100vw" className="object-cover opacity-15 pointer-events-none" />
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-6">
           <div className="grid lg:grid-cols-2 gap-8 md:gap-14 items-start">
@@ -107,7 +107,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
             {/* Left: image + thumbnails — sticky on desktop */}
             <div className="space-y-4 lg:sticky lg:top-20">
               <div className="relative aspect-square rounded overflow-hidden border border-gold-border/40">
-                <Image src={images[activeImg]} alt={product.title} fill className="object-cover" priority />
+                <Image src={images[activeImg]} alt={`${product.title} Secret Hour`} fill className="object-cover" priority />
               </div>
               {images.length > 1 && (
                 <div className="grid grid-cols-3 gap-3">
@@ -119,7 +119,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
                         activeImg === i ? 'border-gold' : 'border-gold-border/40 hover:border-gold-muted'
                       }`}
                     >
-                      <Image src={img} alt="" fill className="object-cover" />
+                      <Image src={img} alt={`${product.title} Secret Hour`} fill className="object-cover" />
                     </button>
                   ))}
                 </div>
@@ -340,7 +340,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
 
               {/* Crafted by Secret Hour */}
               <div className="flex items-center gap-3 pt-2">
-                <Image src={LOGO} alt="" width={24} height={24} className="w-6 h-6 object-contain opacity-80" />
+                <Image src={LOGO} alt="Secret Hour" width={24} height={24} className="w-6 h-6 object-contain opacity-80" />
                 <span className="text-cream/45 text-[10px] uppercase tracking-[0.3em]">Crafted by Secret Hour</span>
               </div>
             </div>
@@ -368,7 +368,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
             </div>
             <div className="border border-gold-border/40 flex items-center gap-4 p-4 hover:border-gold transition-colors duration-300" style={{ background: 'hsl(350 50% 8%)' }}>
               <Link href={`/product/${upsell.slug}`} className="relative w-20 h-20 shrink-0 bg-sh-card block">
-                <Image src={upsell.img} alt={upsell.title} fill className="object-contain" />
+                <Image src={upsell.img} alt={`${upsell.title} Secret Hour`} fill className="object-contain" />
               </Link>
               <div className="flex-1 min-w-0">
                 <Link href={`/product/${upsell.slug}`} className="text-cream italic text-base hover:text-gold transition-colors block" style={serif}>{upsell.title}</Link>
@@ -399,7 +399,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
                 <div key={p.slug} className="group flex flex-col border border-gold-border/40 hover:border-gold transition-colors duration-300">
                   <Link href={`/product/${p.slug}`} className="block">
                     <div className="relative aspect-square overflow-hidden bg-sh-card">
-                      <Image src={p.img} alt={p.title} fill className="object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+                      <Image src={p.img} alt={`${p.title} Secret Hour`} fill className="object-cover group-hover:scale-[1.03] transition-transform duration-500" />
                     </div>
                   </Link>
                   <div className="p-4 text-center space-y-2 flex-1 flex flex-col">

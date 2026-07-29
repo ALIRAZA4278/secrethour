@@ -54,7 +54,7 @@ export default async function BlogsPage({ searchParams }: { searchParams: Promis
                       <div className="md:w-1/3 relative h-48 md:h-64 bg-sh-card rounded-lg overflow-hidden flex-shrink-0">
                         <Image
                           src={blog.cover_image}
-                          alt={blog.title}
+                          alt={`${blog.title} Secret Hour`}
                           fill
                           className="object-cover group-hover:scale-105 transition duration-300"
                         />

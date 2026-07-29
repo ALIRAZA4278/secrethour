@@ -233,7 +233,7 @@ export default function QuizPage() {
                   <p className="text-[10px] uppercase tracking-[0.3em] text-gold/70 mb-5 text-center">Recommended for You</p>
                   <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center">
                     <div className="relative w-28 h-28 shrink-0 bg-sh-bg mx-auto sm:mx-0">
-                      {result.product.img && <Image src={result.product.img} alt={result.product.name} fill className="object-contain" />}
+                      {result.product.img && <Image src={result.product.img} alt={`${result.product.name} Secret Hour`} fill className="object-contain" />}
                     </div>
                     <div className="flex-1 space-y-2">
                       <h2 className="text-lg italic text-cream leading-snug" style={serif}>{result.product.name}</h2>
@@ -271,7 +271,7 @@ export default function QuizPage() {
                   style={{ background: 'rgba(11,10,9,0.7)' }}
                 >
                   <div className="relative w-16 h-16 shrink-0 bg-burgundy/40">
-                    {upsell.img && <Image src={upsell.img} alt={upsell.title} fill className="object-cover" />}
+                    {upsell.img && <Image src={upsell.img} alt={`${upsell.title} Secret Hour`} fill className="object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[9px] uppercase tracking-[0.25em] text-gold/60 mb-0.5">Add the Mood</p>

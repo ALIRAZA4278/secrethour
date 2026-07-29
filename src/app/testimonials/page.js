@@ -104,7 +104,7 @@ export default function TestimonialsPage() {
       <Navbar />
 
       <div className="relative flex-1">
-        <Image src={SILK} alt="" fill sizes="100vw" className="object-cover opacity-8 rotate-180 pointer-events-none" />
+        <Image src={SILK} alt="Secret Hour" fill sizes="100vw" className="object-cover opacity-8 rotate-180 pointer-events-none" />
 
         {/* Header */}
         <section className="relative z-10 pt-10 pb-12 px-6 text-center">
