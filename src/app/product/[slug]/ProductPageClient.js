@@ -340,7 +340,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
 
               {/* Crafted by Secret Hour */}
               <div className="flex items-center gap-3 pt-2">
-                <img src={LOGO} alt="" className="w-6 h-6 object-contain opacity-80" />
+                <Image src={LOGO} alt="" width={24} height={24} className="w-6 h-6 object-contain opacity-80" />
                 <span className="text-cream/45 text-[10px] uppercase tracking-[0.3em]">Crafted by Secret Hour</span>
               </div>
             </div>
