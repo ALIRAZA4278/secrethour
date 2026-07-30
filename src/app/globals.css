@@ -17,6 +17,15 @@
   --color-burgundy-deep:  hsl(350 80% 6%);
 }
 
+/* Hide scrollbar (used on horizontal bundle scroller) while keeping scroll */
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Gold gradient text — matches original .text-gold-gradient */
 .text-gold-gradient {
   background: linear-gradient(135deg, hsl(43, 72%, 52%), hsl(43, 60%, 70%));
