@@ -25,5 +25,13 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4"
-  }
+  },
+  "browserslist": [
+    "chrome >= 90",
+    "firefox >= 90",
+    "safari >= 14",
+    "edge >= 90",
+    "not dead",
+    "not ie 11"
+  ]
 }
