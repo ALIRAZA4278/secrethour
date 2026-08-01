@@ -219,7 +219,7 @@ function Login({ onLogin }) {
 /* ═══════════════════════════════════════════
    ORDER DRAWER
 ═══════════════════════════════════════════ */
-function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustomerFilter }) {
+function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustomerFilter, onItemsChange }) {
   const [status,        setStatus]        = useState(order?.status || 'pending');
   const [custOrders,    setCustOrders]    = useState([]);
   const [custLoading,   setCustLoading]   = useState(false);
@@ -245,6 +245,33 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   const [instaworldLoading, setInstaworldLoading] = useState('');
   const [cities,           setCities]           = useState([]);
   const [citiesLoading,    setCitiesLoading]    = useState(false);
+  const [editItems,        setEditItems]        = useState([]);
+
+  const itemsSubtotal = editItems.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 0), 0);
+
+  function startEditing() {
+    setEditItems((items || []).map(i => ({ ...i })));
+    setEditing(true);
+  }
+  function updateItem(idx, field, value) {
+    setEditItems(prev => {
+      const next = prev.map((it, i) => i === idx ? { ...it, [field]: value } : it);
+      const sub = next.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 0), 0);
+      setEditForm(f => ({ ...f, total: String(sub) }));
+      return next;
+    });
+  }
+  function removeItem(idx) {
+    setEditItems(prev => {
+      const next = prev.filter((_, i) => i !== idx);
+      const sub = next.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 0), 0);
+      setEditForm(f => ({ ...f, total: String(sub) }));
+      return next;
+    });
+  }
+  function addItem() {
+    setEditItems(prev => [...prev, { product_title: '', variation: '', price: 0, quantity: 1, _new: true }]);
+  }
 
   async function loadCities() {
     setCitiesLoading(true);
@@ -293,6 +320,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
     setStatus(order?.status || 'pending');
     setNewComment('');
     setEditing(false);
+    setEditItems([]);
     setEditForm({
       full_name:      `${order?.first_name || ''} ${order?.last_name || ''}`.trim(),
       phone:          order?.phone           || '',
@@ -359,23 +387,63 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
 
   async function saveOrder() {
     setSavingOrder(true);
-    const nameParts = (editForm.full_name || '').trim().split(/\s+/);
-    const patch = {
-      first_name:     nameParts[0] || '',
-      last_name:      nameParts.slice(1).join(' ') || '',
-      phone:          editForm.phone,
-      email:          editForm.email,
-      address:        editForm.address,
-      city:           editForm.city,
-      payment_method: editForm.payment_method,
-      total:          parseFloat(editForm.total) || order.total,
-    };
-    await supabase.from('orders').update(patch).eq('id', order.id);
-    await insertEvent('comment', 'Order details updated by admin');
-    onStatusChange?.(order.id, patch);
+    try {
+      // ── 1. Sync order items ──────────────────────────────
+      const original = items || [];
+      const current  = editItems.filter(i => (i.product_title || '').trim());
+      const currentIds = new Set(current.filter(i => i.id).map(i => i.id));
+
+      const toDelete = original.filter(i => i.id && !currentIds.has(i.id)).map(i => i.id);
+      const toUpdate = current.filter(i => i.id);
+      const toInsert = current.filter(i => !i.id);
+
+      if (toDelete.length) {
+        await supabase.from('order_items').delete().in('id', toDelete);
+      }
+      for (const it of toUpdate) {
+        await supabase.from('order_items').update({
+          product_title: it.product_title,
+          variation:     it.variation || null,
+          price:         Number(it.price) || 0,
+          quantity:      Math.max(1, parseInt(it.quantity) || 1),
+        }).eq('id', it.id);
+      }
+      if (toInsert.length) {
+        await supabase.from('order_items').insert(toInsert.map(it => ({
+          order_id:      order.id,
+          product_title: it.product_title,
+          variation:     it.variation || null,
+          price:         Number(it.price) || 0,
+          quantity:      Math.max(1, parseInt(it.quantity) || 1),
+        })));
+      }
+
+      // ── 2. Update the order record ───────────────────────
+      const nameParts = (editForm.full_name || '').trim().split(/\s+/);
+      const patch = {
+        first_name:     nameParts[0] || '',
+        last_name:      nameParts.slice(1).join(' ') || '',
+        phone:          editForm.phone,
+        email:          editForm.email,
+        address:        editForm.address,
+        city:           editForm.city,
+        payment_method: editForm.payment_method,
+        total:          parseFloat(editForm.total) || itemsSubtotal || order.total,
+      };
+      await supabase.from('orders').update(patch).eq('id', order.id);
+
+      // ── 3. Refresh items in the parent, log, notify ──────
+      const { data: fresh } = await supabase.from('order_items').select('*').eq('order_id', order.id);
+      onItemsChange?.(order.id, fresh || []);
+      await insertEvent('comment', 'Order details & items updated by admin');
+      onStatusChange?.(order.id, patch);
+      setEditing(false);
+      loadEvents();
+    } catch (err) {
+      console.error('Failed to save order:', err);
+      alert(`Failed to save order: ${err.message}`);
+    }
     setSavingOrder(false);
-    setEditing(false);
-    loadEvents();
   }
 
   async function bookOnPostEx() {
@@ -641,7 +709,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-1">
             <span className="text-gray-400 text-xs uppercase tracking-[0.2em]">Customer Details</span>
             {!editing ? (
-              <button onClick={() => setEditing(true)} className="text-xs text-blue-600 hover:text-blue-800 transition font-medium uppercase tracking-[0.12em] whitespace-nowrap">Edit</button>
+              <button onClick={startEditing} className="text-xs text-blue-600 hover:text-blue-800 transition font-medium uppercase tracking-[0.12em] whitespace-nowrap">Edit</button>
             ) : (
               <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
                 <button onClick={() => setEditing(false)} className="flex-1 sm:flex-none text-xs text-gray-400 hover:text-gray-700 transition uppercase tracking-[0.12em] px-2 py-1 rounded border border-gray-300">Cancel</button>
@@ -750,30 +818,83 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
         </div>
 
         {/* Items */}
-        {items?.length > 0 && (
+        {(editing || items?.length > 0) && (
           <div className="px-6 py-5 border-b border-gray-200">
-            <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-4">ITEMS</p>
-            <div className="space-y-3">
-              {items.map(item => (
-                <div key={item.id} className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-gray-400 text-xs uppercase tracking-[0.2em]">ITEMS</p>
+              {editing && (
+                <button onClick={addItem} className="text-xs text-blue-600 hover:text-blue-800 font-medium uppercase tracking-[0.12em]">+ Add item</button>
+              )}
+            </div>
+
+            {editing ? (
+              /* ── Edit mode: editable item rows ── */
+              <div className="space-y-3">
+                {editItems.length === 0 && (
+                  <p className="text-gray-400 text-xs italic">No items. Click "+ Add item" to add one.</p>
+                )}
+                {editItems.map((item, idx) => (
+                  <div key={item.id || `new-${idx}`} className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-lg p-2.5">
                     {item.product_img && (
-                      <div className="relative w-9 h-9 shrink-0 bg-gray-100 border border-gray-200 rounded">
+                      <div className="relative w-9 h-9 shrink-0 bg-white border border-gray-200 rounded mt-0.5">
                         <Image src={item.product_img} alt="" fill className="object-contain" />
                       </div>
                     )}
-                    <span className="text-gray-700 text-sm">{item.product_title}{item.variation ? <span className="text-orange-500 text-xs ml-1">({item.variation})</span> : ''} <span className="text-gray-400">× {item.quantity}</span>
-                      {item.custom_note && <span className="block text-purple-600 text-xs mt-0.5">Note: {item.custom_note}</span>}
-                    </span>
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <input value={item.product_title} onChange={e => updateItem(idx, 'product_title', e.target.value)} placeholder="Product name"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-800 outline-none focus:border-gray-500" />
+                      <input value={item.variation || ''} onChange={e => updateItem(idx, 'variation', e.target.value)} placeholder="Variation (optional)"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs text-gray-600 outline-none focus:border-gray-500" />
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-400 text-[10px] uppercase">Qty</span>
+                          <input type="number" min="1" value={item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value)}
+                            className="w-16 px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-800 outline-none focus:border-gray-500" />
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-400 text-[10px] uppercase">Rs.</span>
+                          <input type="number" min="0" value={item.price} onChange={e => updateItem(idx, 'price', e.target.value)}
+                            className="w-24 px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-800 outline-none focus:border-gray-500" />
+                        </div>
+                        <span className="text-gray-500 text-xs ml-auto">= Rs. {((Number(item.price) || 0) * (Number(item.quantity) || 0)).toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <button onClick={() => removeItem(idx)} title="Remove item"
+                      className="text-gray-300 hover:text-red-500 transition font-bold text-lg leading-none shrink-0 mt-0.5">×</button>
                   </div>
-                  <span className="text-gray-800 text-sm shrink-0 font-medium">Rs. {(item.price * item.quantity).toLocaleString()}</span>
+                ))}
+                <div className="flex justify-between pt-3 border-t border-gray-200">
+                  <span className="text-gray-500 text-sm">Items Subtotal</span>
+                  <span className="text-gray-900 font-semibold text-sm">Rs. {itemsSubtotal.toLocaleString()}</span>
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-between mt-4 pt-4 border-t border-gray-200">
-              <span className="italic text-gray-900 text-base" style={serif}>Total</span>
-              <span className="text-gray-900 font-bold text-base" style={serif}>Rs. {order.total?.toLocaleString()}</span>
-            </div>
+                <p className="text-gray-400 text-[10px]">Total auto-updates from items. You can still override the "Order Amount" above for discounts.</p>
+              </div>
+            ) : (
+              /* ── View mode: read-only ── */
+              <>
+                <div className="space-y-3">
+                  {items.map(item => (
+                    <div key={item.id} className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        {item.product_img && (
+                          <div className="relative w-9 h-9 shrink-0 bg-gray-100 border border-gray-200 rounded">
+                            <Image src={item.product_img} alt="" fill className="object-contain" />
+                          </div>
+                        )}
+                        <span className="text-gray-700 text-sm">{item.product_title}{item.variation ? <span className="text-orange-500 text-xs ml-1">({item.variation})</span> : ''} <span className="text-gray-400">× {item.quantity}</span>
+                          {item.custom_note && <span className="block text-purple-600 text-xs mt-0.5">Note: {item.custom_note}</span>}
+                        </span>
+                      </div>
+                      <span className="text-gray-800 text-sm shrink-0 font-medium">Rs. {(item.price * item.quantity).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-between mt-4 pt-4 border-t border-gray-200">
+                  <span className="italic text-gray-900 text-base" style={serif}>Total</span>
+                  <span className="text-gray-900 font-bold text-base" style={serif}>Rs. {order.total?.toLocaleString()}</span>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -1428,6 +1549,7 @@ function Dashboard() {
             setRecent(prev => prev.map(o => o.id === id ? { ...o, ...patch } : o));
             if (selectedOrder?.id === id) setSelectedOrder(o => ({ ...o, ...patch }));
           }}
+          onItemsChange={(id, newItems) => setItemsMap(m => ({ ...m, [id]: newItems }))}
         />
       )}
     </div>
@@ -1774,6 +1896,7 @@ function OrdersTab() {
           onStatusChange={handleStatusChange}
           onDelete={handleDeleteOrder}
           onCustomerFilter={val => setSearch(val)}
+          onItemsChange={(id, newItems) => setItemsMap(m => ({ ...m, [id]: newItems }))}
         />
       )}
     </div>
