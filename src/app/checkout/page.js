@@ -283,7 +283,7 @@ export default function CheckoutPage() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gold">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
                     </svg>
-                    <h2 className="italic text-lg text-cream" style={serif}>Payment Method</h2>
+                    <h2 className="text-lg text-cream font-medium">Payment Method</h2>
                   </div>
                   <p className="text-gold text-[10px] uppercase tracking-[0.2em] mb-4">✦ Pay Online &amp; Get 10% Discount</p>
 
@@ -297,11 +297,15 @@ export default function CheckoutPage() {
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-gold/70">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
                             </svg>
-                            <span className="italic text-cream text-sm" style={serif}>Bank Transfer</span>
+                            <span className="text-cream text-sm font-medium">Bank Transfer</span>
                           </div>
                           <span className="bg-gold/20 text-gold text-[9px] uppercase tracking-[0.15em] px-2 py-0.5 rounded ml-auto">10% Off</span>
                         </div>
-                        <p className="text-cream/40 text-xs mt-0.5">Fastest processing. Discount applied automatically.</p>
+                        <p className="mt-1.5">
+                          <span className="inline-block bg-gold/20 text-gold text-xs font-semibold px-2.5 py-1 rounded">
+                            Save Rs. {Math.round(totalPrice * 0.10).toLocaleString()}
+                          </span>
+                        </p>
 
                         {/* Bank details — inside the card */}
                         {payment === 'bank' && (
@@ -349,7 +353,7 @@ export default function CheckoutPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 1-.987-1.106v-.828" />
                         </svg>
                         <div>
-                          <span className="italic text-cream text-sm" style={serif}>Cash on Delivery</span>
+                          <span className="text-cream text-sm font-medium">Cash on Delivery</span>
                           <p className="text-cream/40 text-xs mt-0.5">Pay in cash when your discreet package arrives.</p>
                         </div>
                       </div>
