@@ -19,6 +19,10 @@ export async function generateStaticParams() {
 
 export const dynamicParams = true;
 
+// Revalidate so edits/deletes (and the "More from the Blog" section) stay fresh
+// without needing a full redeploy.
+export const revalidate = 300;
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const blog = await getBlogBySlug(slug);
