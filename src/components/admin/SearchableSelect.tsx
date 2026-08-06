@@ -14,6 +14,7 @@ interface SearchableSelectProps {
   placeholder?: string;
   className?: string;
   loading?: boolean;
+  emptyText?: string;
 }
 
 export default function SearchableSelect({
@@ -23,6 +24,7 @@ export default function SearchableSelect({
   placeholder = 'Search...',
   className = '',
   loading = false,
+  emptyText = 'No results found',
 }: SearchableSelectProps) {
   const [search, setSearch] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -81,7 +83,7 @@ export default function SearchableSelect({
           {loading ? (
             <div className="px-3 py-2 text-gray-500 text-sm">Loading...</div>
           ) : filtered.length === 0 ? (
-            <div className="px-3 py-2 text-gray-500 text-sm">No cities found</div>
+            <div className="px-3 py-2 text-gray-500 text-sm">{emptyText}</div>
           ) : (
             filtered.map(option => (
               <button

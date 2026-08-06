@@ -246,8 +246,32 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   const [cities,           setCities]           = useState([]);
   const [citiesLoading,    setCitiesLoading]    = useState(false);
   const [editItems,        setEditItems]        = useState([]);
+  const [products,         setProducts]         = useState([]);
 
   const itemsSubtotal = editItems.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 0), 0);
+
+  async function loadProducts() {
+    const { data } = await supabase
+      .from('products')
+      .select('slug, title, numeric_price, img')
+      .order('title');
+    setProducts(data || []);
+  }
+
+  function selectProduct(idx, product) {
+    setEditItems(prev => {
+      const next = prev.map((it, i) => i === idx ? {
+        ...it,
+        product_title: product.title,
+        product_slug:  product.slug,
+        product_img:   product.img || null,
+        price:         Number(product.numeric_price) || 0,
+      } : it);
+      const sub = next.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 0), 0);
+      setEditForm(f => ({ ...f, total: String(sub) }));
+      return next;
+    });
+  }
 
   function startEditing() {
     setEditItems((items || []).map(i => ({ ...i })));
@@ -333,6 +357,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
     if (!order) return;
     loadEvents();
     loadCities();
+    loadProducts();
     setCustLoading(true);
     const key = order.phone || order.email;
     if (!key) { setCustLoading(false); return; }
@@ -744,6 +769,7 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
                   options={cities}
                   placeholder="Search city..."
                   loading={citiesLoading}
+                  emptyText="No cities found"
                 />
               </div>
               <div>
@@ -841,8 +867,18 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
                       </div>
                     )}
                     <div className="flex-1 min-w-0 space-y-2">
-                      <input value={item.product_title} onChange={e => updateItem(idx, 'product_title', e.target.value)} placeholder="Product name"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-800 outline-none focus:border-gray-500" />
+                      {item._new ? (
+                        <SearchableSelect
+                          value={item.product_title}
+                          onChange={name => { const p = products.find(x => x.title === name); if (p) selectProduct(idx, p); }}
+                          options={products.map(p => ({ id: p.slug, name: p.title }))}
+                          placeholder="Select a product…"
+                          emptyText="No products found"
+                        />
+                      ) : (
+                        <input value={item.product_title} onChange={e => updateItem(idx, 'product_title', e.target.value)} placeholder="Product name"
+                          className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-800 outline-none focus:border-gray-500" />
+                      )}
                       <input value={item.variation || ''} onChange={e => updateItem(idx, 'variation', e.target.value)} placeholder="Variation (optional)"
                         className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs text-gray-600 outline-none focus:border-gray-500" />
                       <div className="flex items-center gap-2">
