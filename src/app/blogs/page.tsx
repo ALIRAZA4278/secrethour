@@ -7,6 +7,10 @@ import { getPublishedBlogs } from '@/lib/blog-queries';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 
+// Revalidate the listing periodically so newly published blogs appear
+// without needing a full redeploy.
+export const revalidate = 300;
+
 export default async function BlogsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const params = await searchParams;
   const page = parseInt(params?.page || '1', 10);
