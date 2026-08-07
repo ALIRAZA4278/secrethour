@@ -296,7 +296,7 @@ export default function Home() {
             <div className="flex gap-5 md:gap-6 min-w-min">
               {bundles.map((p) => (
                 <Link key={p.slug} href={`/product/${p.slug}`}
-                  className="group block border border-gold-border hover:border-gold transition-colors duration-300 relative shrink-0 w-full sm:w-96">
+                  className="group block border border-gold-border hover:border-gold transition-colors duration-300 relative shrink-0 w-[78vw] max-w-sm sm:w-96">
                   {p.tag === 'best-seller' && (
                     <span className="absolute top-3 left-3 z-10 bg-gold text-sh-bg text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1">
                       Best Seller
