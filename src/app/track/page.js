@@ -22,6 +22,7 @@ const STATUS_CONFIG = {
 
 // Main delivery flow (top row)
 const MAIN_STEPS = [
+  { key: 'pending',          label: 'Pending',          icon: '🛍️' },
   { key: 'confirmed',        label: 'Confirmed',        icon: '📦' },
   { key: 'shipped',          label: 'Shipped',          icon: '🏭' },
   { key: 'out_for_delivery', label: 'Out for Delivery', icon: '🚚' },
@@ -35,8 +36,8 @@ const EXCEPTION_STEPS = [
 ];
 // How far along the main flow each status is (drives the top row fill)
 const MAIN_PROGRESS = {
-  pending: 0, confirmed: 1, shipped: 2, out_for_delivery: 3, delivered: 4,
-  attempt: 3, returned: 4, cancelled: 1,
+  pending: 1, confirmed: 2, shipped: 3, out_for_delivery: 4, delivered: 5,
+  attempt: 4, returned: 4, cancelled: 2,
 };
 
 export default function TrackPage() {
