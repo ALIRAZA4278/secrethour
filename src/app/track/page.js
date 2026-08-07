@@ -20,12 +20,24 @@ const STATUS_CONFIG = {
   'returned':         { icon: '↩️', color: 'text-red-400',    bar: 0, label: 'Returned' },
 };
 
-const STEPS = [
-  { label: 'Confirmed',       icon: '📦' },
-  { label: 'Shipped',         icon: '🏭' },
-  { label: 'Out for Delivery', icon: '🚚' },
-  { label: 'Delivered',       icon: '✅' },
+// Main delivery flow (top row)
+const MAIN_STEPS = [
+  { key: 'confirmed',        label: 'Confirmed',        icon: '📦' },
+  { key: 'shipped',          label: 'Shipped',          icon: '🏭' },
+  { key: 'out_for_delivery', label: 'Out for Delivery', icon: '🚚' },
+  { key: 'delivered',        label: 'Delivered',        icon: '✅' },
 ];
+// Exception statuses (bottom row)
+const EXCEPTION_STEPS = [
+  { key: 'attempt',   label: 'Attempt',   icon: '🔔' },
+  { key: 'returned',  label: 'Returned',  icon: '↩️' },
+  { key: 'cancelled', label: 'Cancelled', icon: '❌' },
+];
+// How far along the main flow each status is (drives the top row fill)
+const MAIN_PROGRESS = {
+  pending: 0, confirmed: 1, shipped: 2, out_for_delivery: 3, delivered: 4,
+  attempt: 3, returned: 4, cancelled: 1,
+};
 
 export default function TrackPage() {
   const [orderId,  setOrderId]  = useState('');
@@ -51,7 +63,7 @@ export default function TrackPage() {
 
   const statusKey = result?.statusKey || result?.orderStatus || '';
   const cfg     = STATUS_CONFIG[statusKey] || { icon: '📬', color: 'text-gold', bar: 1, label: statusKey };
-  const barStep = cfg.bar;
+  const mainProgress = MAIN_PROGRESS[statusKey] ?? 1;
   const displayStatus = cfg.label || statusKey;
 
   return (
@@ -113,26 +125,49 @@ export default function TrackPage() {
                   )}
                 </div>
 
-                {/* Progress bar */}
-                {barStep > 0 && (
-                  <div className="flex items-center gap-1">
-                    {STEPS.map((step, i) => (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base border-2 transition-all ${
-                          i < barStep ? 'border-gold bg-gold/20' : 'border-gold-border/30 bg-black/20'
-                        }`}>
-                          {step.icon}
+                {/* Progress bar — all statuses */}
+                <div className="space-y-4">
+                  {/* Main delivery flow */}
+                  <div className="flex items-start gap-1">
+                    {MAIN_STEPS.map((step) => {
+                      const current = statusKey === step.key;
+                      const done    = mainProgress > 0 && MAIN_PROGRESS[step.key] <= mainProgress;
+                      return (
+                        <div key={step.key} className="flex-1 flex flex-col items-center gap-1.5">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base border-2 transition-all ${
+                            current ? 'border-gold bg-gold/40 ring-2 ring-gold/40'
+                            : done   ? 'border-gold bg-gold/20'
+                            :          'border-gold-border/30 bg-black/20'
+                          }`}>
+                            {step.icon}
+                          </div>
+                          <p className={`text-[9px] uppercase tracking-[0.1em] text-center leading-tight ${
+                            current ? 'text-gold font-semibold' : done ? 'text-gold' : 'text-cream/30'
+                          }`}>{step.label}</p>
                         </div>
-                        <p className={`text-[9px] uppercase tracking-[0.1em] text-center leading-tight ${
-                          i < barStep ? 'text-gold' : 'text-cream/30'
-                        }`}>{step.label}</p>
-                        {i < STEPS.length - 1 && (
-                          <div className="hidden" />
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
-                )}
+
+                  {/* Exception statuses */}
+                  <div className="flex items-start justify-center gap-4 pt-1 border-t border-gold-border/10">
+                    {EXCEPTION_STEPS.map((step) => {
+                      const current = statusKey === step.key;
+                      return (
+                        <div key={step.key} className="flex flex-col items-center gap-1.5 w-20">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base border-2 transition-all ${
+                            current ? 'border-red-400 bg-red-500/25 ring-2 ring-red-400/40' : 'border-gold-border/30 bg-black/20'
+                          }`}>
+                            {step.icon}
+                          </div>
+                          <p className={`text-[9px] uppercase tracking-[0.1em] text-center leading-tight ${
+                            current ? 'text-red-400 font-semibold' : 'text-cream/30'
+                          }`}>{step.label}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
                 {/* Details — all PostEx fields */}
                 <div className="space-y-0 bg-black/20 border border-gold-border/20 rounded overflow-hidden">
