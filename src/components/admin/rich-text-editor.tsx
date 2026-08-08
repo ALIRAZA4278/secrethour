@@ -2,6 +2,10 @@
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableHeader from '@tiptap/extension-table-header';
+import TableCell from '@tiptap/extension-table-cell';
 
 interface RichTextEditorProps {
   value: string;
@@ -11,7 +15,13 @@ interface RichTextEditorProps {
 
 export default function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
+    ],
     content: value,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
@@ -117,6 +127,27 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         >
           ↷
         </button>
+
+        <div className={separatorClass} />
+
+        {/* Table */}
+        <button
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+          className={`${buttonClass} ${editor.isActive('table') ? 'bg-gray-200 border-gray-400' : ''}`}
+          title="Insert Table"
+        >
+          ▦ Table
+        </button>
+
+        {editor.isActive('table') && (
+          <>
+            <button onClick={() => editor.chain().focus().addColumnAfter().run()} className={buttonClass} title="Add column">+ Col</button>
+            <button onClick={() => editor.chain().focus().deleteColumn().run()} className={buttonClass} title="Delete column">− Col</button>
+            <button onClick={() => editor.chain().focus().addRowAfter().run()} className={buttonClass} title="Add row">+ Row</button>
+            <button onClick={() => editor.chain().focus().deleteRow().run()} className={buttonClass} title="Delete row">− Row</button>
+            <button onClick={() => editor.chain().focus().deleteTable().run()} className={`${buttonClass} text-red-500 hover:text-red-700`} title="Delete table">✕ Table</button>
+          </>
+        )}
       </div>
 
       {/* Editor */}

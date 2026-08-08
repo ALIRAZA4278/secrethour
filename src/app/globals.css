@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme inline {
   --font-sans: var(--font-inter);
@@ -56,6 +57,71 @@
 .btn-glow:hover {
   border-color: var(--color-gold) !important;
   box-shadow: 0 0 16px hsla(43, 72%, 52%, 0.45);
+}
+
+/* ─── Rich text editor (admin) — table borders while editing ─── */
+.ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.75rem 0;
+  table-layout: fixed;
+  overflow: hidden;
+}
+.ProseMirror th,
+.ProseMirror td {
+  border: 1px solid #d1d5db;
+  padding: 6px 10px;
+  vertical-align: top;
+  position: relative;
+}
+.ProseMirror th {
+  background: #f3f4f6;
+  font-weight: 600;
+  text-align: left;
+}
+.ProseMirror .selectedCell:after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(37, 99, 235, 0.12);
+  pointer-events: none;
+}
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #93c5fd;
+  cursor: col-resize;
+}
+
+/* ─── Blog article tables (dark / gold theme) ─── */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.75rem 0;
+  font-size: 0.95rem;
+  display: block;
+  overflow-x: auto;
+}
+.prose th {
+  background: hsl(43 40% 15% / 0.45);
+  color: hsl(43 72% 62%);
+  border: 1px solid hsl(43 40% 30% / 0.5);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+}
+.prose td {
+  border: 1px solid hsl(43 40% 30% / 0.3);
+  padding: 10px 14px;
+  color: hsl(38 30% 80%);
+  vertical-align: top;
+}
+.prose tbody tr:first-child th { white-space: nowrap; }
+.prose tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
 }
 
 /* Marquee animation for announcement bar */
