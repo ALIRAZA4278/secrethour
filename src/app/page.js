@@ -304,8 +304,8 @@ export default function Home() {
                     Best Seller
                   </span>
                 )}
-                <div className="relative aspect-4/3 overflow-hidden bg-sh-card">
-                  <Image src={p.img} alt={`${p.title} Secret Hour`} fill sizes="300px" className="object-contain p-1.5" />
+                <div className="relative aspect-square overflow-hidden bg-sh-card">
+                  <Image src={p.img} alt={`${p.title} Secret Hour`} fill sizes="320px" className="object-cover" />
                 </div>
                 <div className="p-4 bg-black/40 text-center flex flex-col flex-1">
                   <h3 className="text-sm md:text-base italic text-cream leading-snug line-clamp-2 min-h-[2.75rem] flex items-center justify-center" style={serif}>{p.title}</h3>
