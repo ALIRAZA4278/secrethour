@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import MetaPixel from '../components/MetaPixel';
 import Footer from '../components/Footer';
 import { getServerSupabase } from '../../lib/supabase-server';
+import { getSale, fmtPKR } from '../../lib/pricing';
 import AddToCartBtn from './AddToCartBtn';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
@@ -31,7 +32,7 @@ export default async function ShopPage() {
     const supabase = getServerSupabase();
     const { data } = await supabase
       .from('products')
-      .select('slug, title, category, img, price, numeric_price, tag, variations, bulk_discount_qty, bulk_discount_pct')
+      .select('slug, title, category, img, price, numeric_price, sale_price, tag, variations, bulk_discount_qty, bulk_discount_pct')
       .eq('hidden', false)
       .order('created_at');
     if (data) products = data;
@@ -101,7 +102,17 @@ export default async function ShopPage() {
                       <h2 className="text-sm md:text-base italic text-cream leading-snug line-clamp-2" style={serif}>
                         {p.title}
                       </h2>
-                      <p className="text-gold text-base md:text-lg pt-1" style={serif}>{p.price}</p>
+                      {(() => {
+                        const s = getSale(p);
+                        return s.onSale ? (
+                          <p className="pt-1 flex items-baseline justify-center gap-2" style={serif}>
+                            <span className="text-gold text-base md:text-lg">{fmtPKR(s.effective)}</span>
+                            <span className="text-cream/40 text-sm line-through">{fmtPKR(s.original)}</span>
+                          </p>
+                        ) : (
+                          <p className="text-gold text-base md:text-lg pt-1" style={serif}>{p.price}</p>
+                        );
+                      })()}
                     </div>
                     <AddToCartBtn product={p} />
                   </div>

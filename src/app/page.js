@@ -9,6 +9,7 @@ import MetaPixel from './components/MetaPixel';
 import Footer from './components/Footer';
 import { useCart } from './context/CartContext';
 import { supabase } from '../lib/supabase';
+import { getSale, fmtPKR } from '../lib/pricing';
 
 const IMG = {
   silk:     '/assets/bg-silk-B9_HjwKe.jpg',
@@ -65,7 +66,7 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from('products')
-      .select('slug, title, subtitle, price, numeric_price, img, images, tag, variations, bulk_discount_qty, bulk_discount_pct')
+      .select('slug, title, subtitle, price, numeric_price, sale_price, img, images, tag, variations, bulk_discount_qty, bulk_discount_pct')
       .neq('hidden', true)
       .then(({ data }) => {
         if (!data) return;
@@ -308,9 +309,19 @@ export default function Home() {
                   <div className="p-4 space-y-1.5 bg-black/40 text-center">
                     <h3 className="text-sm md:text-base italic text-cream" style={serif}>{p.title}</h3>
                     <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
-                    <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
+                    {(() => {
+                      const s = getSale(p);
+                      return s.onSale ? (
+                        <p className="flex items-baseline justify-center gap-2" style={serif}>
+                          <span className="text-gold text-base md:text-lg">{fmtPKR(s.effective)}</span>
+                          <span className="text-cream/40 text-sm line-through">{fmtPKR(s.original)}</span>
+                        </p>
+                      ) : (
+                        <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
+                      );
+                    })()}
                     <button
-                      onClick={(e) => { e.preventDefault(); if (p.variations?.length > 0) { router.push(`/product/${p.slug}`); } else { addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numeric_price, img: p.img, bulkDiscountQty: p.bulk_discount_qty || null, bulkDiscountPct: p.bulk_discount_pct || 0 }); } }}
+                      onClick={(e) => { e.preventDefault(); if (p.variations?.length > 0) { router.push(`/product/${p.slug}`); } else { const s = getSale(p); addToCart({ slug: p.slug, title: p.title, price: fmtPKR(s.effective), numericPrice: s.effective, img: p.img, bulkDiscountQty: p.bulk_discount_qty || null, bulkDiscountPct: p.bulk_discount_pct || 0 }); } }}
                       className="mt-1 w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
                     >
                       Add to Cart

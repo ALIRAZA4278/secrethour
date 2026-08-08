@@ -8,6 +8,7 @@ import Navbar from '../../components/Navbar';
 import MetaPixel from '../../components/MetaPixel';
 import Footer from '../../components/Footer';
 import { useCart } from '../../context/CartContext';
+import { getSale, fmtPKR } from '../../../lib/pricing';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 const SILK = '/assets/bg-silk-B9_HjwKe.jpg';
@@ -53,11 +54,12 @@ export default function ProductPageClient({ product, images, related, upsell, re
 
   const cartItem = () => {
     const varPrice = selectedVariation?.price;
+    const effNumeric = varPrice ?? getSale(product).effective;
     return {
       slug: product.slug,
       title: product.title,
-      price: varPrice ? `Rs. ${varPrice.toLocaleString()}` : product.price,
-      numericPrice: varPrice ?? product.numeric_price,
+      price: fmtPKR(effNumeric),
+      numericPrice: effNumeric,
       img: images?.[0],
       variation: selectedVariation?.name || null,
       bulkDiscountQty: product.bulk_discount_qty || null,
@@ -158,9 +160,24 @@ export default function ProductPageClient({ product, images, related, upsell, re
               </div>
 
               <div>
-                <p className="text-3xl text-gold" style={serif}>
-                  {selectedVariation?.price ? `Rs. ${selectedVariation.price.toLocaleString()}` : product.price}
-                </p>
+                {(() => {
+                  const sale = getSale(product);
+                  // Sale applies to the base price only (not to a selected variation)
+                  if (!selectedVariation && sale.onSale) {
+                    return (
+                      <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
+                        <p className="text-3xl text-gold" style={serif}>{fmtPKR(sale.effective)}</p>
+                        <p className="text-lg text-cream/40 line-through" style={serif}>{fmtPKR(sale.original)}</p>
+                        <span className="bg-gold/20 text-gold text-[10px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded">{sale.pct}% OFF</span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <p className="text-3xl text-gold" style={serif}>
+                      {selectedVariation?.price ? fmtPKR(selectedVariation.price) : product.price}
+                    </p>
+                  );
+                })()}
                 {product.stock_note && (
                   <p className="text-cream/45 text-xs uppercase tracking-[0.18em] mt-1">{product.stock_note}</p>
                 )}

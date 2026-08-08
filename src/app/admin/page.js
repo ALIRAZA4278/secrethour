@@ -1944,7 +1944,7 @@ function OrdersTab() {
 ═══════════════════════════════════════════ */
 const EMPTY = {
   slug: '', title: '', subtitle: '', category: '', tagline: '',
-  numeric_price: '', stock_note: '', description: '',
+  numeric_price: '', sale_price: '', stock_note: '', description: '',
   features: '', included: '', how_it_works: '',
   quote: '', quote_label: '', upsell_slug: '', tag: '',
   in_stock: true, hidden: false, custom_text_enabled: false,
@@ -2038,6 +2038,7 @@ function ProductsTab() {
       slug: p.slug, title: p.title, subtitle: p.subtitle || '',
       category: p.category || '', tagline: p.tagline || '',
       numeric_price: String(p.numeric_price || ''),
+      sale_price:    String(p.sale_price || ''),
       stock_note: p.stock_note || '', description: p.description || '',
       features:     (p.features     || []).join(', '),
       included:     (p.included     || []).join(', '),
@@ -2094,6 +2095,7 @@ function ProductsTab() {
         tagline:       form.tagline.trim(),
         price:         `Rs. ${parseInt(form.numeric_price).toLocaleString()}`,
         numeric_price: parseInt(form.numeric_price) || 0,
+        sale_price:    form.sale_price ? (parseInt(form.sale_price) || null) : null,
         stock_note:    form.stock_note.trim(),
         img:           primaryUrl,
         images:        allImages,
@@ -2222,12 +2224,14 @@ function ProductsTab() {
                   ['Category', 'category', 'e.g. Card Game'],
                   ['Tagline', 'tagline', 'Small italic above title'],
                   ['Price in PKR *', 'numeric_price', 'e.g. 3499', true],
+                  ['Sale Price in PKR (optional)', 'sale_price', 'e.g. 2999 — original shows cut', false],
                   ['Stock Note', 'stock_note', 'e.g. Limited stock available'],
                 ].map(([l, k, ph, req]) => (
                   <div key={k}>
                     <label className={LBL}>{l}</label>
-                    <input type={k === 'numeric_price' ? 'number' : 'text'}
+                    <input type={(k === 'numeric_price' || k === 'sale_price') ? 'number' : 'text'}
                       value={form[k]} onChange={f(k)} placeholder={ph} required={!!req} className={INP} />
+                    {k === 'sale_price' && <p className="text-[10px] text-gray-400 mt-1">Leave empty for no discount. Must be lower than the price.</p>}
                   </div>
                 ))}
                 <div>

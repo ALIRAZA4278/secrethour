@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
+import { getSale, fmtPKR } from '../../lib/pricing';
 
 export default function AddToCartBtn({ product }) {
   const { addToCart } = useCart();
@@ -14,11 +15,12 @@ export default function AddToCartBtn({ product }) {
       router.push(`/product/${product.slug}`);
       return;
     }
+    const sale = getSale(product);
     addToCart({
       slug:            product.slug,
       title:           product.title,
-      price:           product.price,
-      numericPrice:    product.numeric_price,
+      price:           fmtPKR(sale.effective),
+      numericPrice:    sale.effective,
       img:             product.img,
       bulkDiscountQty: product.bulk_discount_qty || null,
       bulkDiscountPct: product.bulk_discount_pct || 0,
