@@ -124,6 +124,21 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
+/* Blog FAQ — h3 questions get a divider + gold accent, answer sits below */
+.prose h3 {
+  color: hsl(43 72% 60%);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid hsl(43 40% 30% / 0.25);
+}
+.prose h3 + p {
+  margin-top: 0.5rem;
+}
+
 /* Marquee animation for announcement bar */
 @keyframes marquee {
   0%   { transform: translateX(0); }
