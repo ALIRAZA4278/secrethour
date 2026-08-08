@@ -76,8 +76,9 @@ export default function Home() {
         const deck = visible.find(p => p.category === 'Card Game');
         if (deck) setProducts({ cardGame: deck });
 
-        // All visible products that are NOT the card game (for slider)
-        setBundles(visible.filter(p => p.category !== 'Card Game'));
+        // Bundles slider — include every visible product (deck shown first)
+        const others = visible.filter(p => p.category !== 'Card Game');
+        setBundles(deck ? [deck, ...others] : others);
       });
 
     // Fetch real reviews from both tables
