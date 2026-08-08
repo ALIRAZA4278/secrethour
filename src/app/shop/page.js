@@ -79,13 +79,18 @@ export default async function ShopPage() {
                   href={`/product/${p.slug}`}
                   className="rounded overflow-hidden group flex flex-col border border-gold-border/60 hover:border-gold transition-colors duration-300"
                 >
-                  <div className="relative aspect-square overflow-hidden">
-                    <Image
-                      src={p.img}
-                      alt={`${p.title} Secret Hour`}
-                      fill
-                      className="object-cover"
-                    />
+                  <div className="relative aspect-square overflow-hidden bg-sh-card">
+                    {p.img ? (
+                      <Image
+                        src={p.img}
+                        alt={`${p.title} Secret Hour`}
+                        fill
+                        sizes="(max-width: 1024px) 50vw, 33vw"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-cream/20 text-xs">No image</div>
+                    )}
                     {p.tag && (
                       <span className={`absolute top-2 left-2 text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-1 ${
                         p.tag === 'best-seller' ? 'bg-gold text-sh-bg' :
@@ -99,7 +104,7 @@ export default async function ShopPage() {
                   <div className="px-4 py-3 text-center space-y-2 flex-1 flex flex-col justify-between">
                     <div className="space-y-1">
                       <p className="text-gold/70 text-[10px] uppercase tracking-[0.3em]">{p.category}</p>
-                      <h2 className="text-sm md:text-base italic text-cream leading-snug line-clamp-2" style={serif}>
+                      <h2 className="text-sm md:text-base italic text-cream leading-snug line-clamp-2 min-h-[2.5rem] md:min-h-[2.75rem] flex items-center justify-center" style={serif}>
                         {p.title}
                       </h2>
                       {(() => {

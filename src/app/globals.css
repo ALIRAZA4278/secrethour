@@ -134,6 +134,15 @@
   width: max-content;
 }
 
+/* Curated Bundles auto-scroll (right-to-left, pauses on hover) */
+.bundles-marquee {
+  animation: marquee 45s linear infinite;
+  width: max-content;
+}
+.bundles-marquee:hover {
+  animation-play-state: paused;
+}
+
 body {
   background-color: hsl(20 10% 4%);
   color: hsl(38 30% 85%);

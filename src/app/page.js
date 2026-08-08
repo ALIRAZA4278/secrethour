@@ -293,11 +293,11 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="overflow-x-auto pb-2 -mx-4 md:-mx-6 px-4 md:px-6 scrollbar-hide">
-            <div className="flex gap-5 md:gap-6 min-w-min">
-              {bundles.map((p) => (
-                <Link key={p.slug} href={`/product/${p.slug}`}
-                  className="group block border border-gold-border hover:border-gold transition-colors duration-300 relative shrink-0 w-[78vw] max-w-sm sm:w-96">
+          <div className="overflow-hidden">
+            <div className="bundles-marquee flex gap-4 md:gap-5 py-1">
+              {bundles.length > 0 && [...bundles, ...bundles].map((p, i) => (
+                <Link key={`${p.slug}-${i}`} href={`/product/${p.slug}`}
+                  className="group block border border-gold-border hover:border-gold transition-colors duration-300 relative shrink-0 w-[240px] sm:w-[248px]">
                   {p.tag === 'best-seller' && (
                     <span className="absolute top-3 left-3 z-10 bg-gold text-sh-bg text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1">
                       Best Seller
