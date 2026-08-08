@@ -279,8 +279,8 @@ export default function Home() {
       </section>
 
       {/* ─── Bundles ─────────────────────────────────────────── */}
-      <section className="relative px-4 md:px-6 py-16 md:py-20" style={{ background: 'linear-gradient(to bottom, hsl(350 60% 12%) 0%, hsl(20 10% 4%) 100%)' }}>
-        <div className="max-w-3xl mx-auto w-full">
+      <section className="relative py-16 md:py-20 overflow-hidden" style={{ background: 'linear-gradient(to bottom, hsl(350 60% 12%) 0%, hsl(20 10% 4%) 100%)' }}>
+        <div className="max-w-3xl mx-auto w-full px-4 md:px-6">
           <div className="text-center mb-8 md:mb-12">
             <span className="text-gold text-[10px] uppercase tracking-[0.3em] block mb-4">
               Curated Bundles
@@ -292,44 +292,45 @@ export default function Home() {
               Thoughtfully assembled boxes for the moments that matter most.
             </p>
           </div>
+        </div>
 
-          <div className="overflow-hidden">
-            <div className="bundles-marquee flex gap-4 md:gap-5 py-1">
-              {bundles.length > 0 && [...bundles, ...bundles].map((p, i) => (
-                <Link key={`${p.slug}-${i}`} href={`/product/${p.slug}`}
-                  className="group block border border-gold-border hover:border-gold transition-colors duration-300 relative shrink-0 w-[240px] sm:w-[248px]">
-                  {p.tag === 'best-seller' && (
-                    <span className="absolute top-3 left-3 z-10 bg-gold text-sh-bg text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1">
-                      Best Seller
-                    </span>
-                  )}
-                  <div className="relative aspect-4/3 overflow-hidden">
-                    <Image src={p.img} alt={`${p.title} Secret Hour`} fill className="object-cover" />
-                  </div>
-                  <div className="p-4 space-y-1.5 bg-black/40 text-center">
-                    <h3 className="text-sm md:text-base italic text-cream" style={serif}>{p.title}</h3>
-                    <p className="text-cream/55 text-xs italic" style={serif}>{p.subtitle}</p>
-                    {(() => {
-                      const s = getSale(p);
-                      return s.onSale ? (
-                        <p className="flex items-baseline justify-center gap-2" style={serif}>
-                          <span className="text-gold text-base md:text-lg">{fmtPKR(s.effective)}</span>
-                          <span className="text-cream/40 text-sm line-through">{fmtPKR(s.original)}</span>
-                        </p>
-                      ) : (
-                        <p className="text-gold text-base md:text-lg" style={serif}>{p.price}</p>
-                      );
-                    })()}
-                    <button
-                      onClick={(e) => { e.preventDefault(); if (p.variations?.length > 0) { router.push(`/product/${p.slug}`); } else { const s = getSale(p); addToCart({ slug: p.slug, title: p.title, price: fmtPKR(s.effective), numericPrice: s.effective, img: p.img, bulkDiscountQty: p.bulk_discount_qty || null, bulkDiscountPct: p.bulk_discount_pct || 0 }); } }}
-                      className="mt-1 w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
-                </Link>
-              ))}
-            </div>
+        <div className="overflow-hidden mx-auto" style={{ width: '80%' }}>
+          <div className="bundles-marquee flex gap-5" style={{ width: 'max-content' }}>
+            {bundles.length > 0 && [...bundles, ...bundles].map((p, i) => (
+              <Link key={`${p.slug}-${i}`} href={`/product/${p.slug}`}
+                className="group flex flex-col border border-gold-border hover:border-gold transition-colors duration-300 relative shrink-0 w-[300px] sm:w-[320px]">
+                {p.tag === 'best-seller' && (
+                  <span className="absolute top-3 left-3 z-10 bg-gold text-sh-bg text-[9px] font-bold uppercase tracking-[0.15em] px-2.5 py-1">
+                    Best Seller
+                  </span>
+                )}
+                <div className="relative aspect-4/3 overflow-hidden bg-sh-card">
+                  <Image src={p.img} alt={`${p.title} Secret Hour`} fill sizes="300px" className="object-contain p-1.5" />
+                </div>
+                <div className="p-4 bg-black/40 text-center flex flex-col flex-1">
+                  <h3 className="text-sm md:text-base italic text-cream leading-snug line-clamp-2 min-h-[2.75rem] flex items-center justify-center" style={serif}>{p.title}</h3>
+                  <p className="text-cream/55 text-xs italic line-clamp-2 min-h-[2rem] mt-1" style={serif}>{p.subtitle}</p>
+                  {(() => {
+                    const s = getSale(p);
+                    return s.onSale ? (
+                      <p className="mt-1.5 flex items-baseline justify-center gap-2" style={serif}>
+                        <span className="text-gold text-base md:text-lg">{fmtPKR(s.effective)}</span>
+                        <span className="text-cream/40 text-sm line-through">{fmtPKR(s.original)}</span>
+                      </p>
+                    ) : (
+                      <p className="text-gold text-base md:text-lg mt-1.5" style={serif}>{p.price}</p>
+                    );
+                  })()}
+                  <button
+                    onClick={(e) => { e.preventDefault(); if (p.variations?.length > 0) { router.push(`/product/${p.slug}`); } else { const s = getSale(p); addToCart({ slug: p.slug, title: p.title, price: fmtPKR(s.effective), numericPrice: s.effective, img: p.img, bulkDiscountQty: p.bulk_discount_qty || null, bulkDiscountPct: p.bulk_discount_pct || 0 }); } }}
+                    className="mt-auto w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
+                    style={{ marginTop: 'auto' }}
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
