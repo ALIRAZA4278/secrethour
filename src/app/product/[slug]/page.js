@@ -54,11 +54,21 @@ async function getProductData(slug) {
     const reviews = reviewsRes.data || [];
 
     const relatedFiltered = allProducts.filter(p => p.slug !== product.slug);
-    console.log(`[Product] Slug: ${product.slug}, AllProducts: ${allProducts.map(p => p.slug).join(', ')}, Related: ${relatedFiltered.map(p => p.slug).join(', ')}`);
+
+    // Admin-picked related products (in order) take priority; otherwise auto-fill.
+    let related;
+    if (Array.isArray(product.related_slugs) && product.related_slugs.length) {
+      related = product.related_slugs
+        .map(s => allProducts.find(p => p.slug === s))
+        .filter(Boolean)
+        .filter(p => p.slug !== product.slug);
+    } else {
+      related = relatedFiltered.slice(0, 3);
+    }
 
     return {
       product,
-      related: relatedFiltered.slice(0, 3),
+      related,
       upsell: allProducts.find(x => x.slug === product.upsell_slug) || null,
       reviews,
     };

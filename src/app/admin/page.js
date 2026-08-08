@@ -1947,6 +1947,7 @@ const EMPTY = {
   numeric_price: '', sale_price: '', stock_note: '', description: '',
   features: '', included: '', how_it_works: '',
   quote: '', quote_label: '', upsell_slug: '', tag: '',
+  related_1: '', related_2: '', related_3: '',
   in_stock: true, hidden: false, custom_text_enabled: false,
   bulk_discount_qty: '', bulk_discount_pct: '',
 };
@@ -2046,6 +2047,9 @@ function ProductsTab() {
       quote:        p.quote       || '',
       quote_label:  p.quote_label || '',
       upsell_slug:  p.upsell_slug || '',
+      related_1:    p.related_slugs?.[0] || '',
+      related_2:    p.related_slugs?.[1] || '',
+      related_3:    p.related_slugs?.[2] || '',
       tag:          p.tag         || '',
       in_stock:            p.in_stock !== false,
       hidden:              p.hidden === true,
@@ -2106,6 +2110,7 @@ function ProductsTab() {
         quote:         form.quote.trim(),
         quote_label:   form.quote_label.trim(),
         upsell_slug:   form.upsell_slug.trim() || null,
+        related_slugs: (() => { const a = [form.related_1, form.related_2, form.related_3].map(s => s.trim()).filter(Boolean); return a.length ? a : null; })(),
         tag:           form.tag.trim() || null,
         in_stock:            form.in_stock,
         hidden:              form.hidden,
@@ -2359,6 +2364,21 @@ function ProductsTab() {
                     <option key={p.slug} value={p.slug}>{p.title}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="pt-2">
+                <label className={LBL}>You May Also Love — choose up to 3 (optional)</label>
+                <p className="text-[10px] text-gray-400 mb-2">Leave all empty to auto-show other products.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {['related_1', 'related_2', 'related_3'].map((k, i) => (
+                    <select key={k} value={form[k]} onChange={f(k)} className={INP}>
+                      <option value="">— Related {i + 1} —</option>
+                      {products.filter(p => p.id !== editId).map(p => (
+                        <option key={p.slug} value={p.slug}>{p.title}</option>
+                      ))}
+                    </select>
+                  ))}
+                </div>
               </div>
             </section>
 
