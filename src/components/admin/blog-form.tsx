@@ -234,7 +234,7 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 16v-4m0 0V8m0 4H8m0 0h4m0 0h4" />
               </svg>
               <p className="text-gray-700 text-sm mb-1">Drop your image here or click to browse</p>
-              <p className="text-gray-500 text-xs">JPG, PNG • Max 5MB</p>
+              <p className="text-gray-500 text-xs">Landscape 16:9 • 1200×630px • JPG/PNG • Max 5MB</p>
             </div>
           )}
 
@@ -252,6 +252,7 @@ export default function BlogForm({ blog, onSuccess, onClose }: BlogFormProps) {
               Uploading image...
             </div>
           )}
+          <p className="text-gray-400 text-[11px] mt-2">Recommended: landscape 16:9 · 1200×630px · JPG/PNG · max 5MB</p>
         </div>
 
         {/* Content with Rich Text Editor */}

@@ -1960,7 +1960,7 @@ async function uploadImg(file, slug) {
   return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
 }
 
-function ImgSlot({ label, file, preview, required, onChange, onClear }) {
+function ImgSlot({ label, file, preview, required, onChange, onClear, hint = 'Square 1:1 · 1000×1000px · max 2MB' }) {
   return (
     <div className="space-y-2">
       <p className="text-xs uppercase tracking-[0.18em] text-gray-500 font-medium">{label}</p>
@@ -1983,6 +1983,7 @@ function ImgSlot({ label, file, preview, required, onChange, onClear }) {
           </label>
         )}
       </div>
+      {hint && <p className="text-[10px] text-gray-400 leading-tight">{hint}</p>}
     </div>
   );
 }
