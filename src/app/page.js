@@ -270,7 +270,7 @@ export default function Home() {
             </div>
 
             <Link
-              href={`/product/${products.cardGame?.slug || 'the-midnight-deck'}`}
+              href={`/product/${products.cardGame?.slug || 'midnight-deck'}`}
               className="inline-block w-full sm:w-auto text-center bg-sh-bg border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-10 py-4 btn-glow transition-all duration-300 hover:bg-burgundy"
             >
               Open the Box
