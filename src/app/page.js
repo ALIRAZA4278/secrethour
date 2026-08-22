@@ -66,7 +66,7 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from('products')
-      .select('slug, title, subtitle, price, numeric_price, sale_price, img, images, tag, variations, bulk_discount_qty, bulk_discount_pct')
+      .select('slug, title, subtitle, price, numeric_price, sale_price, img, images, tag, variations, bulk_discount_qty, bulk_discount_pct, description, features, category')
       .neq('hidden', true)
       .then(({ data }) => {
         if (!data) return;
@@ -242,29 +242,46 @@ export default function Home() {
             <p className="text-gold/70 text-[10px] uppercase tracking-[0.35em]">Featured</p>
             <div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl italic leading-tight text-cream" style={serif}>
-                <em>The Midnight Deck</em>
+                <em>{products.cardGame?.title || 'The Midnight Deck'}</em>
               </h2>
             </div>
 
-            <p className="text-cream/55 italic text-sm" style={serif}>
-              A private invitation to rediscover each other.
-            </p>
+            {products.cardGame?.subtitle && (
+              <p className="text-cream/55 italic text-sm" style={serif}>
+                {products.cardGame.subtitle}
+              </p>
+            )}
 
-            <p className="text-cream/60 leading-relaxed text-sm">
-              Crafted for married couples, The Midnight Deck turns ordinary nights into unforgettable rituals. Playful dares and meaningful questions — all wrapped in a matte black box with soft gold detailing.
-            </p>
+            {products.cardGame?.description && (
+              <p className="text-cream/60 leading-relaxed text-sm">
+                {products.cardGame.description}
+              </p>
+            )}
 
-            <ul className="space-y-2">
-              {['Builds comfort naturally', 'No awkward moments', 'Easy to start, meaningful to continue'].map((item) => (
-                <li key={item} className="flex items-center gap-2.5 text-cream/65 text-sm">
-                  <span className="text-gold text-sm leading-none">✓</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
+            {products.cardGame?.features?.length > 0 && (
+              <ul className="space-y-2">
+                {products.cardGame.features.map((item) => (
+                  <li key={item} className="flex items-center gap-2.5 text-cream/65 text-sm">
+                    <span className="text-gold text-sm leading-none">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            )}
 
             <div>
-              <p className="text-3xl md:text-4xl text-gold" style={serif}>{products.cardGame?.price || 'Rs. 2,999'}</p>
+              {(() => {
+                const deck = products.cardGame;
+                const s = deck ? getSale(deck) : null;
+                return s?.onSale ? (
+                  <p className="flex items-baseline flex-wrap gap-x-3 gap-y-1" style={serif}>
+                    <span className="text-3xl md:text-4xl text-gold">{fmtPKR(s.effective)}</span>
+                    <span className="text-xl md:text-2xl text-cream/40 line-through">{fmtPKR(s.original)}</span>
+                  </p>
+                ) : (
+                  <p className="text-3xl md:text-4xl text-gold" style={serif}>{deck?.price || 'Rs. 2,999'}</p>
+                );
+              })()}
               <p className="text-cream/30 text-[9px] uppercase tracking-[0.2em] mt-1">Including all taxes · Available in small batches</p>
               <p className="text-gold/60 text-[9px] uppercase tracking-[0.2em] mt-1">🚚 Free Delivery across Pakistan</p>
             </div>

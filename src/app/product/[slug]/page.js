@@ -40,7 +40,7 @@ async function getProductData(slug) {
 
     const [productRes, allProductsRes, reviewsRes] = await Promise.all([
       supabase.from('products').select('*').eq('slug', actualSlug).neq('hidden', true).single(),
-      supabase.from('products').select('slug, title, price, numeric_price, img, category').neq('hidden', true),
+      supabase.from('products').select('slug, title, price, numeric_price, sale_price, img, category').neq('hidden', true),
       supabase.from('product_reviews').select('id, reviewer_name, rating, body, created_at').eq('product_slug', actualSlug).eq('approved', true).order('created_at', { ascending: false }),
     ]);
 

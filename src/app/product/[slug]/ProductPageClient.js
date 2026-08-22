@@ -389,10 +389,20 @@ export default function ProductPageClient({ product, images, related, upsell, re
               </Link>
               <div className="flex-1 min-w-0">
                 <Link href={`/product/${upsell.slug}`} className="text-cream italic text-base hover:text-gold transition-colors block" style={serif}>{upsell.title}</Link>
-                <p className="text-gold text-sm mt-0.5" style={serif}>{upsell.price}</p>
+                {(() => {
+                  const s = getSale(upsell);
+                  return s.onSale ? (
+                    <p className="mt-0.5 flex items-baseline gap-2" style={serif}>
+                      <span className="text-gold text-sm">{fmtPKR(s.effective)}</span>
+                      <span className="text-cream/40 text-xs line-through">{fmtPKR(s.original)}</span>
+                    </p>
+                  ) : (
+                    <p className="text-gold text-sm mt-0.5" style={serif}>{upsell.price}</p>
+                  );
+                })()}
               </div>
               <button
-                onClick={() => addToCart({ slug: upsell.slug, title: upsell.title, price: upsell.price, numericPrice: upsell.numeric_price, img: upsell.img, variation: null, bulkDiscountQty: null, bulkDiscountPct: null, customNote: null })}
+                onClick={() => { const s = getSale(upsell); addToCart({ slug: upsell.slug, title: upsell.title, price: fmtPKR(s.effective), numericPrice: s.effective, img: upsell.img, variation: null, bulkDiscountQty: null, bulkDiscountPct: null, customNote: null }); }}
                 className="shrink-0 bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] px-5 py-2.5 btn-glow transition-all duration-300"
               >
                 Add to Cart
@@ -421,9 +431,19 @@ export default function ProductPageClient({ product, images, related, upsell, re
                   </Link>
                   <div className="p-4 text-center space-y-2 flex-1 flex flex-col">
                     <Link href={`/product/${p.slug}`} className="text-sm italic text-cream leading-snug hover:text-gold transition-colors" style={serif}>{p.title}</Link>
-                    <p className="text-gold text-base" style={serif}>{p.price}</p>
+                    {(() => {
+                      const s = getSale(p);
+                      return s.onSale ? (
+                        <p className="flex items-baseline justify-center gap-2" style={serif}>
+                          <span className="text-gold text-base">{fmtPKR(s.effective)}</span>
+                          <span className="text-cream/40 text-xs line-through">{fmtPKR(s.original)}</span>
+                        </p>
+                      ) : (
+                        <p className="text-gold text-base" style={serif}>{p.price}</p>
+                      );
+                    })()}
                     <button
-                      onClick={() => addToCart({ slug: p.slug, title: p.title, price: p.price, numericPrice: p.numeric_price, img: p.img, variation: null, bulkDiscountQty: null, bulkDiscountPct: null, customNote: null })}
+                      onClick={() => { const s = getSale(p); addToCart({ slug: p.slug, title: p.title, price: fmtPKR(s.effective), numericPrice: s.effective, img: p.img, variation: null, bulkDiscountQty: null, bulkDiscountPct: null, customNote: null }); }}
                       className="mt-auto bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] px-4 py-2 btn-glow transition-all duration-300"
                     >
                       Add to Cart
