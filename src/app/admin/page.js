@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 import BlogsList from '@/components/admin/blogs-list';
 import SearchableSelect from '@/components/admin/SearchableSelect';
+import { getSale } from '../../lib/pricing';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -253,9 +254,17 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
   async function loadProducts() {
     const { data } = await supabase
       .from('products')
-      .select('slug, title, numeric_price, img')
+      .select('slug, title, numeric_price, sale_price, variations, img')
       .order('title');
     setProducts(data || []);
+  }
+
+  // Order lines store a slug (newer rows) or only a title (older ones).
+  function productForItem(item) {
+    if (!item) return null;
+    return products.find(p => p.slug === item.product_slug)
+        || products.find(p => p.title === item.product_title)
+        || null;
   }
 
   function selectProduct(idx, product) {
@@ -265,7 +274,8 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
         product_title: product.title,
         product_slug:  product.slug,
         product_img:   product.img || null,
-        price:         Number(product.numeric_price) || 0,
+        variation:     '',
+        price:         getSale(product).effective,
       } : it);
       const sub = next.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.quantity) || 0), 0);
       setEditForm(f => ({ ...f, total: String(sub) }));
@@ -879,8 +889,30 @@ function OrderDrawer({ order, items, onClose, onStatusChange, onDelete, onCustom
                         <input value={item.product_title} onChange={e => updateItem(idx, 'product_title', e.target.value)} placeholder="Product name"
                           className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-800 outline-none focus:border-gray-500" />
                       )}
-                      <input value={item.variation || ''} onChange={e => updateItem(idx, 'variation', e.target.value)} placeholder="Variation (optional)"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs text-gray-600 outline-none focus:border-gray-500" />
+                      {(() => {
+                        const prod  = productForItem(item);
+                        const names = (prod?.variations || [])
+                          .map(v => (v?.name ?? v))
+                          .filter(v => typeof v === 'string' && v.trim());
+                        if (!names.length) {
+                          // Product has no variations configured — nothing to pick from.
+                          return (
+                            <input value={item.variation || ''} onChange={e => updateItem(idx, 'variation', e.target.value)}
+                              placeholder={prod ? 'No variations for this product' : 'Variation (optional)'}
+                              className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs text-gray-600 outline-none focus:border-gray-500" />
+                          );
+                        }
+                        const current = item.variation || '';
+                        // Keep a legacy value selectable so editing an old order can't silently drop it.
+                        const options = current && !names.includes(current) ? [current, ...names] : names;
+                        return (
+                          <select value={current} onChange={e => updateItem(idx, 'variation', e.target.value)}
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs text-gray-600 outline-none focus:border-gray-500 bg-white">
+                            <option value="">Variation (optional)</option>
+                            {options.map(n => <option key={n} value={n}>{n}</option>)}
+                          </select>
+                        );
+                      })()}
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1">
                           <span className="text-gray-400 text-[10px] uppercase">Qty</span>
