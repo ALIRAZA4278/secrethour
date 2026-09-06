@@ -49,7 +49,7 @@ export default function Footer() {
     <footer className="bg-sh-bg border-t border-gold-border/30">
       {/* Copyright banner */}
       <div className="border-b border-gold-border/20 py-3 px-6 text-center">
-        <p className="text-cream/30 text-[9px] uppercase tracking-[0.25em]">
+        <p className="text-cream/60 text-[9px] uppercase tracking-[0.25em]">
           All products, designs, and content are protected under copyright.
         </p>
       </div>
@@ -60,13 +60,13 @@ export default function Footer() {
           <div className="relative w-52 h-14">
             <Image src={LOGO} alt="Secret Hour" fill className="object-contain object-left" />
           </div>
-          <p className="text-cream/45 text-sm leading-relaxed max-w-[200px]">
+          <p className="text-cream/60 text-sm leading-relaxed max-w-[200px]">
             Quiet luxuries for married couples — made for the hours that belong only to you.
           </p>
         </div>
 
         <div className="space-y-5">
-          <h4 className="text-cream italic text-base mb-4" style={serif}>Shop</h4>
+          <h3 className="text-cream italic text-base mb-4" style={serif}>Shop</h3>
           <ul className="space-y-3">
             {[
               ['All Products',  '/shop'],
@@ -82,7 +82,7 @@ export default function Footer() {
         </div>
 
         <div className="space-y-5">
-          <h4 className="text-cream italic text-base mb-4" style={serif}>House</h4>
+          <h3 className="text-cream italic text-base mb-4" style={serif}>House</h3>
           <ul className="space-y-3">
             {[
               ['About Us',        '/about'],
@@ -102,7 +102,7 @@ export default function Footer() {
         </div>
 
         <div className="space-y-5">
-          <h4 className="text-cream italic text-base mb-4" style={serif}>Information</h4>
+          <h3 className="text-cream italic text-base mb-4" style={serif}>Information</h3>
           <ul className="space-y-3">
             {[
               ['Shipping Policy',    '/info/shipping'],
@@ -136,10 +136,10 @@ export default function Footer() {
             </a>
           ))}
         </div>
-        <p className="text-cream/25 text-xs tracking-[0.12em] text-center">
+        <p className="text-cream/60 text-xs tracking-[0.12em] text-center">
           info@secrethour.pk · Discreet Packaging · Private Experience
         </p>
-        <p className="text-cream/25 text-xs tracking-[0.12em]">
+        <p className="text-cream/60 text-xs tracking-[0.12em]">
           © 2026 Secret Hour. All rights reserved.
         </p>
       </div>

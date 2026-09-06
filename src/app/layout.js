@@ -83,8 +83,16 @@ export default function RootLayout({ children }) {
           "url": "https://secrethour.pk",
           "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://www.secrethour.pk/shop?q={search_term_string}" }, "query-input": "required name=search_term_string" }
         }) }} />
-        {/* Google Tag Manager */}
-        <Script id="gtm" strategy="afterInteractive">{`
+        {/* Supabase serves every product image and the client-side product queries,
+            so open that connection before the first request needs it. */}
+        <link rel="preconnect" href="https://bazyygvvewedhnyxetrx.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://bazyygvvewedhnyxetrx.supabase.co" />
+        {/* Analytics/pixel hosts load on idle — resolve DNS early, don't hold a socket open. */}
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
+
+        {/* Google Tag Manager — idle-loaded to keep it off the main thread during hydration */}
+        <Script id="gtm" strategy="lazyOnload">{`
           (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
           new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
           j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
@@ -92,21 +100,14 @@ export default function RootLayout({ children }) {
           })(window,document,'script','dataLayer','GTM-KDWZNSR8');
         `}</Script>
 
-        {/* Google Analytics — G-E08ZDX9KFY */}
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-E08ZDX9KFY" strategy="afterInteractive" />
-        <Script id="gtag-1" strategy="afterInteractive">{`
+        {/* One gtag.js library configured for both GA properties — previously the same
+            ~90 KB script was downloaded, parsed and executed twice. */}
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-E08ZDX9KFY" strategy="lazyOnload" />
+        <Script id="gtag-init" strategy="lazyOnload">{`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', 'G-E08ZDX9KFY');
-        `}</Script>
-
-        {/* Google Analytics — G-E52568V4BP */}
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-E52568V4BP" strategy="afterInteractive" />
-        <Script id="gtag-2" strategy="afterInteractive">{`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
           gtag('config', 'G-E52568V4BP');
         `}</Script>
 

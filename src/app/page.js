@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import Image, { getImageProps } from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -17,9 +17,38 @@ const IMG = {
 };
 
 const SLIDES = [
-  { desk: '/Banners/1.jpg.jpeg',              mob: '/Banners/1 mob.jpg.jpeg' },
-  { desk: '/Banners/2.jpg.jpeg',              mob: '/Banners/2 mob.jpg.jpeg' },
+  { desk: '/Banners/1.jpg.jpeg', mob: '/Banners/1 mob.jpg.jpeg', alt: 'Secret Hour couple gift boxes on dark silk' },
+  { desk: '/Banners/2.jpg.jpeg', mob: '/Banners/2 mob.jpg.jpeg', alt: 'The Midnight Deck card game by Secret Hour' },
 ];
+
+// Desktop banners are 1920x1080, mobile 750x1334. Rendering both as <Image fill>
+// made every viewport download BOTH variants (the CSS-hidden one included), which
+// is what pushed LCP to 3.7s. <picture> + getImageProps lets the browser pick one.
+const DESK_W = 1920, DESK_H = 1080;
+const MOB_W  = 750,  MOB_H  = 1334;
+
+function HeroSlide({ slide, eager }) {
+  const common = { alt: slide.alt, sizes: '100vw' };
+  const { props: { srcSet: deskSrcSet } } = getImageProps({
+    ...common, src: slide.desk, width: DESK_W, height: DESK_H,
+  });
+  const { props: { srcSet: mobSrcSet, ...rest } } = getImageProps({
+    ...common, src: slide.mob, width: MOB_W, height: MOB_H,
+  });
+  return (
+    <picture>
+      <source media="(min-width: 768px)" srcSet={deskSrcSet} />
+      <source srcSet={mobSrcSet} />
+      <img
+        {...rest}
+        loading={eager ? 'eager' : 'lazy'}
+        fetchPriority={eager ? 'high' : 'auto'}
+        decoding={eager ? 'sync' : 'async'}
+        className="absolute inset-0 w-full h-full object-cover object-top"
+      />
+    </picture>
+  );
+}
 
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
@@ -35,8 +64,13 @@ export default function Home() {
 
   // Hero slider
   const [current, setCurrent] = useState(0);
+  const [heroReady, setHeroReady] = useState(false);
   const touchStartX = useRef(null);
   const timerRef = useRef(null);
+
+  // Slide 2+ is inside the viewport (stacked, opacity-0), so it would be fetched
+  // immediately and compete with the LCP image. Mount it after hydration instead.
+  useEffect(() => { setHeroReady(true); }, []);
 
   const next = useCallback(() => setCurrent(c => (c + 1) % SLIDES.length), []);
   const prev = useCallback(() => setCurrent(c => (c - 1 + SLIDES.length) % SLIDES.length), []);
@@ -113,8 +147,7 @@ export default function Home() {
             key={i}
             className={`absolute inset-0 transition-opacity duration-700 ${i === current ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
           >
-            <Image src={slide.mob} alt="Banner Secret Hour" fill priority={i === 0} sizes="100vw" className="object-cover object-top md:hidden" />
-            <Image src={slide.desk} alt="Banner Secret Hour" fill priority={i === 0} sizes="100vw" className="object-cover object-top hidden md:block" />
+            {(i === 0 || heroReady) && <HeroSlide slide={slide} eager={i === 0} />}
           </div>
         ))}
 
@@ -179,12 +212,17 @@ export default function Home() {
               key={i}
               onClick={() => goTo(i)}
               aria-label={`Go to slide ${i + 1}`}
-              className={`transition-all duration-300 rounded-full ${
-                i === current
-                  ? 'w-6 h-1.5 bg-white'
-                  : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
-              }`}
-            />
+              aria-current={i === current ? 'true' : undefined}
+              className="w-6 h-6 flex items-center justify-center"
+            >
+              <span
+                className={`block transition-all duration-300 rounded-full ${
+                  i === current
+                    ? 'w-6 h-1.5 bg-white'
+                    : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
+                }`}
+              />
+            </button>
           ))}
         </div>
       </section>
@@ -212,6 +250,7 @@ export default function Home() {
                   <>
                     <button
                       onClick={() => setFeatImg(i => (i - 1 + imgs.length) % imgs.length)}
+                      aria-label="Previous product image"
                       className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/50 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -220,6 +259,7 @@ export default function Home() {
                     </button>
                     <button
                       onClick={() => setFeatImg(i => (i + 1) % imgs.length)}
+                      aria-label="Next product image"
                       className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-black/50 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -228,8 +268,15 @@ export default function Home() {
                     </button>
                     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                       {imgs.map((_, i) => (
-                        <button key={i} onClick={() => setFeatImg(i)}
-                          className={`rounded-full transition-all duration-300 ${i === featImg ? 'w-5 h-1.5 bg-gold' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'}`} />
+                        <button
+                          key={i}
+                          onClick={() => setFeatImg(i)}
+                          aria-label={`Show product image ${i + 1}`}
+                          aria-current={i === featImg ? 'true' : undefined}
+                          className="w-6 h-6 flex items-center justify-center"
+                        >
+                          <span className={`block rounded-full transition-all duration-300 ${i === featImg ? 'w-5 h-1.5 bg-gold' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'}`} />
+                        </button>
                       ))}
                     </div>
                   </>
@@ -282,7 +329,7 @@ export default function Home() {
                   <p className="text-3xl md:text-4xl text-gold" style={serif}>{deck?.price || 'Rs. 2,999'}</p>
                 );
               })()}
-              <p className="text-cream/30 text-[9px] uppercase tracking-[0.2em] mt-1">Including all taxes · Available in small batches</p>
+              <p className="text-cream/60 text-[9px] uppercase tracking-[0.2em] mt-1">Including all taxes · Available in small batches</p>
               <p className="text-gold/60 text-[9px] uppercase tracking-[0.2em] mt-1">🚚 Free Delivery across Pakistan</p>
             </div>
 
