@@ -28,6 +28,22 @@ function cartReducer(state, action) {
   }
 }
 
+// The price to strike through: the pre-sale list price when the product was on
+// sale, otherwise the plain unit price. `numericPrice` is already sale-adjusted,
+// so without `listPrice` the cart could never show what the customer saved.
+export function itemCompareAtPrice(item) {
+  const list = Number(item?.listPrice) || 0;
+  return list > item.numericPrice ? list : item.numericPrice;
+}
+
+// Total discount off the list price, sale and bulk combined, as a percentage.
+export function itemDiscountPct(item) {
+  const compareAt = itemCompareAtPrice(item);
+  const eff = itemEffectivePrice(item);
+  if (!(compareAt > eff)) return 0;
+  return Math.round((1 - eff / compareAt) * 100);
+}
+
 // Returns effective unit price for an item (applies bulk discount if threshold met)
 export function itemEffectivePrice(item) {
   if (
@@ -57,10 +73,13 @@ export function CartProvider({ children }) {
 
   const totalItems = items.reduce((s, i) => s + i.qty, 0);
   const totalPrice = items.reduce((s, i) => s + itemEffectivePrice(i) * i.qty, 0);
+  // What the same basket would have cost at list price — drives the "you saved" line.
+  const totalCompareAt = items.reduce((s, i) => s + itemCompareAtPrice(i) * i.qty, 0);
+  const totalSavings = Math.max(0, totalCompareAt - totalPrice);
 
   return (
     <CartContext.Provider
-      value={{ items, open, setOpen, addToCart, removeFromCart, updateQty, totalItems, totalPrice }}
+      value={{ items, open, setOpen, addToCart, removeFromCart, updateQty, totalItems, totalPrice, totalCompareAt, totalSavings }}
     >
       {children}
     </CartContext.Provider>

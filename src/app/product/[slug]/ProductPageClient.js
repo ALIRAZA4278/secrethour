@@ -69,6 +69,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
       title: product.title,
       price: fmtPKR(effNumeric),
       numericPrice: effNumeric,
+      listPrice: getSale(product).onSale ? (selectedVariation?.price ?? getSale(product).original) : null,
       img: images?.[0],
       variation: selectedVariation?.name || null,
       bulkDiscountQty: product.bulk_discount_qty || null,
@@ -412,7 +413,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
                 })()}
               </div>
               <button
-                onClick={() => { const s = getSale(upsell); addToCart({ slug: upsell.slug, title: upsell.title, price: fmtPKR(s.effective), numericPrice: s.effective, img: upsell.img, variation: null, bulkDiscountQty: null, bulkDiscountPct: null, customNote: null }); }}
+                onClick={() => { const s = getSale(upsell); addToCart({ slug: upsell.slug, title: upsell.title, price: fmtPKR(s.effective), numericPrice: s.effective, listPrice: s.onSale ? s.original : null, img: upsell.img, variation: null, bulkDiscountQty: null, bulkDiscountPct: null, customNote: null }); }}
                 className="shrink-0 bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] px-5 py-2.5 btn-glow transition-all duration-300"
               >
                 Add to Cart
@@ -453,7 +454,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
                       );
                     })()}
                     <button
-                      onClick={() => { const s = getSale(p); addToCart({ slug: p.slug, title: p.title, price: fmtPKR(s.effective), numericPrice: s.effective, img: p.img, variation: null, bulkDiscountQty: null, bulkDiscountPct: null, customNote: null }); }}
+                      onClick={() => { const s = getSale(p); addToCart({ slug: p.slug, title: p.title, price: fmtPKR(s.effective), numericPrice: s.effective, listPrice: s.onSale ? s.original : null, img: p.img, variation: null, bulkDiscountQty: null, bulkDiscountPct: null, customNote: null }); }}
                       className="mt-auto bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] px-4 py-2 btn-glow transition-all duration-300"
                     >
                       Add to Cart

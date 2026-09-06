@@ -125,6 +125,7 @@ export default function QuizPage() {
       desc:         meta.desc,
       price:        fmtPKR(getSale(dbP).effective),
       numericPrice: getSale(dbP).effective,
+      listPrice:    getSale(dbP).onSale ? getSale(dbP).original : null,
       sale:         getSale(dbP),
       img:          dbP.img || '',
     },
@@ -255,6 +256,7 @@ export default function QuizPage() {
                             title: result.product.name,
                             price: result.product.price,
                             numericPrice: result.product.numericPrice,
+                            listPrice: result.product.listPrice,
                             img: result.product.img,
                           })}
                           className="bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.15em] px-4 py-2.5 btn-glow transition-all"
@@ -293,6 +295,7 @@ export default function QuizPage() {
                       title: upsell.title,
                       price: fmtPKR(getSale(upsell).effective),
                       numericPrice: getSale(upsell).effective,
+                      listPrice: getSale(upsell).onSale ? getSale(upsell).original : null,
                       img: upsell.img || '',
                     })}
                     className="shrink-0 border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.15em] px-4 py-2 hover:bg-burgundy transition-all"

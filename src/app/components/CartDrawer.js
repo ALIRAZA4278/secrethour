@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { useCart, itemEffectivePrice } from '../context/CartContext';
+import { useCart, itemEffectivePrice, itemCompareAtPrice, itemDiscountPct } from '../context/CartContext';
 import { getSale, fmtPKR } from '../../lib/pricing';
 
 const supabase = createClient(
@@ -16,7 +16,7 @@ const supabase = createClient(
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 
 export default function CartDrawer() {
-  const { items, open, setOpen, removeFromCart, updateQty, totalPrice, addToCart } = useCart();
+  const { items, open, setOpen, removeFromCart, updateQty, totalPrice, totalCompareAt, totalSavings, addToCart } = useCart();
   const router = useRouter();
   const [suggestions, setSuggestions] = useState([]);
 
@@ -81,16 +81,19 @@ export default function CartDrawer() {
                     <h3 className="text-cream text-sm leading-snug" style={serif}>{item.title}</h3>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       {(() => {
-                        const eff = itemEffectivePrice(item);
-                        const discountApplied = eff < item.numericPrice;
-                        return discountApplied ? (
+                        const eff       = itemEffectivePrice(item);
+                        const compareAt = itemCompareAtPrice(item);
+                        const pct       = itemDiscountPct(item);
+                        // compareAt covers both discounts: the sale off the list price
+                        // and the bulk break once the qty threshold is met.
+                        return compareAt > eff ? (
                           <>
-                            <p className="text-gold text-sm font-semibold">Rs. {eff.toLocaleString()}</p>
-                            <p className="text-cream/40 text-xs line-through">{item.price}</p>
-                            <span className="text-[10px] text-green-400 font-bold uppercase tracking-wide">{item.bulkDiscountPct}% off</span>
+                            <p className="text-gold text-sm font-semibold">{fmtPKR(eff)}</p>
+                            <p className="text-cream/40 text-xs line-through">{fmtPKR(compareAt)}</p>
+                            <span className="text-[10px] text-green-400 font-bold uppercase tracking-wide">{pct}% off</span>
                           </>
                         ) : (
-                          <p className="text-gold text-sm">{item.price}</p>
+                          <p className="text-gold text-sm">{fmtPKR(eff)}</p>
                         );
                       })()}
                     </div>
@@ -168,6 +171,7 @@ export default function CartDrawer() {
                                   title:           u.title,
                                   price:           fmtPKR(sale.effective),
                                   numericPrice:    sale.effective,
+                                  listPrice:       sale.onSale ? sale.original : null,
                                   img:             img || '',
                                   bulkDiscountQty: u.bulk_discount_qty || null,
                                   bulkDiscountPct: u.bulk_discount_pct || 0,
@@ -194,6 +198,12 @@ export default function CartDrawer() {
         {/* Footer */}
         {items.length > 0 && (
           <div className="p-6 border-t border-gold-border/40 space-y-4">
+            {totalSavings > 0 && (
+              <div className="flex justify-between text-xs">
+                <span className="text-cream/50 line-through">{fmtPKR(totalCompareAt)}</span>
+                <span className="text-green-400 font-medium">You save {fmtPKR(totalSavings)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-lg" style={serif}>
               <span className="text-cream italic">Total</span>
               <span className="text-gold">Rs. {totalPrice.toLocaleString()}</span>

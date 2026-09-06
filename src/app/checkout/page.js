@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { useCart, itemEffectivePrice } from '../context/CartContext';
+import { useCart, itemEffectivePrice, itemCompareAtPrice } from '../context/CartContext';
 import { supabase } from '../../lib/supabase';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
@@ -17,7 +17,7 @@ const inputCls = 'w-full px-4 py-3 bg-sh-card/60 border border-gold-border/40 ro
 const cardCls = 'rounded-lg p-6 md:p-7 border border-gold-border/20 bg-gradient-to-b from-sh-card/50 to-sh-card/20 backdrop-blur-sm';
 
 export default function CheckoutPage() {
-  const { items, totalPrice, totalItems } = useCart();
+  const { items, totalPrice, totalItems, totalCompareAt, totalSavings } = useCart();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -394,7 +394,18 @@ export default function CheckoutPage() {
                         {item.variation && <p className="text-gold/60 text-[10px] uppercase tracking-[0.15em]">{item.variation}</p>}
                         <p className="text-cream/40 text-xs mt-0.5">Qty {item.qty}</p>
                       </div>
-                      <p className="text-gold text-sm shrink-0">Rs. {(itemEffectivePrice(item) * item.qty).toLocaleString()}</p>
+                      {(() => {
+                        const line      = itemEffectivePrice(item) * item.qty;
+                        const compareAt = itemCompareAtPrice(item) * item.qty;
+                        return (
+                          <div className="shrink-0 text-right">
+                            <p className="text-gold text-sm">Rs. {line.toLocaleString()}</p>
+                            {compareAt > line && (
+                              <p className="text-cream/40 text-[11px] line-through">Rs. {compareAt.toLocaleString()}</p>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>
@@ -445,6 +456,12 @@ export default function CheckoutPage() {
                     <span>Subtotal</span>
                     <span>Rs. {totalPrice.toLocaleString()}</span>
                   </div>
+                  {totalSavings > 0 && (
+                    <div className="flex justify-between text-green-400 text-xs">
+                      <span>Sale price applied</span>
+                      <span>You saved Rs. {totalSavings.toLocaleString()}</span>
+                    </div>
+                  )}
                   {discount > 0 && (
                     <div className="flex justify-between text-gold/70">
                       <span>Discount ({promoApplied ? `${promoDiscount}% promo` : '10% bank'})</span>

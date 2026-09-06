@@ -21,6 +21,7 @@ export default function AddToCartBtn({ product }) {
       title:           product.title,
       price:           fmtPKR(sale.effective),
       numericPrice:    sale.effective,
+      listPrice:       sale.onSale ? sale.original : null,
       img:             product.img,
       bulkDiscountQty: product.bulk_discount_qty || null,
       bulkDiscountPct: product.bulk_discount_pct || 0,
