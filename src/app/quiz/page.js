@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
+import { getSale, fmtPKR } from '../../lib/pricing';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 
@@ -100,7 +101,7 @@ export default function QuizPage() {
   useEffect(() => {
     supabase
       .from('products')
-      .select('slug, title, price, numeric_price, img')
+      .select('slug, title, price, numeric_price, sale_price, img')
       .in('slug', [...RESULT_SLUGS, UPSELL_SLUG])
       .neq('hidden', true)
       .then(({ data }) => {
@@ -122,8 +123,9 @@ export default function QuizPage() {
       slug:         meta.slug,
       name:         dbP.title,
       desc:         meta.desc,
-      price:        dbP.price,
-      numericPrice: dbP.numeric_price,
+      price:        fmtPKR(getSale(dbP).effective),
+      numericPrice: getSale(dbP).effective,
+      sale:         getSale(dbP),
       img:          dbP.img || '',
     },
   } : meta ? { note: meta.note, product: null } : null;
@@ -238,7 +240,14 @@ export default function QuizPage() {
                     <div className="flex-1 space-y-2">
                       <h2 className="text-lg italic text-cream leading-snug" style={serif}>{result.product.name}</h2>
                       <p className="text-cream/55 text-xs leading-relaxed">{result.product.desc}</p>
-                      <p className="text-gold text-base" style={serif}>{result.product.price}</p>
+                      {result.product.sale.onSale ? (
+                        <p className="flex items-baseline gap-2" style={serif}>
+                          <span className="text-gold text-base">{fmtPKR(result.product.sale.effective)}</span>
+                          <span className="text-cream/40 text-sm line-through">{fmtPKR(result.product.sale.original)}</span>
+                        </p>
+                      ) : (
+                        <p className="text-gold text-base" style={serif}>{result.product.price}</p>
+                      )}
                       <div className="flex flex-wrap gap-2 pt-1">
                         <button
                           onClick={() => addToCart({
@@ -276,14 +285,14 @@ export default function QuizPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-[9px] uppercase tracking-[0.25em] text-gold/60 mb-0.5">Add the Mood</p>
                     <p className="italic text-cream text-sm" style={serif}>{upsell.title}</p>
-                    <p className="text-gold/80 text-xs">{upsell.price}</p>
+                    <p className="text-gold/80 text-xs">{fmtPKR(getSale(upsell).effective)}</p>
                   </div>
                   <button
                     onClick={() => addToCart({
                       slug: upsell.slug,
                       title: upsell.title,
-                      price: upsell.price,
-                      numericPrice: upsell.numeric_price,
+                      price: fmtPKR(getSale(upsell).effective),
+                      numericPrice: getSale(upsell).effective,
                       img: upsell.img || '',
                     })}
                     className="shrink-0 border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.15em] px-4 py-2 hover:bg-burgundy transition-all"

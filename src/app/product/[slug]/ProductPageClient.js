@@ -52,9 +52,18 @@ export default function ProductPageClient({ product, images, related, upsell, re
     return () => clearInterval(timer);
   }, [reviews.length]);
 
+  // A sale on the product applies to whichever variation is chosen, at the same
+  // percentage. Without this the sale vanished the moment a variation was selected.
+  const variationPrice = (v) => {
+    const sale = getSale(product);
+    const base = v?.price;
+    if (base == null) return sale.effective;
+    if (!sale.onSale) return base;
+    return Math.round(base * (1 - sale.pct / 100));
+  };
+
   const cartItem = () => {
-    const varPrice = selectedVariation?.price;
-    const effNumeric = varPrice ?? getSale(product).effective;
+    const effNumeric = variationPrice(selectedVariation);
     return {
       slug: product.slug,
       title: product.title,
@@ -162,12 +171,13 @@ export default function ProductPageClient({ product, images, related, upsell, re
               <div>
                 {(() => {
                   const sale = getSale(product);
-                  // Sale applies to the base price only (not to a selected variation)
-                  if (!selectedVariation && sale.onSale) {
+                  const shown    = variationPrice(selectedVariation);
+                  const original = selectedVariation?.price ?? sale.original;
+                  if (sale.onSale) {
                     return (
                       <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
-                        <p className="text-3xl text-gold" style={serif}>{fmtPKR(sale.effective)}</p>
-                        <p className="text-lg text-cream/40 line-through" style={serif}>{fmtPKR(sale.original)}</p>
+                        <p className="text-3xl text-gold" style={serif}>{fmtPKR(shown)}</p>
+                        <p className="text-lg text-cream/40 line-through" style={serif}>{fmtPKR(original)}</p>
                         <span className="bg-gold/20 text-gold text-[10px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded">{sale.pct}% OFF</span>
                       </div>
                     );
@@ -535,9 +545,12 @@ export default function ProductPageClient({ product, images, related, upsell, re
                     <button
                       key={i}
                       onClick={() => setReviewIdx(i)}
-                      className={`transition-all duration-300 rounded-full ${i === reviewIdx ? 'w-5 h-1.5 bg-gold' : 'w-1.5 h-1.5 bg-cream/20 hover:bg-cream/40'}`}
+                      className="w-6 h-6 flex items-center justify-center"
                       aria-label={`Review ${i + 1}`}
-                    />
+                      aria-current={i === reviewIdx ? 'true' : undefined}
+                    >
+                      <span className={`block transition-all duration-300 rounded-full ${i === reviewIdx ? 'w-5 h-1.5 bg-gold' : 'w-1.5 h-1.5 bg-cream/20 hover:bg-cream/40'}`} />
+                    </button>
                   ))}
                 </div>
                 <button

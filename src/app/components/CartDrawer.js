@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { useCart, itemEffectivePrice } from '../context/CartContext';
+import { getSale, fmtPKR } from '../../lib/pricing';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -26,7 +27,7 @@ export default function CartDrawer() {
 
     supabase
       .from('products')
-      .select('slug, title, price, numeric_price, images, img, bulk_discount_qty, bulk_discount_pct, variations')
+      .select('slug, title, price, numeric_price, sale_price, images, img, bulk_discount_qty, bulk_discount_pct, variations')
       .neq('hidden', true)
       .then(({ data }) => {
         if (!data?.length) return;
@@ -138,7 +139,7 @@ export default function CartDrawer() {
                   <div className="space-y-3">
                     {suggestions.map((u) => {
                       const img = (Array.isArray(u.images) ? u.images[0] : u.images) || u.img;
-                      const numericPrice = u.numeric_price || 0;
+                      const sale = getSale(u);
                       return (
                         <div key={u.slug} className="flex items-center gap-3 border border-gold-border/30 p-3" style={{ background: 'rgba(11,10,9,0.5)' }}>
                           <div className="relative w-14 h-14 shrink-0 bg-burgundy/30">
@@ -146,7 +147,15 @@ export default function CartDrawer() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-cream text-sm leading-snug" style={serif}>{u.title}</p>
-                            <p className="text-gold text-xs mt-0.5">Rs. {numericPrice.toLocaleString()}</p>
+                            {sale.onSale ? (
+                              <p className="flex items-baseline gap-2 mt-0.5">
+                                <span className="text-gold text-xs">{fmtPKR(sale.effective)}</span>
+                                <span className="text-cream/40 text-[10px] line-through">{fmtPKR(sale.original)}</span>
+                                <span className="text-[9px] text-green-400 font-bold uppercase tracking-wide">{sale.pct}% off</span>
+                              </p>
+                            ) : (
+                              <p className="text-gold text-xs mt-0.5">{fmtPKR(sale.original)}</p>
+                            )}
                           </div>
                           <button
                             onClick={() => {
@@ -157,8 +166,8 @@ export default function CartDrawer() {
                                 addToCart({
                                   slug:            u.slug,
                                   title:           u.title,
-                                  price:           `Rs. ${numericPrice.toLocaleString()}`,
-                                  numericPrice,
+                                  price:           fmtPKR(sale.effective),
+                                  numericPrice:    sale.effective,
                                   img:             img || '',
                                   bulkDiscountQty: u.bulk_discount_qty || null,
                                   bulkDiscountPct: u.bulk_discount_pct || 0,
