@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useCart, itemEffectivePrice, itemCompareAtPrice } from '../context/CartContext';
+import { isValidPkMobile, normalizePkPhone, PK_PHONE_HINT } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
@@ -27,6 +28,7 @@ export default function CheckoutPage() {
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
   const [form, setForm] = useState({
     fullName: '', email: '', phone: '',
     address: '', city: '', postalCode: '', country: 'Pakistan',
@@ -85,6 +87,16 @@ export default function CheckoutPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    // `required` alone let a single digit through, and the order then reached
+    // PostEx with a number it could not deliver to.
+    if (!isValidPkMobile(form.phone)) {
+      setPhoneError(PK_PHONE_HINT);
+      document.getElementById('checkout-phone')?.focus();
+      return;
+    }
+    setPhoneError('');
+
     setSubmitting(true);
     setSubmitError('');
 
@@ -95,7 +107,7 @@ export default function CheckoutPage() {
           first_name: form.fullName,
           last_name: '',
           email: form.email,
-          phone: form.phone,
+          phone: normalizePkPhone(form.phone),
           address: form.address,
           city: form.city,
           postal_code: form.postalCode,
@@ -250,8 +262,25 @@ export default function CheckoutPage() {
                       <input type="email" required value={form.email} onChange={set('email')} className={inputCls} />
                     </div>
                     <div>
-                      <label className={labelCls}>WhatsApp Number <span className="text-red-400">*</span></label>
-                      <input type="tel" required value={form.phone} onChange={set('phone')} placeholder="+92 3xx xxxxxxx" className={inputCls} />
+                      <label className={labelCls} htmlFor="checkout-phone">WhatsApp Number <span className="text-red-400">*</span></label>
+                      <input
+                        id="checkout-phone"
+                        type="tel"
+                        required
+                        inputMode="tel"
+                        autoComplete="tel"
+                        maxLength={20}
+                        value={form.phone}
+                        onChange={(e) => { setPhoneError(''); set('phone')(e); }}
+                        onBlur={() => setPhoneError(form.phone && !isValidPkMobile(form.phone) ? PK_PHONE_HINT : '')}
+                        placeholder="0300 1234567"
+                        aria-invalid={phoneError ? 'true' : undefined}
+                        aria-describedby={phoneError ? 'checkout-phone-error' : undefined}
+                        className={`${inputCls} ${phoneError ? 'border-red-400/70' : ''}`}
+                      />
+                      {phoneError && (
+                        <p id="checkout-phone-error" role="alert" className="text-red-400 text-xs mt-1.5">{phoneError}</p>
+                      )}
                     </div>
                   </div>
                   <div className="mt-4">

@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server';
+// Shared with checkout so the number validated at the till is the number sent here.
+import { normalizePkPhone as normalizePhone } from '../../../lib/phone';
 
 const POSTEX_URL = 'https://api.postex.pk/services/integration/api/order/v3/create-order';
 const TOKEN = process.env.POSTEX_API_TOKEN;
 const PICKUP_CODE = process.env.POSTEX_PICKUP_CODE || '001';
-
-function normalizePhone(phone) {
-  const digits = (phone || '').replace(/\D/g, '');
-  if (digits.startsWith('92') && digits.length === 12) return '0' + digits.slice(2);
-  if (digits.startsWith('3') && digits.length === 10) return '0' + digits;
-  return digits.slice(0, 11);
-}
 
 const CITY_MAP = {
   'karachi': 'Karachi', 'khi': 'Karachi', 'krc': 'Karachi',
