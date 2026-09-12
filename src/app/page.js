@@ -16,12 +16,12 @@ const IMG = {
   cardGame: '/assets/sh-card-game-Cw972EQC.png',
 };
 
-const CARD_BACK = '/assets/CARDS/back of cards-01.png';
+const CARD_BACK = '/assets/CARDS/card-back.png';
 const FOUR_SIDES = [
-  { label: 'Playful',  img: '/assets/CARDS/playful-01.png' },
-  { label: 'Romantic', img: '/assets/CARDS/romantic-01.png' },
-  { label: 'Sensual',  img: '/assets/CARDS/sensual-01.png' },
-  { label: 'Wild',     img: '/assets/CARDS/wild-01.png' },
+  { label: 'Playful',  img: '/assets/CARDS/playful.png' },
+  { label: 'Romantic', img: '/assets/CARDS/romantic.png' },
+  { label: 'Sensual',  img: '/assets/CARDS/sensual.png' },
+  { label: 'Wild',     img: '/assets/CARDS/wild.png' },
 ];
 
 const SLIDES = [
@@ -59,29 +59,28 @@ function HeroSlide({ slide, eager }) {
 }
 
 const FAN = [
-  { rot: -10, y: 22, z: 1 },
-  { rot: -4,  y: 6,  z: 2 },
-  { rot: 4,   y: 6,  z: 3 },
-  { rot: 10,  y: 22, z: 4 },
+  { rot: -6,   y: 12, z: 1 },
+  { rot: -2.5, y: 2,  z: 2 },
+  { rot: 2.5,  y: 2,  z: 3 },
+  { rot: 6,    y: 12, z: 4 },
 ];
 
-function FlipCard({ side, fan }) {
-  const [flipped, setFlipped] = useState(false);
+function FlipCard({ side, fan, flipped, onToggle }) {
   return (
     <button
       type="button"
-      onClick={() => setFlipped((f) => !f)}
+      onClick={onToggle}
       aria-pressed={flipped}
       aria-label={flipped ? `${side.label} — tap to hide` : `Tap to reveal ${side.label}`}
-      className={`card-flip relative aspect-2/3 w-full ${flipped ? 'is-flipped' : ''}`}
+      className={`card-flip relative aspect-5/7 w-full ${flipped ? 'is-flipped' : ''}`}
       style={{ '--rot': `${fan.rot}deg`, '--y': `${fan.y}px`, zIndex: flipped ? 30 : fan.z }}
     >
       <div className="card-flip-inner">
         <div className="card-flip-face">
-          <Image src={CARD_BACK} alt="Secret Hour — tap to reveal" fill sizes="(min-width: 768px) 220px, 45vw" className="object-cover" />
+          <Image src={CARD_BACK} alt="Secret Hour — tap to reveal" fill sizes="(min-width: 640px) 24vw, 45vw" className="object-cover" />
         </div>
         <div className="card-flip-face card-flip-back">
-          <Image src={side.img} alt={`Secret Hour — ${side.label}`} fill sizes="(min-width: 768px) 220px, 45vw" className="object-cover" />
+          <Image src={side.img} alt={`Secret Hour — ${side.label}`} fill sizes="(min-width: 640px) 24vw, 45vw" className="object-cover" />
         </div>
       </div>
     </button>
@@ -98,6 +97,8 @@ export default function Home() {
   const [bundles, setBundles] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [featImg, setFeatImg] = useState(0);
+  // Only one card is revealed at a time — two zoomed cards would collide.
+  const [openCard, setOpenCard] = useState(null);
 
   // Hero slider
   const [current, setCurrent] = useState(0);
@@ -381,23 +382,24 @@ export default function Home() {
       </section>
 
       {/* ─── Four Sides (flip cards) ─────────────────────────── */}
-      <section className="relative py-16 md:py-24 px-4 md:px-6 overflow-hidden bg-black text-center">
+      <section className="relative py-16 md:py-24 px-3 md:px-6 overflow-hidden text-center"
+        style={{ background: 'radial-gradient(ellipse at top, hsl(350 50% 8%) 0%, hsl(20 5% 3%) 60%)' }}>
         <style>{`
           .card-flip {
             perspective: 1500px;
             cursor: pointer;
-            border-radius: 6px;
+            border-radius: 10px;
             transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease;
           }
           @media (min-width: 640px) {
-            .four-sides-fan { display: flex; flex-wrap: nowrap; justify-content: center; align-items: flex-end; }
-            .four-sides-fan > * { width: 200px; margin: 0 -22px; }
+            .four-sides-fan { display: flex; flex-wrap: nowrap; justify-content: center; align-items: center; gap: 1.5vw; }
+            .four-sides-fan > * { flex: 1 1 0; width: auto; max-width: 420px; }
             .card-flip { transform: rotate(var(--rot, 0deg)) translateY(var(--y, 0px)); }
             .card-flip:hover { z-index: 25 !important; }
           }
           .card-flip.is-flipped {
-            transform: rotate(0deg) translateY(-18px) scale(1.12) !important;
-            box-shadow: 0 0 45px 8px rgba(214, 178, 94, 0.55);
+            transform: rotate(0deg) translateY(0) scale(1.06) !important;
+            box-shadow: 0 0 60px 14px rgba(214, 178, 94, 0.5);
           }
           .card-flip-inner {
             position: relative;
@@ -411,10 +413,9 @@ export default function Home() {
             position: absolute;
             inset: 0;
             overflow: hidden;
-            border-radius: 6px;
+            border-radius: 10px;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            background: var(--color-sh-card);
           }
           .card-flip-back { transform: rotateY(180deg); }
         `}</style>
@@ -425,11 +426,24 @@ export default function Home() {
         </h2>
         <p className="text-cream/55 italic text-sm mt-2" style={serif}>Tap each card to reveal what awaits.</p>
 
-        <div className="four-sides-fan max-w-5xl mx-auto mt-10 md:mt-14 grid grid-cols-2 gap-4">
+        <div className="four-sides-fan w-full sm:w-4/5 mx-auto mt-10 md:mt-14 grid grid-cols-2 gap-3">
           {FOUR_SIDES.map((side, i) => (
-            <FlipCard key={side.label} side={side} fan={FAN[i]} />
+            <FlipCard
+              key={side.label}
+              side={side}
+              fan={FAN[i]}
+              flipped={openCard === side.label}
+              onToggle={() => setOpenCard(c => (c === side.label ? null : side.label))}
+            />
           ))}
         </div>
+
+        <Link
+          href={`/product/${products.cardGame?.slug || 'midnight-deck'}`}
+          className="inline-block mt-12 md:mt-16 bg-burgundy border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-10 py-4 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
+        >
+          Begin Your Secret Hour
+        </Link>
       </section>
 
       {/* ─── Bundles ─────────────────────────────────────────── */}
