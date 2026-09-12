@@ -5,7 +5,8 @@ import { useState } from 'react';
 import Navbar from '../components/Navbar';
 import MetaPixel from '../components/MetaPixel';
 import Footer from '../components/Footer';
-import { MOOD_CARDS, MoodFlipCard, cardFlipStyles } from '../components/MoodCards';
+import Image from 'next/image';
+import { CARD_BACK, MOOD_CARDS, MoodFlipCard, cardFlipStyles } from '../components/MoodCards';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 const DECK_HREF = '/product/midnight-deck';
@@ -40,20 +41,93 @@ const TURN_FLOW = [
 const EYEBROW = 'text-gold/70 text-[10px] uppercase tracking-[0.35em]';
 const H2 = 'text-2xl sm:text-3xl md:text-4xl italic text-cream leading-tight';
 
-function RevealCard({ card, caption }) {
+// Sample prompts printed on the reveal cards.
+const PROMPTS = {
+  hero: { category: 'Midnight', text: "Whisper the one thing you've never told anyone — starting with me." },
+  turn: { category: 'Romantic', text: "Tell me, out loud, the thing about me you've never said." },
+  wild: { category: 'Wild',     text: 'Swap one item of clothing with me for the next three cards.' },
+};
+
+// One turn, start to finish.
+const TURN_STEPS = ['Read it aloud.', 'Do what it asks.', 'Your partner scores you.', 'Next turn.'];
+
+function PromptFace({ category, text }) {
+  return (
+    <div className="w-full h-full flex flex-col justify-between p-5 text-left"
+      style={{ background: 'linear-gradient(160deg, hsl(350 42% 19%) 0%, hsl(350 45% 11%) 100%)' }}>
+      <div>
+        <p className="text-gold/80 text-[9px] uppercase tracking-[0.3em]">{category}</p>
+        <span className="block w-8 h-px bg-gold/50 mt-2" />
+      </div>
+      <p className="text-cream italic text-sm leading-relaxed" style={serif}>{text}</p>
+      <p className="text-gold/40 text-[8px] uppercase tracking-[0.3em]">Secret Hour</p>
+      <span className="absolute inset-1.5 border border-gold-border/40 rounded-lg pointer-events-none" />
+    </div>
+  );
+}
+
+function FlipPromptCard({ prompt, flipped, onToggle, label }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={flipped}
+      aria-label={flipped ? `${label} — tap to hide` : `Reveal ${label}`}
+      className={`card-flip relative aspect-5/7 w-52 sm:w-60 md:w-64 ${flipped ? 'is-flipped' : ''}`}
+    >
+      <div className="card-flip-inner">
+        <div className="card-flip-face">
+          <Image src={CARD_BACK} alt="" fill sizes="256px" className="object-cover" />
+        </div>
+        <div className="card-flip-face card-flip-back">
+          <PromptFace {...prompt} />
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function RevealCard({ prompt, label, caption, revealedCaption }) {
   const [flipped, setFlipped] = useState(false);
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="w-52 sm:w-60 md:w-64">
-        <MoodFlipCard
-          label={card.label}
-          img={card.img}
-          flipped={flipped}
-          onToggle={() => setFlipped(f => !f)}
-          sizes="(min-width: 768px) 256px, 208px"
-        />
-      </div>
-      <p className={EYEBROW}>{flipped ? 'Tap to hide' : caption}</p>
+      <FlipPromptCard prompt={prompt} label={label} flipped={flipped} onToggle={() => setFlipped(f => !f)} />
+      <p className={`${EYEBROW} text-center`}>{flipped ? revealedCaption : caption}</p>
+    </div>
+  );
+}
+
+// The card flips first, then steps through a single turn.
+function TurnDemo() {
+  const [step, setStep] = useState(null);
+  const revealed = step !== null;
+  const last = step === TURN_STEPS.length - 1;
+
+  return (
+    <div className="flex flex-col items-center gap-5">
+      <FlipPromptCard
+        prompt={PROMPTS.turn}
+        label="the sample turn card"
+        flipped={revealed}
+        onToggle={() => setStep(s => (s === null ? 0 : s))}
+      />
+      <p className="text-cream/70 italic text-sm" style={serif}>
+        {revealed ? TURN_STEPS[step] : 'Your turn.'}
+      </p>
+      {revealed && (
+        <>
+          <button type="button"
+            onClick={() => setStep(s => (last ? null : s + 1))}
+            className="border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-8 py-3 btn-glow transition-all duration-300 hover:bg-burgundy">
+            {last ? 'Play again' : 'Continue'}
+          </button>
+          <div className="flex items-center gap-2" aria-hidden="true">
+            {TURN_STEPS.map((_, i) => (
+              <span key={i} className={`h-0.5 w-6 transition-colors ${i <= step ? 'bg-gold' : 'bg-white/15'}`} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -91,7 +165,12 @@ export default function HowToPlayPage() {
             </div>
           </div>
           <div className="flex justify-center md:justify-end">
-            <RevealCard card={MOOD_CARDS[1]} caption="Click to reveal" />
+            <RevealCard
+              prompt={PROMPTS.hero}
+              label="a sample Midnight Deck card"
+              caption="Click to reveal"
+              revealedCaption="That's the kind of night you're getting into."
+            />
           </div>
         </div>
       </section>
@@ -133,7 +212,7 @@ export default function HowToPlayPage() {
           <h2 className={H2} style={serif}>Your turn.</h2>
         </div>
         <div className="flex justify-center">
-          <RevealCard card={MOOD_CARDS[0]} caption="Tap to reveal" />
+          <TurnDemo />
         </div>
       </section>
 
@@ -167,18 +246,17 @@ export default function HowToPlayPage() {
           <p className={EYEBROW}>The scoreboard</p>
           <h2 className={`${H2} mt-3`} style={serif}>First to 22 wins.</h2>
 
-          <div className="border border-gold-border/40 bg-sh-card p-6 md:p-8 mt-10 space-y-6 text-left">
+          <div className="border border-gold-border/40 bg-sh-card p-6 md:p-8 mt-10 space-y-7 text-left">
             {[{ name: 'Player 1', score: 12.5 }, { name: 'Player 2', score: 10 }].map(p => (
               <div key={p.name} className="space-y-2">
                 <div className="flex items-baseline justify-between">
                   <span className="text-gold/60 text-[10px] uppercase tracking-[0.3em]">{p.name}</span>
-                  <span className="text-cream" style={serif}>
-                    {p.score}<span className="text-cream/40 text-sm"> / 22</span>
-                  </span>
+                  <span className="text-cream text-xl md:text-2xl" style={serif}>{p.score}</span>
                 </div>
-                <div className="h-1.5 bg-white/10 overflow-hidden">
+                <div className="h-px bg-white/15 overflow-hidden">
                   <div className="h-full bg-gold" style={{ width: `${(p.score / 22) * 100}%` }} />
                 </div>
+                <p className="text-cream/40 text-[10px] tracking-[0.2em]">{p.score} / 22</p>
               </div>
             ))}
           </div>
@@ -186,21 +264,19 @@ export default function HowToPlayPage() {
           <p className="text-cream/55 italic text-sm mt-6" style={serif}>First player to reach 22 points wins.</p>
           <p className="text-cream/45 text-xs mt-1">Take turns drawing and performing prompts.</p>
 
-          <div className="mt-8 space-y-3">
-            {TURN_FLOW.map(row => (
-              <div key={row.player} className="flex flex-wrap items-center justify-center gap-2">
-                <span className="border border-gold-border/50 text-gold/80 text-[10px] uppercase tracking-[0.2em] px-3 py-1.5">
-                  {row.player}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-3">
+            {TURN_FLOW.flatMap(row => [
+              { key: row.player, text: row.player, lead: true },
+              ...row.steps.map(s => ({ key: `${row.player}-${s}`, text: s, lead: false })),
+            ]).map((chip, i) => (
+              <span key={chip.key} className="flex items-center gap-3">
+                {i > 0 && <span className="text-gold/40 text-xs">→</span>}
+                <span className={`rounded-full text-[10px] uppercase tracking-[0.2em] px-4 py-2 border ${
+                  chip.lead ? 'border-gold-muted text-gold/85' : 'border-gold-border/30 text-cream/65'
+                }`}>
+                  {chip.text}
                 </span>
-                {row.steps.map(step => (
-                  <span key={step} className="flex items-center gap-2">
-                    <span className="text-gold/40">→</span>
-                    <span className="border border-gold-border/30 text-cream/65 text-[10px] uppercase tracking-[0.2em] px-3 py-1.5">
-                      {step}
-                    </span>
-                  </span>
-                ))}
-              </div>
+              </span>
             ))}
           </div>
         </div>
@@ -222,7 +298,7 @@ export default function HowToPlayPage() {
             {CATEGORIES.map(cat => {
               const card = MOOD_CARDS.find(c => c.label === cat.label);
               return (
-                <div key={cat.label} className="space-y-4">
+                <div key={cat.label} className="flex flex-col gap-4">
                   <MoodFlipCard
                     label={cat.label}
                     img={card.img}
@@ -230,7 +306,7 @@ export default function HowToPlayPage() {
                     onToggle={() => setOpenCategory(c => (c === cat.label ? null : cat.label))}
                     sizes="(min-width: 1024px) 22vw, 45vw"
                   />
-                  <div className="border border-gold-border/40 bg-sh-card p-5 space-y-2">
+                  <div className="flex-1 border border-gold-border/40 bg-sh-card p-5 space-y-2">
                     <h3 className="text-gold text-xs uppercase tracking-[0.25em]">{cat.label}</h3>
                     <p className="text-cream/60 italic text-xs leading-relaxed" style={serif}>{cat.blurb}</p>
                     <ul className="space-y-1 pt-1">
@@ -260,7 +336,12 @@ export default function HowToPlayPage() {
             </p>
           </div>
           <div className="flex justify-center md:justify-end">
-            <RevealCard card={MOOD_CARDS[3]} caption="Tap to reveal" />
+            <RevealCard
+              prompt={PROMPTS.wild}
+              label="a sample Wild card"
+              caption="Tap to reveal"
+              revealedCaption="And that's only one of them."
+            />
           </div>
         </div>
       </section>
