@@ -6,6 +6,13 @@
 -- from the admin Products tab.
 ALTER TABLE products ADD COLUMN IF NOT EXISTS moods TEXT[] DEFAULT '{}';
 
+-- The card deck spans all four categories, so it is recommended for every
+-- mood. Only seeds products that have no moods set yet, so admin edits stick.
+UPDATE products
+SET moods = ARRAY['Romantic', 'Playful', 'Sensual', 'Wild']
+WHERE (slug = 'midnight-deck' OR category = 'Card Game')
+  AND (moods IS NULL OR moods = '{}');
+
 -- Bundle discount tiers: "add N items total, unlock X% off the bundle".
 -- Managed from the admin Bundles tab.
 CREATE TABLE IF NOT EXISTS bundle_discount_tiers (

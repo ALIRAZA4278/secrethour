@@ -12,6 +12,14 @@ import { getSale, fmtPKR } from '../../lib/pricing';
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 const MOODS = ['Romantic', 'Playful', 'Sensual', 'Wild'];
 
+// Mirrors the tiers seeded by supabase-bundle-builder.sql; used only until
+// that table exists, after which the admin-managed rows take over.
+const DEFAULT_TIERS = [
+  { min_items: 2, discount_pct: 5 },
+  { min_items: 3, discount_pct: 10 },
+  { min_items: 4, discount_pct: 15 },
+];
+
 function QtyStepper({ qty, onChange }) {
   return (
     <div className="flex items-center gap-2">
@@ -40,19 +48,27 @@ export default function BuildABundlePage() {
   const [mood, setMood] = useState(null);
 
   useEffect(() => {
-    Promise.all([
-      supabase.from('products')
-        .select('slug, title, subtitle, tagline, img, numeric_price, sale_price, moods')
-        .neq('hidden', true)
-        .order('created_at'),
-      supabase.from('bundle_discount_tiers').select('*').order('min_items'),
-      supabase.from('bundle_presets').select('*').order('sort_order'),
-    ]).then(([{ data: p }, { data: t }, { data: pr }]) => {
-      setProducts(p || []);
-      setTiers(t || []);
+    const COLS = 'slug, title, subtitle, tagline, img, numeric_price, sale_price';
+    async function load() {
+      // `moods` and the bundle tables only exist once supabase-bundle-builder.sql
+      // has been run. Until then, still show the products and fall back to the
+      // tiers that migration seeds, so the page works either way.
+      let { data: prods } = await supabase.from('products')
+        .select(`${COLS}, moods`).neq('hidden', true).order('created_at');
+      if (!prods) {
+        ({ data: prods } = await supabase.from('products')
+          .select(COLS).neq('hidden', true).order('created_at'));
+      }
+      const [{ data: t }, { data: pr }] = await Promise.all([
+        supabase.from('bundle_discount_tiers').select('*').order('min_items'),
+        supabase.from('bundle_presets').select('*').order('sort_order'),
+      ]);
+      setProducts(prods || []);
+      setTiers(t?.length ? t : DEFAULT_TIERS);
       setPresets(pr || []);
       setLoading(false);
-    });
+    }
+    load();
   }, []);
 
   function setQty(slug, qty) {

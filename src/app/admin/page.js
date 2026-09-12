@@ -2310,6 +2310,19 @@ function ProductsTab() {
               <div className="space-y-2">
                 <label className={LBL}>Moods <span className="normal-case tracking-normal text-gray-400 font-normal">(shown as &quot;Recommended&quot; on Build a Bundle when a matching mood is selected)</span></label>
                 <div className="flex flex-wrap gap-2">
+                  {(() => {
+                    const all = MOODS.every(m => form.moods.includes(m));
+                    return (
+                      <button type="button"
+                        onClick={() => setForm(p => ({ ...p, moods: all ? [] : [...MOODS] }))}
+                        className={`text-xs uppercase tracking-[0.15em] font-medium px-3.5 py-2 rounded-lg border transition ${
+                          all ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-300 text-gray-600 hover:border-gray-500'
+                        }`}>
+                        All Categories
+                      </button>
+                    );
+                  })()}
+                  <span className="w-px bg-gray-200 mx-1" />
                   {MOODS.map(m => {
                     const active = form.moods.includes(m);
                     return (

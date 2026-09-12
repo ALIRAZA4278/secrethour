@@ -385,10 +385,13 @@ export default function Home() {
       <section className="relative py-16 md:py-24 px-3 md:px-6 overflow-hidden text-center"
         style={{ background: 'radial-gradient(ellipse at top, hsl(350 50% 8%) 0%, hsl(20 5% 3%) 60%)' }}>
         <style>{`
+          /* The card art has an 85px corner radius on a 1000x1400 canvas, so the
+             frame has to round by the same proportion (8.5% of width = 6.07% of
+             height) or dark wedges show at the corners and the glow reads square. */
           .card-flip {
             perspective: 1500px;
             cursor: pointer;
-            border-radius: 10px;
+            border-radius: 8.5% / 6.07%;
             transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease;
           }
           @media (min-width: 640px) {
@@ -413,7 +416,7 @@ export default function Home() {
             position: absolute;
             inset: 0;
             overflow: hidden;
-            border-radius: 10px;
+            border-radius: 8.5% / 6.07%;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
           }
