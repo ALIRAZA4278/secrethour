@@ -1982,7 +1982,10 @@ const EMPTY = {
   related_1: '', related_2: '', related_3: '',
   in_stock: true, hidden: false, custom_text_enabled: false,
   bulk_discount_qty: '', bulk_discount_pct: '',
+  moods: [],
 };
+
+const MOODS = ['Romantic', 'Playful', 'Sensual', 'Wild'];
 
 
 async function uploadImg(file, slug) {
@@ -2088,6 +2091,7 @@ function ProductsTab() {
       custom_text_enabled: p.custom_text_enabled === true,
       bulk_discount_qty: p.bulk_discount_qty ? String(p.bulk_discount_qty) : '',
       bulk_discount_pct: p.bulk_discount_pct ? String(p.bulk_discount_pct) : '',
+      moods: p.moods || [],
     });
     const imgs = p.images?.length ? p.images : [p.img].filter(Boolean);
     setPreview(imgs[0] || '');
@@ -2151,6 +2155,7 @@ function ProductsTab() {
         bulk_discount_pct: parseInt(form.bulk_discount_pct) || null,
         faq:               faq.filter(r => r.q.trim()),
         variations:        variations.filter(v => v?.name?.trim()),
+        moods:             form.moods,
       };
       const { error } = editId
         ? await supabase.from('products').update(payload).eq('id', editId)
@@ -2299,6 +2304,28 @@ function ProductsTab() {
                 {form.bulk_discount_qty && form.bulk_discount_pct && (
                   <p className="text-green-600 text-xs">Buy {form.bulk_discount_qty}+ → {form.bulk_discount_pct}% discount applied automatically</p>
                 )}
+              </div>
+
+              {/* Moods — used to highlight this product on the Build a Bundle page */}
+              <div className="space-y-2">
+                <label className={LBL}>Moods <span className="normal-case tracking-normal text-gray-400 font-normal">(shown as &quot;Recommended&quot; on Build a Bundle when a matching mood is selected)</span></label>
+                <div className="flex flex-wrap gap-2">
+                  {MOODS.map(m => {
+                    const active = form.moods.includes(m);
+                    return (
+                      <button key={m} type="button"
+                        onClick={() => setForm(p => ({
+                          ...p,
+                          moods: active ? p.moods.filter(x => x !== m) : [...p.moods, m],
+                        }))}
+                        className={`text-xs uppercase tracking-[0.15em] font-medium px-3.5 py-2 rounded-lg border transition ${
+                          active ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-300 text-gray-600 hover:border-gray-500'
+                        }`}>
+                        {m}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Stock & Visibility toggles */}
@@ -3197,6 +3224,242 @@ function Spinner() {
 }
 
 /* ═══════════════════════════════════════════
+   BUNDLE BUILDER TAB
+═══════════════════════════════════════════ */
+function BundleBuilderTab() {
+  const [tiers,    setTiers]    = useState([]);
+  const [presets,  setPresets]  = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loading,  setLoading]  = useState(true);
+
+  const [tierMin,    setTierMin]    = useState('');
+  const [tierPct,    setTierPct]    = useState('');
+  const [savingTier, setSavingTier] = useState(false);
+
+  const [presetEditId,  setPresetEditId]  = useState(null);
+  const [presetName,    setPresetName]    = useState('');
+  const [presetBlurb,   setPresetBlurb]   = useState('');
+  const [presetItems,   setPresetItems]   = useState([]);
+  const [presetPick,    setPresetPick]    = useState('');
+  const [savingPreset,  setSavingPreset]  = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [{ data: t }, { data: p }, { data: prod }] = await Promise.all([
+      supabase.from('bundle_discount_tiers').select('*').order('min_items'),
+      supabase.from('bundle_presets').select('*').order('sort_order'),
+      supabase.from('products').select('slug, title').order('title'),
+    ]);
+    setTiers(t || []);
+    setPresets(p || []);
+    setProducts(prod || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function addTier(e) {
+    e.preventDefault();
+    if (!tierMin || !tierPct) return;
+    setSavingTier(true);
+    await supabase.from('bundle_discount_tiers').insert({ min_items: parseInt(tierMin), discount_pct: parseInt(tierPct) });
+    setTierMin(''); setTierPct('');
+    await load();
+    setSavingTier(false);
+  }
+
+  async function deleteTier(id) {
+    if (!window.confirm('Delete this discount tier?')) return;
+    await supabase.from('bundle_discount_tiers').delete().eq('id', id);
+    load();
+  }
+
+  function resetPresetForm() {
+    setPresetEditId(null); setPresetName(''); setPresetBlurb(''); setPresetItems([]); setPresetPick('');
+  }
+
+  function startEditPreset(p) {
+    setPresetEditId(p.id);
+    setPresetName(p.name);
+    setPresetBlurb(p.blurb || '');
+    setPresetItems((p.product_slugs || []).map(slug => ({ slug, title: products.find(x => x.slug === slug)?.title || slug })));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function addPresetItem(name) {
+    const p = products.find(x => x.title === name);
+    if (p && !presetItems.find(i => i.slug === p.slug)) {
+      setPresetItems(prev => [...prev, { slug: p.slug, title: p.title }]);
+    }
+    setPresetPick('');
+  }
+
+  function removePresetItem(slug) {
+    setPresetItems(prev => prev.filter(i => i.slug !== slug));
+  }
+
+  async function savePreset(e) {
+    e.preventDefault();
+    if (!presetName.trim() || presetItems.length === 0) return;
+    setSavingPreset(true);
+    const payload = {
+      name:          presetName.trim(),
+      blurb:         presetBlurb.trim(),
+      product_slugs: presetItems.map(i => i.slug),
+    };
+    const { error } = presetEditId
+      ? await supabase.from('bundle_presets').update(payload).eq('id', presetEditId)
+      : await supabase.from('bundle_presets').insert({ ...payload, sort_order: presets.length });
+    if (error) alert('Save failed: ' + error.message);
+    resetPresetForm();
+    await load();
+    setSavingPreset(false);
+  }
+
+  async function deletePreset(id) {
+    if (!window.confirm('Delete this preset bundle?')) return;
+    await supabase.from('bundle_presets').delete().eq('id', id);
+    load();
+  }
+
+  if (loading) return <Spinner />;
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Admin</p>
+        <h1 className="text-4xl italic text-gray-900" style={serif}>Build a Bundle</h1>
+        <p className="text-gray-400 text-sm mt-1">Controls the /build-a-bundle page — discount tiers and the &quot;Need inspiration?&quot; presets.</p>
+      </div>
+
+      {/* Discount Tiers */}
+      <div className="border border-gray-200 bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6">
+        <div>
+          <h2 className="text-xl italic text-gray-900" style={serif}>Discount Tiers</h2>
+          <p className="text-gray-400 text-sm mt-1">Customers see &quot;Add N more to unlock X% off.&quot; The highest tier they reach applies to the whole bundle.</p>
+        </div>
+
+        <form onSubmit={addTier} className="flex flex-wrap gap-3 items-end">
+          <div className="w-40">
+            <label className={LBL}>Min Items</label>
+            <input type="number" min="2" value={tierMin} onChange={e => setTierMin(e.target.value)} required placeholder="e.g. 2" className={INP} />
+          </div>
+          <div className="w-40">
+            <label className={LBL}>Discount %</label>
+            <input type="number" min="1" max="100" value={tierPct} onChange={e => setTierPct(e.target.value)} required placeholder="e.g. 5" className={INP} />
+          </div>
+          <button type="submit" disabled={savingTier}
+            className="bg-gray-900 text-white text-xs uppercase tracking-[0.15em] px-5 py-2.5 rounded-lg hover:bg-black transition disabled:opacity-50 h-[42px]">
+            {savingTier ? 'Adding…' : '+ Add Tier'}
+          </button>
+        </form>
+
+        {tiers.length === 0 ? (
+          <p className="text-gray-400 text-sm italic">No discount tiers yet — the bundle builder will show no discount until you add one.</p>
+        ) : (
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <div className="grid grid-cols-[1fr_1fr_120px] gap-x-4 px-5 py-3 border-b border-gray-200 bg-gray-50">
+              {['MIN ITEMS', 'DISCOUNT', 'ACTIONS'].map(h => (
+                <span key={h} className="text-xs text-gray-500 uppercase tracking-[0.2em] font-semibold">{h}</span>
+              ))}
+            </div>
+            {tiers.map(t => (
+              <div key={t.id} className="grid grid-cols-[1fr_1fr_120px] gap-x-4 items-center px-5 py-3.5 border-b border-gray-100 last:border-0">
+                <span className="text-gray-900 text-sm font-semibold">{t.min_items}+ items</span>
+                <span className="text-gray-700 text-sm">{t.discount_pct}% off</span>
+                <button onClick={() => deleteTier(t.id)}
+                  className="text-red-400 hover:text-red-600 text-xs uppercase tracking-[0.15em] transition font-medium text-left">
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Presets */}
+      <div className="border border-gray-200 bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6">
+        <div>
+          <h2 className="text-xl italic text-gray-900" style={serif}>Need Inspiration — Presets</h2>
+          <p className="text-gray-400 text-sm mt-1">Curated combos shown on the Build a Bundle page. &quot;Use This&quot; fills the bundle with these products.</p>
+        </div>
+
+        <form onSubmit={savePreset} className="border border-gray-200 rounded-xl p-4 space-y-3 bg-gray-50">
+          <p className="text-xs uppercase tracking-[0.2em] text-gray-500 font-semibold">{presetEditId ? 'Edit Preset' : 'New Preset'}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className={LBL}>Name</label>
+              <input value={presetName} onChange={e => setPresetName(e.target.value)} required placeholder="e.g. The First Night" className={INP} />
+            </div>
+            <div>
+              <label className={LBL}>Blurb</label>
+              <input value={presetBlurb} onChange={e => setPresetBlurb(e.target.value)} placeholder="e.g. Soft light, slow cards, something sweet." className={INP} />
+            </div>
+          </div>
+          <div>
+            <label className={LBL}>Products</label>
+            <SearchableSelect
+              value={presetPick}
+              onChange={addPresetItem}
+              options={products.map(p => ({ id: p.slug, name: p.title }))}
+              placeholder="Search a product to add…"
+              emptyText="No products found"
+            />
+            {presetItems.length === 0 ? (
+              <p className="text-gray-400 text-xs italic mt-2">No products added yet.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {presetItems.map(i => (
+                  <span key={i.slug} className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-700">
+                    {i.title}
+                    <button type="button" onClick={() => removePresetItem(i.slug)} className="text-gray-300 hover:text-red-500 font-bold leading-none">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="submit" disabled={savingPreset}
+              className="bg-gray-900 text-white text-xs uppercase tracking-[0.15em] px-5 py-2.5 rounded-lg hover:bg-black transition disabled:opacity-50">
+              {savingPreset ? 'Saving…' : presetEditId ? 'Save Changes' : '+ Add Preset'}
+            </button>
+            {presetEditId && (
+              <button type="button" onClick={resetPresetForm} className="text-gray-400 hover:text-gray-700 text-xs uppercase tracking-[0.15em] transition">Cancel</button>
+            )}
+          </div>
+        </form>
+
+        {presets.length === 0 ? (
+          <p className="text-gray-400 text-sm italic">No presets yet — the &quot;Need inspiration?&quot; section stays hidden on the storefront until you add one.</p>
+        ) : (
+          <div className="space-y-3">
+            {presets.map(p => (
+              <div key={p.id} className="flex items-start justify-between gap-4 border border-gray-200 rounded-lg px-4 py-3">
+                <div>
+                  <p className="text-gray-900 font-semibold text-sm">{p.name}</p>
+                  {p.blurb && <p className="text-gray-400 text-xs mt-0.5">{p.blurb}</p>}
+                  <p className="text-gray-500 text-xs mt-1">{(p.product_slugs || []).join(', ')}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => startEditPreset(p)}
+                    className="text-xs uppercase tracking-[0.12em] font-medium px-3 py-1.5 border border-gray-300 text-gray-600 hover:border-gray-500 rounded-lg transition">
+                    Edit
+                  </button>
+                  <button onClick={() => deletePreset(p.id)}
+                    className="text-xs uppercase tracking-[0.12em] font-medium px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg transition">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
    MAIN
 ═══════════════════════════════════════════ */
 export default function AdminPage() {
@@ -3213,6 +3476,7 @@ export default function AdminPage() {
     { id: 'orders',    label: 'Orders' },
     { id: 'abandoned', label: 'Abandoned' },
     { id: 'products',  label: 'Products' },
+    { id: 'bundles',   label: 'Bundles' },
     { id: 'reviews',   label: 'Reviews' },
     { id: 'promos',    label: 'Promos' },
     { id: 'blogs',     label: 'Blogs' },
@@ -3254,6 +3518,7 @@ export default function AdminPage() {
         {tab === 'orders'    && <OrdersTab />}
         {tab === 'abandoned' && <AbandonedCartsTab />}
         {tab === 'products'  && <ProductsTab />}
+        {tab === 'bundles'   && <BundleBuilderTab />}
         {tab === 'reviews'   && <ReviewsTab />}
         {tab === 'promos'    && <PromoCodesTab />}
         {tab === 'blogs'     && <BlogsList />}

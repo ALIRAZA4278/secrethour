@@ -7,13 +7,14 @@ const CartContext = createContext(null);
 function cartReducer(state, action) {
   switch (action.type) {
     case 'ADD': {
+      const addQty = action.qty || 1;
       const existing = state.find((i) => i.slug === action.item.slug);
       if (existing) {
         return state.map((i) =>
-          i.slug === action.item.slug ? { ...i, qty: i.qty + 1 } : i
+          i.slug === action.item.slug ? { ...i, qty: i.qty + addQty } : i
         );
       }
-      return [...state, { ...action.item, qty: 1 }];
+      return [...state, { ...action.item, qty: addQty }];
     }
     case 'REMOVE':
       return state.filter((i) => i.slug !== action.slug);
@@ -60,8 +61,8 @@ export function CartProvider({ children }) {
   const [items, dispatch] = useReducer(cartReducer, []);
   const [open, setOpen] = useState(false);
 
-  function addToCart(item) {
-    dispatch({ type: 'ADD', item });
+  function addToCart(item, qty) {
+    dispatch({ type: 'ADD', item, qty });
     setOpen(true);
   }
   function removeFromCart(slug) {
