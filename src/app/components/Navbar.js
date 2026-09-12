@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { label: 'Home',         href: '/' },
   { label: 'Shop',         href: '/shop' },
   { label: 'Card Game', href: '/product/midnight-deck' },
+  { label: 'How to Play', href: '/how-to-play' },
   { label: 'Build a Bundle', href: '/build-a-bundle' },
   { label: 'Testimonials', href: '/testimonials' },
   { label: 'About',        href: '/about' },

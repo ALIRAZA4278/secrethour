@@ -10,18 +10,19 @@ import Footer from './components/Footer';
 import { useCart } from './context/CartContext';
 import { supabase } from '../lib/supabase';
 import { getSale, fmtPKR } from '../lib/pricing';
+import { MOOD_CARDS, MoodFlipCard, cardFlipStyles } from './components/MoodCards';
 
 const IMG = {
   silk:     '/assets/bg-silk-B9_HjwKe.jpg',
   cardGame: '/assets/sh-card-game-Cw972EQC.png',
 };
 
-const CARD_BACK = '/assets/CARDS/card-back.png';
-const FOUR_SIDES = [
-  { label: 'Playful',  img: '/assets/CARDS/playful.png' },
-  { label: 'Romantic', img: '/assets/CARDS/romantic.png' },
-  { label: 'Sensual',  img: '/assets/CARDS/sensual.png' },
-  { label: 'Wild',     img: '/assets/CARDS/wild.png' },
+// Fan offsets for the four cards, applied only from the sm breakpoint up.
+const FAN = [
+  { rot: -6,   y: 12, z: 1 },
+  { rot: -2.5, y: 2,  z: 2 },
+  { rot: 2.5,  y: 2,  z: 3 },
+  { rot: 6,    y: 12, z: 4 },
 ];
 
 const SLIDES = [
@@ -55,35 +56,6 @@ function HeroSlide({ slide, eager }) {
         className="absolute inset-0 w-full h-full object-cover object-top"
       />
     </picture>
-  );
-}
-
-const FAN = [
-  { rot: -6,   y: 12, z: 1 },
-  { rot: -2.5, y: 2,  z: 2 },
-  { rot: 2.5,  y: 2,  z: 3 },
-  { rot: 6,    y: 12, z: 4 },
-];
-
-function FlipCard({ side, fan, flipped, onToggle }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-pressed={flipped}
-      aria-label={flipped ? `${side.label} — tap to hide` : `Tap to reveal ${side.label}`}
-      className={`card-flip relative aspect-5/7 w-full ${flipped ? 'is-flipped' : ''}`}
-      style={{ '--rot': `${fan.rot}deg`, '--y': `${fan.y}px`, zIndex: flipped ? 30 : fan.z }}
-    >
-      <div className="card-flip-inner">
-        <div className="card-flip-face">
-          <Image src={CARD_BACK} alt="Secret Hour — tap to reveal" fill sizes="(min-width: 640px) 24vw, 45vw" className="object-cover" />
-        </div>
-        <div className="card-flip-face card-flip-back">
-          <Image src={side.img} alt={`Secret Hour — ${side.label}`} fill sizes="(min-width: 640px) 24vw, 45vw" className="object-cover" />
-        </div>
-      </div>
-    </button>
   );
 }
 
@@ -385,15 +357,7 @@ export default function Home() {
       <section className="relative py-16 md:py-24 px-3 md:px-6 overflow-hidden text-center"
         style={{ background: 'radial-gradient(ellipse at top, hsl(350 50% 8%) 0%, hsl(20 5% 3%) 60%)' }}>
         <style>{`
-          /* The card art has an 85px corner radius on a 1000x1400 canvas, so the
-             frame has to round by the same proportion (8.5% of width = 6.07% of
-             height) or dark wedges show at the corners and the glow reads square. */
-          .card-flip {
-            perspective: 1500px;
-            cursor: pointer;
-            border-radius: 8.5% / 6.07%;
-            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease;
-          }
+          ${cardFlipStyles}
           @media (min-width: 640px) {
             .four-sides-fan { display: flex; flex-wrap: nowrap; justify-content: center; align-items: center; gap: 1.5vw; }
             .four-sides-fan > * { flex: 1 1 0; width: auto; max-width: 420px; }
@@ -402,25 +366,7 @@ export default function Home() {
           }
           .card-flip.is-flipped {
             transform: rotate(0deg) translateY(0) scale(1.06) !important;
-            box-shadow: 0 0 60px 14px rgba(214, 178, 94, 0.5);
           }
-          .card-flip-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-          }
-          .card-flip.is-flipped .card-flip-inner { transform: rotateY(180deg); }
-          .card-flip-face {
-            position: absolute;
-            inset: 0;
-            overflow: hidden;
-            border-radius: 8.5% / 6.07%;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-          }
-          .card-flip-back { transform: rotateY(180deg); }
         `}</style>
 
         <p className="text-gold/70 text-[10px] uppercase tracking-[0.35em]">Tap to Reveal</p>
@@ -430,13 +376,14 @@ export default function Home() {
         <p className="text-cream/55 italic text-sm mt-2" style={serif}>Tap each card to reveal what awaits.</p>
 
         <div className="four-sides-fan w-full sm:w-4/5 mx-auto mt-10 md:mt-14 grid grid-cols-2 gap-3">
-          {FOUR_SIDES.map((side, i) => (
-            <FlipCard
+          {MOOD_CARDS.map((side, i) => (
+            <MoodFlipCard
               key={side.label}
-              side={side}
-              fan={FAN[i]}
+              label={side.label}
+              img={side.img}
               flipped={openCard === side.label}
               onToggle={() => setOpenCard(c => (c === side.label ? null : side.label))}
+              style={{ '--rot': `${FAN[i].rot}deg`, '--y': `${FAN[i].y}px`, zIndex: openCard === side.label ? 30 : FAN[i].z }}
             />
           ))}
         </div>
