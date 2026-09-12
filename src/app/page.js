@@ -58,7 +58,14 @@ function HeroSlide({ slide, eager }) {
   );
 }
 
-function FlipCard({ side }) {
+const FAN = [
+  { rot: -10, y: 22, z: 1 },
+  { rot: -4,  y: 6,  z: 2 },
+  { rot: 4,   y: 6,  z: 3 },
+  { rot: 10,  y: 22, z: 4 },
+];
+
+function FlipCard({ side, fan }) {
   const [flipped, setFlipped] = useState(false);
   return (
     <button
@@ -67,12 +74,13 @@ function FlipCard({ side }) {
       aria-pressed={flipped}
       aria-label={flipped ? `${side.label} — tap to hide` : `Tap to reveal ${side.label}`}
       className={`card-flip relative aspect-2/3 w-full ${flipped ? 'is-flipped' : ''}`}
+      style={{ '--rot': `${fan.rot}deg`, '--y': `${fan.y}px`, zIndex: flipped ? 30 : fan.z }}
     >
       <div className="card-flip-inner">
-        <div className="card-flip-face border border-gold-border/40">
+        <div className="card-flip-face">
           <Image src={CARD_BACK} alt="Secret Hour — tap to reveal" fill sizes="(min-width: 768px) 220px, 45vw" className="object-cover" />
         </div>
-        <div className="card-flip-face card-flip-back border border-gold">
+        <div className="card-flip-face card-flip-back">
           <Image src={side.img} alt={`Secret Hour — ${side.label}`} fill sizes="(min-width: 768px) 220px, 45vw" className="object-cover" />
         </div>
       </div>
@@ -375,7 +383,22 @@ export default function Home() {
       {/* ─── Four Sides (flip cards) ─────────────────────────── */}
       <section className="relative py-16 md:py-24 px-4 md:px-6 overflow-hidden bg-black text-center">
         <style>{`
-          .card-flip { perspective: 1500px; cursor: pointer; }
+          .card-flip {
+            perspective: 1500px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease;
+          }
+          @media (min-width: 640px) {
+            .four-sides-fan { display: flex; flex-wrap: nowrap; justify-content: center; align-items: flex-end; }
+            .four-sides-fan > * { width: 200px; margin: 0 -22px; }
+            .card-flip { transform: rotate(var(--rot, 0deg)) translateY(var(--y, 0px)); }
+            .card-flip:hover { z-index: 25 !important; }
+          }
+          .card-flip.is-flipped {
+            transform: rotate(0deg) translateY(-18px) scale(1.12) !important;
+            box-shadow: 0 0 45px 8px rgba(214, 178, 94, 0.55);
+          }
           .card-flip-inner {
             position: relative;
             width: 100%;
@@ -388,6 +411,7 @@ export default function Home() {
             position: absolute;
             inset: 0;
             overflow: hidden;
+            border-radius: 6px;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
             background: var(--color-sh-card);
@@ -401,9 +425,9 @@ export default function Home() {
         </h2>
         <p className="text-cream/55 italic text-sm mt-2" style={serif}>Tap each card to reveal what awaits.</p>
 
-        <div className="max-w-5xl mx-auto mt-10 md:mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6">
-          {FOUR_SIDES.map((side) => (
-            <FlipCard key={side.label} side={side} />
+        <div className="four-sides-fan max-w-5xl mx-auto mt-10 md:mt-14 grid grid-cols-2 gap-4">
+          {FOUR_SIDES.map((side, i) => (
+            <FlipCard key={side.label} side={side} fan={FAN[i]} />
           ))}
         </div>
       </section>
