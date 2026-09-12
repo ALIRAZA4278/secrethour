@@ -16,6 +16,14 @@ const IMG = {
   cardGame: '/assets/sh-card-game-Cw972EQC.png',
 };
 
+const CARD_BACK = '/assets/CARDS/back of cards-01.png';
+const FOUR_SIDES = [
+  { label: 'Playful',  img: '/assets/CARDS/playful-01.png' },
+  { label: 'Romantic', img: '/assets/CARDS/romantic-01.png' },
+  { label: 'Sensual',  img: '/assets/CARDS/sensual-01.png' },
+  { label: 'Wild',     img: '/assets/CARDS/wild-01.png' },
+];
+
 const SLIDES = [
   { desk: '/Banners/1.jpg.jpeg', mob: '/Banners/1 mob.jpg.jpeg', alt: 'Secret Hour couple gift boxes on dark silk' },
   { desk: '/Banners/2.jpg.jpeg', mob: '/Banners/2 mob.jpg.jpeg', alt: 'The Midnight Deck card game by Secret Hour' },
@@ -50,6 +58,27 @@ function HeroSlide({ slide, eager }) {
   );
 }
 
+function FlipCard({ side }) {
+  const [flipped, setFlipped] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => setFlipped((f) => !f)}
+      aria-pressed={flipped}
+      aria-label={flipped ? `${side.label} — tap to hide` : `Tap to reveal ${side.label}`}
+      className={`card-flip relative aspect-2/3 w-full ${flipped ? 'is-flipped' : ''}`}
+    >
+      <div className="card-flip-inner">
+        <div className="card-flip-face border border-gold-border/40">
+          <Image src={CARD_BACK} alt="Secret Hour — tap to reveal" fill sizes="(min-width: 768px) 220px, 45vw" className="object-cover" />
+        </div>
+        <div className="card-flip-face card-flip-back border border-gold">
+          <Image src={side.img} alt={`Secret Hour — ${side.label}`} fill sizes="(min-width: 768px) 220px, 45vw" className="object-cover" />
+        </div>
+      </div>
+    </button>
+  );
+}
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 
@@ -340,6 +369,42 @@ export default function Home() {
               Open the Box
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* ─── Four Sides (flip cards) ─────────────────────────── */}
+      <section className="relative py-16 md:py-24 px-4 md:px-6 overflow-hidden bg-black text-center">
+        <style>{`
+          .card-flip { perspective: 1500px; cursor: pointer; }
+          .card-flip-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+          }
+          .card-flip.is-flipped .card-flip-inner { transform: rotateY(180deg); }
+          .card-flip-face {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            background: var(--color-sh-card);
+          }
+          .card-flip-back { transform: rotateY(180deg); }
+        `}</style>
+
+        <p className="text-gold/70 text-[10px] uppercase tracking-[0.35em]">Tap to Reveal</p>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl italic mt-3 text-cream" style={serif}>
+          Four Sides of <span className="text-gold-light">Your Secret Hour</span>
+        </h2>
+        <p className="text-cream/55 italic text-sm mt-2" style={serif}>Tap each card to reveal what awaits.</p>
+
+        <div className="max-w-5xl mx-auto mt-10 md:mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6">
+          {FOUR_SIDES.map((side) => (
+            <FlipCard key={side.label} side={side} />
+          ))}
         </div>
       </section>
 
