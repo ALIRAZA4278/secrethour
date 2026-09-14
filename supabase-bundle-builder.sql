@@ -37,3 +37,22 @@ CREATE TABLE IF NOT EXISTS bundle_presets (
   sort_order     INTEGER NOT NULL DEFAULT 0,
   created_at     TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Supabase enables RLS on new tables, and with no policy the anon key the site
+-- and admin use gets empty results and rejected writes. Allow both, matching
+-- how products is already reachable (admin login is client-side, not a Supabase role).
+ALTER TABLE bundle_discount_tiers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "bundle_discount_tiers_read" ON bundle_discount_tiers;
+CREATE POLICY "bundle_discount_tiers_read" ON bundle_discount_tiers
+  FOR SELECT USING (true);
+DROP POLICY IF EXISTS "bundle_discount_tiers_write" ON bundle_discount_tiers;
+CREATE POLICY "bundle_discount_tiers_write" ON bundle_discount_tiers
+  FOR ALL USING (true) WITH CHECK (true);
+
+ALTER TABLE bundle_presets ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "bundle_presets_read" ON bundle_presets;
+CREATE POLICY "bundle_presets_read" ON bundle_presets
+  FOR SELECT USING (true);
+DROP POLICY IF EXISTS "bundle_presets_write" ON bundle_presets;
+CREATE POLICY "bundle_presets_write" ON bundle_presets
+  FOR ALL USING (true) WITH CHECK (true);

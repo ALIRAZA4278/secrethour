@@ -13,3 +13,16 @@ export function getSale(product) {
 }
 
 export const fmtPKR = (n) => `Rs. ${(Number(n) || 0).toLocaleString()}`;
+
+// Best bundle discount reached by `count` bundle items (0 when no tier applies).
+export function bundlePct(count, tiers) {
+  return (tiers || []).reduce(
+    (pct, t) => (count >= t.min_items && t.discount_pct > pct ? t.discount_pct : pct),
+    0
+  );
+}
+
+// Rounded per unit, so the bundle builder and the cart always agree to the rupee.
+export function bundleUnitPrice(price, pct) {
+  return Math.round(price * (1 - pct / 100));
+}

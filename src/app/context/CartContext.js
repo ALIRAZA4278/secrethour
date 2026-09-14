@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useReducer, useState } from 'react';
+import { bundlePct, bundleUnitPrice } from '../../lib/pricing';
 
 const CartContext = createContext(null);
 
@@ -10,8 +11,12 @@ function cartReducer(state, action) {
       const addQty = action.qty || 1;
       const existing = state.find((i) => i.slug === action.item.slug);
       if (existing) {
+        // Adding a bundle over a product already in the cart folds it into the bundle.
+        const bundleFields = action.item.bundleTiers
+          ? { bundleTiers: action.item.bundleTiers, bulkDiscountQty: null, bulkDiscountPct: null }
+          : {};
         return state.map((i) =>
-          i.slug === action.item.slug ? { ...i, qty: i.qty + addQty } : i
+          i.slug === action.item.slug ? { ...i, ...bundleFields, qty: i.qty + addQty } : i
         );
       }
       return [...state, { ...action.item, qty: addQty }];
@@ -45,8 +50,12 @@ export function itemDiscountPct(item) {
   return Math.round((1 - eff / compareAt) * 100);
 }
 
-// Returns effective unit price for an item (applies bulk discount if threshold met)
+// Effective unit price: the bundle discount while the bundle still qualifies,
+// otherwise the bulk discount once its quantity threshold is met.
 export function itemEffectivePrice(item) {
+  if (item.bundlePct > 0) {
+    return bundleUnitPrice(item.numericPrice, item.bundlePct);
+  }
   if (
     item.bulkDiscountQty >= 2 &&
     item.bulkDiscountPct > 0 &&
@@ -58,7 +67,7 @@ export function itemEffectivePrice(item) {
 }
 
 export function CartProvider({ children }) {
-  const [items, dispatch] = useReducer(cartReducer, []);
+  const [cartItems, dispatch] = useReducer(cartReducer, []);
   const [open, setOpen] = useState(false);
 
   function addToCart(item, qty) {
@@ -71,6 +80,13 @@ export function CartProvider({ children }) {
   function updateQty(slug, qty) {
     dispatch({ type: 'UPDATE_QTY', slug, qty });
   }
+
+  // The bundle discount is re-derived from what is still in the cart, so removing
+  // bundle items drops the rest to the tier they now qualify for (or none).
+  const bundleCount = cartItems.reduce((s, i) => s + (i.bundleTiers ? i.qty : 0), 0);
+  const items = cartItems.map((i) =>
+    i.bundleTiers ? { ...i, bundlePct: bundlePct(bundleCount, i.bundleTiers) } : i
+  );
 
   const totalItems = items.reduce((s, i) => s + i.qty, 0);
   const totalPrice = items.reduce((s, i) => s + itemEffectivePrice(i) * i.qty, 0);

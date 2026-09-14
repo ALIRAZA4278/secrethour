@@ -7,7 +7,7 @@ import MetaPixel from '../components/MetaPixel';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../../lib/supabase';
-import { getSale, fmtPKR } from '../../lib/pricing';
+import { getSale, fmtPKR, bundlePct, bundleUnitPrice } from '../../lib/pricing';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 const MOODS = ['Romantic', 'Playful', 'Sensual', 'Wild'];
@@ -59,12 +59,14 @@ export default function BuildABundlePage() {
         ({ data: prods } = await supabase.from('products')
           .select(COLS).neq('hidden', true).order('created_at'));
       }
-      const [{ data: t }, { data: pr }] = await Promise.all([
+      const [{ data: t, error: tiersError }, { data: pr }] = await Promise.all([
         supabase.from('bundle_discount_tiers').select('*').order('min_items'),
         supabase.from('bundle_presets').select('*').order('sort_order'),
       ]);
       setProducts(prods || []);
-      setTiers(t?.length ? t : DEFAULT_TIERS);
+      // Fall back only while the table doesn't exist; an empty table means the
+      // admin removed every tier on purpose.
+      setTiers(tiersError ? DEFAULT_TIERS : (t || []));
       setPresets(pr || []);
       setLoading(false);
     }
@@ -98,26 +100,28 @@ export default function BuildABundlePage() {
   const subtotal    = selected.reduce((s, i) => s + getSale(i).effective * i.qty, 0);
 
   const minItemsRequired = tiers[0]?.min_items ?? 2;
-  const matchedTier = [...tiers].reverse().find(t => totalItems >= t.min_items) || null;
   const nextTier    = tiers.find(t => totalItems < t.min_items) || null;
-  const discountPct = matchedTier?.discount_pct || 0;
-  const discountAmt = Math.round(subtotal * discountPct / 100);
-  const total       = subtotal - discountAmt;
+  const discountPct = bundlePct(totalItems, tiers);
+  // Same per-unit rounding as the cart, so the two totals always match.
+  const total       = selected.reduce((s, i) => s + bundleUnitPrice(getSale(i).effective, discountPct) * i.qty, 0);
+  const discountAmt = subtotal - total;
 
   function handleAddBundle() {
     if (totalItems < minItemsRequired) return;
+    // Items carry the tier ladder instead of a baked-in discounted price, so the
+    // cart re-derives the discount if bundle items are later removed.
     selected.forEach(item => {
       const s = getSale(item);
-      const bundleNumeric = Math.round(s.effective * (1 - discountPct / 100));
       addToCart({
         slug: item.slug,
         title: item.title,
-        price: fmtPKR(bundleNumeric),
-        numericPrice: bundleNumeric,
-        listPrice: s.effective,
+        price: fmtPKR(s.effective),
+        numericPrice: s.effective,
+        listPrice: s.onSale ? s.original : null,
         img: item.img,
         bulkDiscountQty: null,
         bulkDiscountPct: null,
+        bundleTiers: tiers,
       }, item.qty);
     });
     setQuantities({});
@@ -238,7 +242,7 @@ export default function BuildABundlePage() {
                 <p className="text-gold/60 text-xs">
                   Add {nextTier.min_items - totalItems} more to unlock {nextTier.discount_pct}% off.
                 </p>
-              ) : totalItems > 0 ? (
+              ) : totalItems > 0 && discountPct > 0 ? (
                 <p className="text-gold/60 text-xs">Maximum bundle discount unlocked!</p>
               ) : null}
 

@@ -2157,10 +2157,23 @@ function ProductsTab() {
         variations:        variations.filter(v => v?.name?.trim()),
         moods:             form.moods,
       };
-      const { error } = editId
-        ? await supabase.from('products').update(payload).eq('id', editId)
-        : await supabase.from('products').insert(payload);
+      const write = p => (editId
+        ? supabase.from('products').update(p).eq('id', editId)
+        : supabase.from('products').insert(p));
+      let { error } = await write(payload);
+      // `moods` only exists once supabase-bundle-builder.sql has been run. Save
+      // everything else rather than blocking every product edit until then.
+      let moodsSkipped = false;
+      if (error && /moods/.test(error.message)) {
+        const withoutMoods = { ...payload };
+        delete withoutMoods.moods;
+        ({ error } = await write(withoutMoods));
+        moodsSkipped = true;
+      }
       if (error) throw error;
+      if (moodsSkipped && form.moods.length) {
+        alert('Product saved, but moods were not stored yet — run supabase-bundle-builder.sql in Supabase to enable them.');
+      }
       cancel(); load();
     } catch (err) {
       alert('Save failed: ' + err.message);
@@ -3255,14 +3268,18 @@ function BundleBuilderTab() {
   const [presetItems,   setPresetItems]   = useState([]);
   const [presetPick,    setPresetPick]    = useState('');
   const [savingPreset,  setSavingPreset]  = useState(false);
+  const [setupMissing,  setSetupMissing]  = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: t }, { data: p }, { data: prod }] = await Promise.all([
+    const [{ data: t, error: tErr }, { data: p, error: pErr }, { data: prod }] = await Promise.all([
       supabase.from('bundle_discount_tiers').select('*').order('min_items'),
       supabase.from('bundle_presets').select('*').order('sort_order'),
       supabase.from('products').select('slug, title').order('title'),
     ]);
+    // These tables come from supabase-bundle-builder.sql; say so instead of
+    // showing an editor whose saves would all fail.
+    setSetupMissing(Boolean(tErr || pErr));
     setTiers(t || []);
     setPresets(p || []);
     setProducts(prod || []);
@@ -3275,15 +3292,20 @@ function BundleBuilderTab() {
     e.preventDefault();
     if (!tierMin || !tierPct) return;
     setSavingTier(true);
-    await supabase.from('bundle_discount_tiers').insert({ min_items: parseInt(tierMin), discount_pct: parseInt(tierPct) });
-    setTierMin(''); setTierPct('');
-    await load();
+    const { error } = await supabase.from('bundle_discount_tiers').insert({ min_items: parseInt(tierMin), discount_pct: parseInt(tierPct) });
+    if (error) {
+      alert('Could not add tier: ' + error.message);
+    } else {
+      setTierMin(''); setTierPct('');
+      await load();
+    }
     setSavingTier(false);
   }
 
   async function deleteTier(id) {
     if (!window.confirm('Delete this discount tier?')) return;
-    await supabase.from('bundle_discount_tiers').delete().eq('id', id);
+    const { error } = await supabase.from('bundle_discount_tiers').delete().eq('id', id);
+    if (error) alert('Could not delete tier: ' + error.message);
     load();
   }
 
@@ -3331,7 +3353,8 @@ function BundleBuilderTab() {
 
   async function deletePreset(id) {
     if (!window.confirm('Delete this preset bundle?')) return;
-    await supabase.from('bundle_presets').delete().eq('id', id);
+    const { error } = await supabase.from('bundle_presets').delete().eq('id', id);
+    if (error) alert('Could not delete preset: ' + error.message);
     load();
   }
 
@@ -3344,6 +3367,17 @@ function BundleBuilderTab() {
         <h1 className="text-4xl italic text-gray-900" style={serif}>Build a Bundle</h1>
         <p className="text-gray-400 text-sm mt-1">Controls the /build-a-bundle page — discount tiers and the &quot;Need inspiration?&quot; presets.</p>
       </div>
+
+      {setupMissing && (
+        <div className="border border-amber-300 bg-amber-50 text-amber-900 rounded-xl p-5 text-sm space-y-1">
+          <p className="font-semibold">One-time database setup needed</p>
+          <p>
+            Open Supabase → SQL Editor and run <code className="bg-amber-100 px-1 rounded">supabase-bundle-builder.sql</code> from
+            the project root. Until then tiers, presets and product moods can&apos;t be saved — the Build a Bundle
+            page still works using the default 5% / 10% / 15% tiers.
+          </p>
+        </div>
+      )}
 
       {/* Discount Tiers */}
       <div className="border border-gray-200 bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6">
