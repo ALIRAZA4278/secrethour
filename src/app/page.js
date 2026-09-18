@@ -110,7 +110,9 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from('products')
-      .select('slug, title, subtitle, price, numeric_price, sale_price, img, images, tag, variations, bulk_discount_qty, bulk_discount_pct, description, features, category')
+      // `*` rather than a column list: option_groups only exists after
+      // supabase-product-options.sql runs, and a missing column fails the query.
+      .select('*')
       .neq('hidden', true)
       .then(({ data }) => {
         if (!data) return;
@@ -440,7 +442,7 @@ export default function Home() {
                     );
                   })()}
                   <button
-                    onClick={(e) => { e.preventDefault(); if (p.variations?.length > 0) { router.push(`/product/${p.slug}`); } else { const s = getSale(p); addToCart({ slug: p.slug, title: p.title, price: fmtPKR(s.effective), numericPrice: s.effective, listPrice: s.onSale ? s.original : null, img: p.img, bulkDiscountQty: p.bulk_discount_qty || null, bulkDiscountPct: p.bulk_discount_pct || 0 }); } }}
+                    onClick={(e) => { e.preventDefault(); if (p.variations?.length > 0 || p.option_groups?.length > 0) { router.push(`/product/${p.slug}`); } else { const s = getSale(p); addToCart({ slug: p.slug, title: p.title, price: fmtPKR(s.effective), numericPrice: s.effective, listPrice: s.onSale ? s.original : null, img: p.img, bulkDiscountQty: p.bulk_discount_qty || null, bulkDiscountPct: p.bulk_discount_pct || 0 }); } }}
                     className="mt-auto w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-2.5 btn-glow transition-all duration-300 hover:bg-[#5a1a24]"
                     style={{ marginTop: 'auto' }}
                   >

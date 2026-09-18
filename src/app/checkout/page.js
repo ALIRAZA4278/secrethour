@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { useCart, itemEffectivePrice, itemCompareAtPrice } from '../context/CartContext';
+import { useCart, itemEffectivePrice, itemCompareAtPrice, itemOptionsText } from '../context/CartContext';
 import { isValidPkMobile, normalizePkPhone, PK_PHONE_HINT } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
 
@@ -60,7 +60,7 @@ export default function CheckoutPage() {
           phone:      updatedForm.phone    || null,
           address:    updatedForm.address  || null,
           city:       updatedForm.city     || null,
-          items:      items.map(i => ({ slug: i.slug, title: i.title, qty: i.qty, price: itemEffectivePrice(i), img: i.img || null, variation: i.variation || null })),
+          items:      items.map(i => ({ slug: i.slug, title: i.title, qty: i.qty, price: itemEffectivePrice(i), img: i.img || null, variation: itemOptionsText(i) })),
           total:      totalPrice,
           status:     'abandoned',
         }),
@@ -132,7 +132,9 @@ export default function CheckoutPage() {
           product_img: item.img,
           quantity: item.qty,
           price: itemEffectivePrice(item),
-          variation: item.variation || null,
+          // Variation and per-component choices as one line, so every downstream
+          // view (admin, emails, CSV export) shows the full configuration.
+          variation: itemOptionsText(item),
           custom_note: item.customNote || null,
         }))
       );
@@ -148,7 +150,7 @@ export default function CheckoutPage() {
             phone: form.phone,
             address: form.address,
             orderId: order.id,
-            items: items.map((i) => ({ title: i.title, qty: i.qty, numericPrice: itemEffectivePrice(i), variation: i.variation || null })),
+            items: items.map((i) => ({ title: i.title, qty: i.qty, numericPrice: itemEffectivePrice(i), variation: itemOptionsText(i) })),
             total,
             payment,
             city: form.city,
@@ -173,7 +175,7 @@ export default function CheckoutPage() {
           price:       itemEffectivePrice(i),
           unitPrice:   itemEffectivePrice(i),
           totalPrice:  itemEffectivePrice(i) * i.qty,
-          variation:   i.variation || null,
+          variation:   itemOptionsText(i),
           slug:        i.slug,
         })),
       };
@@ -414,13 +416,14 @@ export default function CheckoutPage() {
                 {/* Items */}
                 <div className="space-y-4 mb-6">
                   {items.map((item) => (
-                    <div key={item.slug} className="flex gap-3 items-center border-b border-gold-border/20 pb-4">
+                    <div key={item.lineId} className="flex gap-3 items-center border-b border-gold-border/20 pb-4">
                       <div className="relative w-16 h-16 shrink-0 rounded overflow-hidden bg-sh-bg">
                         <Image src={item.img} alt={`${item.title} Secret Hour`} fill className="object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-cream text-sm leading-snug" style={serif}>{item.title}</p>
-                        {item.variation && <p className="text-gold/60 text-[10px] uppercase tracking-[0.15em]">{item.variation}</p>}
+                        {itemOptionsText(item) && <p className="text-gold/60 text-[10px] uppercase tracking-[0.15em]">{itemOptionsText(item)}</p>}
+                        {item.customNote && <p className="text-cream/45 text-[10px] italic mt-0.5">Note: {item.customNote}</p>}
                         <p className="text-cream/40 text-xs mt-0.5">Qty {item.qty}</p>
                       </div>
                       {(() => {

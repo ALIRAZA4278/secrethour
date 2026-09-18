@@ -5,28 +5,47 @@ import { bundlePct, bundleUnitPrice } from '../../lib/pricing';
 
 const CartContext = createContext(null);
 
+// Two of the same product configured differently (a black bow vs a red one) are
+// different line items, so the cart is keyed by the configuration, not the slug.
+export function cartLineId(item) {
+  const opts = item?.options && Object.keys(item.options).length ? JSON.stringify(item.options) : '';
+  return [item?.slug, item?.variation || '', opts, item?.customNote || ''].join('|');
+}
+
+// The chosen configuration as one readable line — used in the cart, on the order
+// and in emails, so staff packing the box can see exactly what was picked.
+export function itemOptionsText(item) {
+  const parts = [];
+  if (item?.variation) parts.push(item.variation);
+  for (const [label, value] of Object.entries(item?.options || {})) {
+    if (value) parts.push(`${label}: ${value}`);
+  }
+  return parts.join(' · ') || null;
+}
+
 function cartReducer(state, action) {
   switch (action.type) {
     case 'ADD': {
       const addQty = action.qty || 1;
-      const existing = state.find((i) => i.slug === action.item.slug);
+      const lineId = cartLineId(action.item);
+      const existing = state.find((i) => i.lineId === lineId);
       if (existing) {
         // Adding a bundle over a product already in the cart folds it into the bundle.
         const bundleFields = action.item.bundleTiers
           ? { bundleTiers: action.item.bundleTiers, bulkDiscountQty: null, bulkDiscountPct: null }
           : {};
         return state.map((i) =>
-          i.slug === action.item.slug ? { ...i, ...bundleFields, qty: i.qty + addQty } : i
+          i.lineId === lineId ? { ...i, ...bundleFields, qty: i.qty + addQty } : i
         );
       }
-      return [...state, { ...action.item, qty: addQty }];
+      return [...state, { ...action.item, lineId, qty: addQty }];
     }
     case 'REMOVE':
-      return state.filter((i) => i.slug !== action.slug);
+      return state.filter((i) => i.lineId !== action.lineId);
     case 'UPDATE_QTY': {
-      if (action.qty < 1) return state.filter((i) => i.slug !== action.slug);
+      if (action.qty < 1) return state.filter((i) => i.lineId !== action.lineId);
       return state.map((i) =>
-        i.slug === action.slug ? { ...i, qty: action.qty } : i
+        i.lineId === action.lineId ? { ...i, qty: action.qty } : i
       );
     }
     default:
@@ -74,11 +93,11 @@ export function CartProvider({ children }) {
     dispatch({ type: 'ADD', item, qty });
     setOpen(true);
   }
-  function removeFromCart(slug) {
-    dispatch({ type: 'REMOVE', slug });
+  function removeFromCart(lineId) {
+    dispatch({ type: 'REMOVE', lineId });
   }
-  function updateQty(slug, qty) {
-    dispatch({ type: 'UPDATE_QTY', slug, qty });
+  function updateQty(lineId, qty) {
+    dispatch({ type: 'UPDATE_QTY', lineId, qty });
   }
 
   // The bundle discount is re-derived from what is still in the cart, so removing

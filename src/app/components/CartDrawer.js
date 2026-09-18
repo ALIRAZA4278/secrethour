@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { useCart, itemEffectivePrice, itemCompareAtPrice, itemDiscountPct } from '../context/CartContext';
+import { useCart, itemEffectivePrice, itemCompareAtPrice, itemDiscountPct, itemOptionsText } from '../context/CartContext';
 import { getSale, fmtPKR } from '../../lib/pricing';
 
 const supabase = createClient(
@@ -27,7 +27,9 @@ export default function CartDrawer() {
 
     supabase
       .from('products')
-      .select('slug, title, price, numeric_price, sale_price, images, img, bulk_discount_qty, bulk_discount_pct, variations')
+      // `*` rather than a column list: option_groups only exists after
+      // supabase-product-options.sql runs, and a missing column fails the query.
+      .select('*')
       .neq('hidden', true)
       .then(({ data }) => {
         if (!data?.length) return;
@@ -73,7 +75,7 @@ export default function CartDrawer() {
           ) : (
             <>
               {items.map((item) => (
-                <div key={item.slug} className="flex gap-4 border-b border-gold-border/30 pb-4">
+                <div key={item.lineId} className="flex gap-4 border-b border-gold-border/30 pb-4">
                   <div className="relative w-20 h-20 shrink-0 rounded overflow-hidden bg-sh-bg">
                     <Image src={item.img} alt={`${item.title} Secret Hour`} fill className="object-cover" />
                   </div>
@@ -97,13 +99,14 @@ export default function CartDrawer() {
                         );
                       })()}
                     </div>
-                    {item.variation && <p className="text-cream/45 text-[10px] uppercase tracking-[0.15em] mt-0.5">{item.variation}</p>}
+                    {itemOptionsText(item) && <p className="text-cream/45 text-[10px] uppercase tracking-[0.15em] mt-0.5">{itemOptionsText(item)}</p>}
+                    {item.customNote && <p className="text-cream/40 text-[10px] italic mt-0.5">Note: {item.customNote}</p>}
                     {item.bulkDiscountQty >= 2 && item.qty < item.bulkDiscountQty && (
                       <p className="text-cream/40 text-[10px] mt-0.5">Buy {item.bulkDiscountQty}+ for {item.bulkDiscountPct}% off</p>
                     )}
                     <div className="flex items-center gap-2 mt-2">
                       <button
-                        onClick={() => updateQty(item.slug, item.qty - 1)}
+                        onClick={() => updateQty(item.lineId, item.qty - 1)}
                         className="text-cream/60 hover:text-cream transition-colors w-6 h-6 flex items-center justify-center border border-gold-border/40 hover:border-gold"
                         aria-label="Decrease quantity"
                       >
@@ -113,7 +116,7 @@ export default function CartDrawer() {
                       </button>
                       <span className="text-cream text-sm w-6 text-center">{item.qty}</span>
                       <button
-                        onClick={() => updateQty(item.slug, item.qty + 1)}
+                        onClick={() => updateQty(item.lineId, item.qty + 1)}
                         className="text-cream/60 hover:text-cream transition-colors w-6 h-6 flex items-center justify-center border border-gold-border/40 hover:border-gold"
                         aria-label="Increase quantity"
                       >
@@ -122,7 +125,7 @@ export default function CartDrawer() {
                         </svg>
                       </button>
                       <button
-                        onClick={() => removeFromCart(item.slug)}
+                        onClick={() => removeFromCart(item.lineId)}
                         className="ml-auto text-cream/40 hover:text-cream/80 transition-colors"
                         aria-label="Remove item"
                       >
@@ -162,7 +165,7 @@ export default function CartDrawer() {
                           </div>
                           <button
                             onClick={() => {
-                              if (u.variations?.length > 0) {
+                              if (u.variations?.length > 0 || u.option_groups?.length > 0) {
                                 setOpen(false);
                                 router.push(`/product/${u.slug}`);
                               } else {

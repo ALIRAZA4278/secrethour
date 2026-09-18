@@ -35,12 +35,15 @@ function FaqItem({ q, a }) {
 
 export default function ProductPageClient({ product, images, related, upsell, reviews }) {
   const router = useRouter();
-  const { addToCart, setOpen, updateQty } = useCart();
+  const { addToCart, setOpen } = useCart();
   const [activeImg, setActiveImg] = useState(0);
   const [selectedVariation, setSelectedVariation] = useState(null);
   const [variationError, setVariationError] = useState(false);
   const [qty, setQty] = useState(1);
   const [customNote, setCustomNote] = useState('');
+  // Per-component choices for bundles (bow colour, candle scent, …).
+  const [options, setOptions] = useState({});
+  const [missingOptions, setMissingOptions] = useState([]);
   const [reviewIdx, setReviewIdx] = useState(0);
 
   useEffect(() => {
@@ -62,6 +65,8 @@ export default function ProductPageClient({ product, images, related, upsell, re
     return Math.round(base * (1 - sale.pct / 100));
   };
 
+  const optionGroups = product.option_groups?.length ? product.option_groups : [];
+
   const cartItem = () => {
     const effNumeric = variationPrice(selectedVariation);
     return {
@@ -72,34 +77,33 @@ export default function ProductPageClient({ product, images, related, upsell, re
       listPrice: getSale(product).onSale ? (selectedVariation?.price ?? getSale(product).original) : null,
       img: images?.[0],
       variation: selectedVariation?.name || null,
+      options: Object.keys(options).length ? options : null,
       bulkDiscountQty: product.bulk_discount_qty || null,
       bulkDiscountPct: product.bulk_discount_pct || null,
       customNote: customNote.trim() || null,
     };
   };
 
+  // Every choice the product offers has to be made before it can be added.
+  const blockedByChoices = () => {
+    const missing = optionGroups.filter(g => !options[g.label]).map(g => g.label);
+    const needsVariation = product.variations?.length > 0 && !selectedVariation;
+    setMissingOptions(missing);
+    setVariationError(needsVariation);
+    if (!needsVariation && !missing.length) return false;
+    document.getElementById(needsVariation ? 'variation-selector' : 'option-groups')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return true;
+  };
+
   const handleAddToCart = () => {
-    if (product.variations?.length > 0 && !selectedVariation) {
-      setVariationError(true);
-      document.getElementById('variation-selector')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-    setVariationError(false);
-    const item = cartItem();
-    addToCart(item);
-    if (qty > 1) updateQty(item.slug, qty);
+    if (blockedByChoices()) return;
+    addToCart(cartItem(), qty);
   };
 
   const buyNow = () => {
-    if (product.variations?.length > 0 && !selectedVariation) {
-      setVariationError(true);
-      document.getElementById('variation-selector')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-    setVariationError(false);
-    const item = cartItem();
-    addToCart(item);
-    if (qty > 1) updateQty(item.slug, qty);
+    if (blockedByChoices()) return;
+    addToCart(cartItem(), qty);
     setOpen(false);
     router.push('/checkout');
   };
@@ -235,6 +239,49 @@ export default function ProductPageClient({ product, images, related, upsell, re
                       )}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Per-component choices (bundles like the Experience Box) */}
+              {optionGroups.length > 0 && (
+                <div id="option-groups" className="space-y-4">
+                  {optionGroups.map((group) => {
+                    const isMissing = missingOptions.includes(group.label);
+                    return (
+                      <div key={group.label} className="space-y-2">
+                        <p className={`text-[10px] uppercase tracking-[0.25em] ${isMissing ? 'text-red-400' : 'text-cream/50'}`}>
+                          {isMissing ? `Please choose ${group.label}` : group.label}
+                        </p>
+                        <div className={`flex flex-wrap gap-2 ${isMissing ? 'ring-1 ring-red-400/50 p-2' : ''}`}>
+                          {(group.choices || []).map((choice) => {
+                            const selected = options[group.label] === choice;
+                            return (
+                              <button
+                                key={choice}
+                                type="button"
+                                onClick={() => {
+                                  setOptions(prev => {
+                                    const next = { ...prev };
+                                    if (selected) delete next[group.label];
+                                    else next[group.label] = choice;
+                                    return next;
+                                  });
+                                  setMissingOptions(prev => prev.filter(l => l !== group.label));
+                                }}
+                                className={`px-4 py-2 text-[11px] uppercase tracking-[0.15em] border transition-all duration-200 ${
+                                  selected
+                                    ? 'border-gold bg-gold/10 text-gold'
+                                    : 'border-gold-border/50 text-cream/65 hover:border-gold/60 hover:text-cream'
+                                }`}
+                              >
+                                {choice}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 

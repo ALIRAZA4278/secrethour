@@ -2035,6 +2035,8 @@ function ProductsTab() {
   const [extraPreviews, setExtraPreviews] = useState(['', '', '']);
   const [faq,           setFaq]           = useState([]);
   const [variations,    setVariations]    = useState([]);
+  const [optionGroups,  setOptionGroups]  = useState([]);
+  const [groupLabel,    setGroupLabel]    = useState('');
   const [varInput,      setVarInput]      = useState('');
   const [varPrice,      setVarPrice]      = useState('');
   const [varDesc,       setVarDesc]       = useState('');
@@ -2100,6 +2102,8 @@ function ProductsTab() {
     setImgFile(null);
     setFaq(p.faq?.length ? p.faq : []);
     setVariations(p.variations?.length ? p.variations : []);
+    setOptionGroups(p.option_groups?.length ? p.option_groups : []);
+    setGroupLabel('');
     setVarInput('');
     setVarPrice('');
     setVarDesc('');
@@ -2113,6 +2117,7 @@ function ProductsTab() {
     setForm(EMPTY); setImgFile(null); setPreview('');
     setExtraFiles([null, null, null]); setExtraPreviews(['', '', '']);
     setFaq([]); setVariations([]); setVarInput(''); setVarPrice(''); setVarDesc(''); setVarTagline('');
+    setOptionGroups([]); setGroupLabel('');
   }
 
   async function save(e) {
@@ -2155,24 +2160,28 @@ function ProductsTab() {
         bulk_discount_pct: parseInt(form.bulk_discount_pct) || null,
         faq:               faq.filter(r => r.q.trim()),
         variations:        variations.filter(v => v?.name?.trim()),
+        option_groups:     optionGroups.filter(g => g.label?.trim() && g.choices?.length),
         moods:             form.moods,
       };
       const write = p => (editId
         ? supabase.from('products').update(p).eq('id', editId)
         : supabase.from('products').insert(p));
-      let { error } = await write(payload);
-      // `moods` only exists once supabase-bundle-builder.sql has been run. Save
-      // everything else rather than blocking every product edit until then.
-      let moodsSkipped = false;
-      if (error && /moods/.test(error.message)) {
-        const withoutMoods = { ...payload };
-        delete withoutMoods.moods;
-        ({ error } = await write(withoutMoods));
-        moodsSkipped = true;
+      // Columns added by the supabase-*.sql migrations may not exist yet. Drop
+      // whichever one Postgres rejects and save the rest, rather than blocking
+      // every product edit until the migration is run.
+      const attempt = { ...payload };
+      const skipped = [];
+      let { error } = await write(attempt);
+      while (error) {
+        const missing = error.message.match(/Could not find the '(\w+)' column/)?.[1];
+        if (!missing || !(missing in attempt)) break;
+        delete attempt[missing];
+        skipped.push(missing);
+        ({ error } = await write(attempt));
       }
       if (error) throw error;
-      if (moodsSkipped && form.moods.length) {
-        alert('Product saved, but moods were not stored yet — run supabase-bundle-builder.sql in Supabase to enable them.');
+      if (skipped.length) {
+        alert(`Product saved, but ${skipped.join(' and ')} could not be stored yet — run the matching supabase-*.sql file in Supabase to enable them.`);
       }
       cancel(); load();
     } catch (err) {
@@ -2537,6 +2546,65 @@ function ProductsTab() {
                   ))}
                 </div>
               )}
+            </section>
+
+            {/* ─ Option Groups ─ */}
+            <section className="space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+                <h4 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold">Option Groups (optional)</h4>
+                <div className="flex gap-2">
+                  <input value={groupLabel} onChange={e => setGroupLabel(e.target.value)}
+                    placeholder="e.g. Bow Colour" className={`${INP} w-48`} />
+                  <button type="button"
+                    onClick={() => {
+                      const label = groupLabel.trim();
+                      if (label && !optionGroups.find(g => g.label === label)) {
+                        setOptionGroups(prev => [...prev, { label, choices: [] }]);
+                        setGroupLabel('');
+                      }
+                    }}
+                    className="bg-gray-900 text-white text-xs uppercase tracking-[0.15em] px-4 py-2 rounded-lg hover:bg-black transition whitespace-nowrap">
+                    + Add Group
+                  </button>
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm">
+                For bundles where the customer picks a choice per item — a bow colour, a candle scent. Each group shows as its own selector on the product page, and the choices are saved with the order.
+              </p>
+              {optionGroups.length === 0 && (
+                <p className="text-gray-400 text-sm italic">No option groups. Add one above if this product has choices to make.</p>
+              )}
+              {optionGroups.map((group, gi) => (
+                <div key={group.label} className="border border-gray-200 rounded-xl p-4 space-y-3 bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs uppercase tracking-[0.2em] text-gray-500 font-medium">{group.label}</span>
+                    <button type="button" onClick={() => setOptionGroups(prev => prev.filter((_, j) => j !== gi))}
+                      className="text-red-500 hover:text-red-700 text-xs font-medium transition">Remove</button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(group.choices || []).map((choice, ci) => (
+                      <span key={choice} className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-700">
+                        {choice}
+                        <button type="button"
+                          onClick={() => setOptionGroups(prev => prev.map((g, j) => j === gi ? { ...g, choices: g.choices.filter((_, k) => k !== ci) } : g))}
+                          className="text-gray-300 hover:text-red-500 font-bold leading-none">×</button>
+                      </span>
+                    ))}
+                  </div>
+                  <input
+                    placeholder="Type a choice and press Enter — e.g. Black"
+                    className={INP}
+                    onKeyDown={e => {
+                      if (e.key !== 'Enter') return;
+                      e.preventDefault();
+                      const choice = e.target.value.trim();
+                      if (!choice || group.choices?.includes(choice)) return;
+                      setOptionGroups(prev => prev.map((g, j) => j === gi ? { ...g, choices: [...(g.choices || []), choice] } : g));
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
+              ))}
             </section>
 
             {/* ─ FAQ ─ */}

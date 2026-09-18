@@ -8,10 +8,13 @@ export default function AddToCartBtn({ product }) {
   const { addToCart } = useCart();
   const router = useRouter();
 
+  // Anything with choices to make has to be configured on the product page.
+  const needsChoices = product.variations?.length > 0 || product.option_groups?.length > 0;
+
   function handle(e) {
     e.preventDefault();
     e.stopPropagation();
-    if (product.variations?.length > 0) {
+    if (needsChoices) {
       router.push(`/product/${product.slug}`);
       return;
     }
@@ -32,7 +35,7 @@ export default function AddToCartBtn({ product }) {
     <button
       onClick={handle}
       className="w-full bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] py-3 btn-glow transition-all duration-300 hover:bg-[#5a1a24]">
-      {product.variations?.length > 0 ? 'Select Options' : 'Add to Cart'}
+      {needsChoices ? 'Select Options' : 'Add to Cart'}
     </button>
   );
 }
