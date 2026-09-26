@@ -2,12 +2,17 @@
 
 import Image from 'next/image';
 import { useState, useEffect, useMemo } from 'react';
+import { notFound } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import MetaPixel from '../components/MetaPixel';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../../lib/supabase';
 import { getSale, fmtPKR, bundlePct, bundleUnitPrice } from '../../lib/pricing';
+
+// Temporarily hidden from customers (not ready to launch yet) — flip to true
+// to bring the page back. Code and data are untouched either way.
+const PAGE_ENABLED = false;
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 const MOODS = ['Romantic', 'Playful', 'Sensual', 'Wild'];
@@ -39,6 +44,8 @@ function QtyStepper({ qty, onChange }) {
 }
 
 export default function BuildABundlePage() {
+  if (!PAGE_ENABLED) notFound();
+
   const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [tiers, setTiers] = useState([]);
