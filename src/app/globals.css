@@ -5,14 +5,17 @@
   --font-sans: var(--font-inter);
   --font-heading: var(--font-playfair);
 
+  /* Black theme stays as-is. Logo/accent gold recentred on the brand color
+     #C5A059 — the family keeps its original light/muted/border spread,
+     just moved to that hue (39°) and saturation (48%) instead of (43°, 72%). */
   --color-sh-bg:          hsl(20 10% 4%);
   --color-sh-card:        hsl(20 15% 7%);
   --color-sh-muted:       hsl(20 15% 12%);
-  --color-gold:           hsl(43 72% 52%);
-  --color-gold-light:     hsl(43 60% 70%);
-  --color-gold-muted:     hsl(43 51% 38%);
-  --color-gold-border:    hsl(43 40% 25%);
-  --color-gold-btn-text:  hsl(43 60% 70%);
+  --color-gold:           #C5A059;
+  --color-gold-light:     hsl(39 40% 75%);
+  --color-gold-muted:     hsl(39 34% 41%);
+  --color-gold-border:    hsl(39 27% 27%);
+  --color-gold-btn-text:  hsl(39 40% 75%);
   --color-cream:          hsl(38 30% 85%);
   --color-burgundy:       hsl(350 60% 12%);
   --color-burgundy-deep:  hsl(350 80% 6%);
