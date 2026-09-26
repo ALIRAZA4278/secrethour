@@ -37,6 +37,9 @@ export default function ProductPageClient({ product, images, related, upsell, re
   const router = useRouter();
   const { addToCart, setOpen } = useCart();
   const [activeImg, setActiveImg] = useState(0);
+  // When a bundle option choice with its own picture is selected, it takes
+  // over the main image; picking a normal thumbnail clears it.
+  const [overrideImage, setOverrideImage] = useState(null);
   const [selectedVariation, setSelectedVariation] = useState(null);
   const [variationError, setVariationError] = useState(false);
   const [qty, setQty] = useState(1);
@@ -123,14 +126,14 @@ export default function ProductPageClient({ product, images, related, upsell, re
             {/* Left: image + thumbnails — sticky on desktop */}
             <div className="space-y-4 lg:sticky lg:top-20">
               <div className="relative aspect-square rounded overflow-hidden border border-gold-border/40">
-                <Image src={images[activeImg]} alt={`${product.title} Secret Hour`} fill className="object-cover" priority />
+                <Image src={overrideImage || images[activeImg]} alt={`${product.title} Secret Hour`} fill className="object-cover" priority />
               </div>
               {images.length > 1 && (
                 <div className="grid grid-cols-3 gap-3">
                   {images.map((img, i) => (
                     <button
                       key={i}
-                      onClick={() => setActiveImg(i)}
+                      onClick={() => { setActiveImg(i); setOverrideImage(null); }}
                       className={`relative aspect-square rounded overflow-hidden border-2 transition-colors ${
                         activeImg === i ? 'border-gold' : 'border-gold-border/40 hover:border-gold-muted'
                       }`}
@@ -244,7 +247,12 @@ export default function ProductPageClient({ product, images, related, upsell, re
 
               {/* Per-component choices (bundles like the Experience Box).
                   A choice is either a plain string (legacy data) or
-                  { value, image, description } — normalise to the latter. */}
+                  { value, image, description, tagline } — normalise to the
+                  latter. `image` swaps the main product photo; the detail
+                  panel (description eyebrow + italic tagline, same style as
+                  Variations above) only renders when a `tagline` is set, so
+                  a choice with just an image and no write-up (e.g. Bow
+                  Colour) doesn't get a redundant text box underneath. */}
               {optionGroups.length > 0 && (
                 <div id="option-groups" className="space-y-5">
                   {optionGroups.map((group) => {
@@ -271,6 +279,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
                                     return next;
                                   });
                                   setMissingOptions(prev => prev.filter(l => l !== group.label));
+                                  setOverrideImage(selected ? null : (choice.image || null));
                                 }}
                                 className={`px-4 py-2 text-[11px] uppercase tracking-[0.15em] border transition-all duration-200 ${
                                   selected
@@ -283,16 +292,12 @@ export default function ProductPageClient({ product, images, related, upsell, re
                             );
                           })}
                         </div>
-                        {selectedChoice && (selectedChoice.image || selectedChoice.description) && (
-                          <div className="flex gap-3 border border-gold-border/30 p-3" style={{ background: 'rgba(11,10,9,0.5)' }}>
-                            {selectedChoice.image && (
-                              <div className="relative w-16 h-16 shrink-0 rounded overflow-hidden bg-black/30">
-                                <Image src={selectedChoice.image} alt={`${group.label}: ${selectedChoice.value}`} fill className="object-cover" />
-                              </div>
-                            )}
+                        {selectedChoice?.tagline && (
+                          <div className="border border-gold-border/30 p-3 space-y-1" style={{ background: 'rgba(11,10,9,0.5)' }}>
                             {selectedChoice.description && (
-                              <p className="text-cream/60 text-xs italic leading-relaxed self-center">{selectedChoice.description}</p>
+                              <p className="text-gold/70 text-[10px] uppercase tracking-[0.2em]">{selectedChoice.description}</p>
                             )}
+                            <p className="text-cream/60 text-xs italic leading-relaxed">{selectedChoice.tagline}</p>
                           </div>
                         )}
                       </div>
