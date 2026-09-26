@@ -62,7 +62,7 @@ export default function TrackPage() {
     setLoading(false);
   }
 
-  const statusKey = result?.statusKey || result?.orderStatus || '';
+  const statusKey = result?.statusKey || '';
   const cfg     = STATUS_CONFIG[statusKey] || { icon: '📬', color: 'text-gold', bar: 1, label: statusKey };
   const mainProgress = MAIN_PROGRESS[statusKey] ?? 1;
   const displayStatus = cfg.label || statusKey;
@@ -117,13 +117,7 @@ export default function TrackPage() {
                 {/* Status badge */}
                 <div className="text-center space-y-2">
                   <p className="text-4xl">{cfg.icon}</p>
-                  {result.customerName && (
-                    <p className="text-sm text-cream/80">{result.customerName}</p>
-                  )}
                   <p className={`text-xl font-medium italic ${cfg.color}`} style={serif}>{displayStatus || 'Pending'}</p>
-                  {result.updatedDate && (
-                    <p className="text-cream/40 text-xs">Last updated: {result.updatedDate}</p>
-                  )}
                 </div>
 
                 {/* Progress bar — all statuses */}
@@ -170,27 +164,17 @@ export default function TrackPage() {
                   </div>
                 </div>
 
-                {/* Details — all PostEx fields */}
+                {/* Details — only non-identifying fields; no customer name,
+                    phone, address or amount ever appear here. */}
                 <div className="space-y-0 bg-black/20 border border-gold-border/20 rounded overflow-hidden">
                   {[
-                    ['Tracking #',        result.tracking || result.trackingNumber],
-                    ['Order Ref',         result.orderRefNumber],
-                    ['Customer',          result.customerName],
-                    ['Phone',             result.customerPhone],
-                    ['City',              result.cityName],
-                    ['Delivery Address',  result.deliveryAddress],
-                    ['Status',            result.orderStatus || result.transactionStatusMessage],
-                    ['Status Code',       result.orderStatusCode],
-                    ['Order Type',        result.orderType],
-                    ['Items',             result.items],
-                    ['Amount',            result.invoicePayment ? `Rs. ${Number(result.invoicePayment).toLocaleString()}` : null],
-                    ['Order Detail',      result.orderDetail],
-                    ['Transaction Notes', result.transactionNotes],
-                    ['Booking Date',      result.bookingDate],
-                    ['Updated Date',      result.updatedDate],
-                    ['Rider Name',        result.riderName],
-                    ['Rider Phone',       result.riderPhone],
-                    ['Return Tracking',   result.returnTrackingNumber],
+                    ['CN Number',               result.cnNumber],
+                    ['Courier Helpline Number', result.courierHelpline],
+                    ['Shipper Name',            result.shipperName],
+                    ['Shipper City',            result.shipperCity],
+                    ['Destination City',        result.destinationCity],
+                    ['Current Status',          displayStatus],
+                    ['Booking Date',            result.bookingDate],
                   ].filter(([, v]) => v !== null && v !== undefined && v !== '').map(([l, v], i) => (
                     <div key={l} className={`flex justify-between gap-4 px-4 py-2.5 ${i % 2 === 0 ? 'bg-white/[0.02]' : ''}`}>
                       <span className="text-cream/40 text-[10px] uppercase tracking-[0.15em] shrink-0 pt-0.5">{l}</span>

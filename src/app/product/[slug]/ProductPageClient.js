@@ -242,28 +242,32 @@ export default function ProductPageClient({ product, images, related, upsell, re
                 </div>
               )}
 
-              {/* Per-component choices (bundles like the Experience Box) */}
+              {/* Per-component choices (bundles like the Experience Box).
+                  A choice is either a plain string (legacy data) or
+                  { value, image, description } — normalise to the latter. */}
               {optionGroups.length > 0 && (
-                <div id="option-groups" className="space-y-4">
+                <div id="option-groups" className="space-y-5">
                   {optionGroups.map((group) => {
                     const isMissing = missingOptions.includes(group.label);
+                    const choices = (group.choices || []).map(c => (typeof c === 'string' ? { value: c } : c));
+                    const selectedChoice = choices.find(c => c.value === options[group.label]);
                     return (
                       <div key={group.label} className="space-y-2">
                         <p className={`text-[10px] uppercase tracking-[0.25em] ${isMissing ? 'text-red-400' : 'text-cream/50'}`}>
                           {isMissing ? `Please choose ${group.label}` : group.label}
                         </p>
                         <div className={`flex flex-wrap gap-2 ${isMissing ? 'ring-1 ring-red-400/50 p-2' : ''}`}>
-                          {(group.choices || []).map((choice) => {
-                            const selected = options[group.label] === choice;
+                          {choices.map((choice) => {
+                            const selected = options[group.label] === choice.value;
                             return (
                               <button
-                                key={choice}
+                                key={choice.value}
                                 type="button"
                                 onClick={() => {
                                   setOptions(prev => {
                                     const next = { ...prev };
                                     if (selected) delete next[group.label];
-                                    else next[group.label] = choice;
+                                    else next[group.label] = choice.value;
                                     return next;
                                   });
                                   setMissingOptions(prev => prev.filter(l => l !== group.label));
@@ -274,11 +278,23 @@ export default function ProductPageClient({ product, images, related, upsell, re
                                     : 'border-gold-border/50 text-cream/65 hover:border-gold/60 hover:text-cream'
                                 }`}
                               >
-                                {choice}
+                                {choice.value}
                               </button>
                             );
                           })}
                         </div>
+                        {selectedChoice && (selectedChoice.image || selectedChoice.description) && (
+                          <div className="flex gap-3 border border-gold-border/30 p-3" style={{ background: 'rgba(11,10,9,0.5)' }}>
+                            {selectedChoice.image && (
+                              <div className="relative w-16 h-16 shrink-0 rounded overflow-hidden bg-black/30">
+                                <Image src={selectedChoice.image} alt={`${group.label}: ${selectedChoice.value}`} fill className="object-cover" />
+                              </div>
+                            )}
+                            {selectedChoice.description && (
+                              <p className="text-cream/60 text-xs italic leading-relaxed self-center">{selectedChoice.description}</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -286,6 +302,20 @@ export default function ProductPageClient({ product, images, related, upsell, re
               )}
 
               {/* Qty selector */}
+              {/* Secret note field */}
+              {product.custom_text_enabled && (
+                <div className="space-y-1.5">
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-cream/50">Secret Note / Custom Text</p>
+                  <textarea
+                    value={customNote}
+                    onChange={e => setCustomNote(e.target.value)}
+                    rows={3}
+                    placeholder="Add your personalised message or custom text…"
+                    className="w-full bg-transparent border border-gold-border/40 text-cream text-sm px-3 py-2.5 placeholder-cream/25 focus:outline-none focus:border-gold-border/70 resize-none"
+                  />
+                </div>
+              )}
+
               <div className="flex items-center gap-3">
                 <p className="text-cream/50 text-[10px] uppercase tracking-[0.25em]">Qty</p>
                 <div className="flex items-center border border-gold-border/50">
@@ -307,20 +337,6 @@ export default function ProductPageClient({ product, images, related, upsell, re
                   <span className="text-green-400 text-[10px] font-bold uppercase tracking-wide">{product.bulk_discount_pct}% off unlocked!</span>
                 )}
               </div>
-
-              {/* Secret note field */}
-              {product.custom_text_enabled && (
-                <div className="space-y-1.5">
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-cream/50">Secret Note / Custom Text</p>
-                  <textarea
-                    value={customNote}
-                    onChange={e => setCustomNote(e.target.value)}
-                    rows={3}
-                    placeholder="Add your personalised message or custom text…"
-                    className="w-full bg-transparent border border-gold-border/40 text-cream text-sm px-3 py-2.5 placeholder-cream/25 focus:outline-none focus:border-gold-border/70 resize-none"
-                  />
-                </div>
-              )}
 
               {/* Buttons — directly below price */}
               <div className="flex flex-col sm:flex-row gap-3">

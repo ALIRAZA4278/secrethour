@@ -8,12 +8,55 @@ const supabase = createClient(
 
 const TOKEN = process.env.POSTEX_API_TOKEN;
 
+const SUPPORT_HELPLINE = '+92 371 2400399';
+const SHIPPER_NAME = 'Secret Hour';
+const SHIPPER_CITY = 'Karachi';
+
 function orderNum(id) {
   let h = 0;
   for (const c of (id || '').replace(/-/g, '')) h = ((h << 5) - h + parseInt(c, 16)) | 0;
   return `SH-${Math.abs(h % 9000) + 1000}`;
 }
 
+function formatDate(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  });
+}
+
+// PostEx's raw status text varies by courier stage; map it to our own
+// canonical set so the tracker always speaks in our words, not theirs.
+function mapStatus(raw, fallback) {
+  const s = (raw || '').toLowerCase();
+  if (!s) return fallback || 'pending';
+  if (s.includes('deliver') && !s.includes('undeliver') && !s.includes('attempt')) return 'delivered';
+  if (s.includes('out for delivery')) return 'out_for_delivery';
+  if (s.includes('attempt')) return 'attempt';
+  if (s.includes('return')) return 'returned';
+  if (s.includes('cancel')) return 'cancelled';
+  if (s.includes('transit') || s.includes('picked') || s.includes('warehouse') || s.includes('dispatch') || s.includes('ship')) return 'shipped';
+  if (s.includes('book') || s.includes('confirm')) return 'confirmed';
+  return fallback || 'pending';
+}
+
+// The only fields this endpoint is allowed to expose. It's a public,
+// unauthenticated lookup by order ID, so nothing customer-identifying
+// (name, phone, address, amount) belongs in the response.
+function safeResponse({ cnNumber, statusKey, bookingDate, destinationCity }) {
+  return {
+    cnNumber: cnNumber || null,
+    courierHelpline: SUPPORT_HELPLINE,
+    shipperName: SHIPPER_NAME,
+    shipperCity: SHIPPER_CITY,
+    destinationCity: destinationCity || null,
+    statusKey,
+    bookingDate: formatDate(bookingDate),
+  };
+}
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
@@ -27,7 +70,7 @@ export async function GET(req) {
   // Fetch all orders and find matching one
   const { data: orders, error } = await supabase
     .from('orders')
-    .select('id, first_name, email, phone, postex_tracking, postex_status, status, address, city, total')
+    .select('id, email, phone, postex_tracking, postex_status, status, city, created_at')
     .order('created_at', { ascending: false });
 
   if (error || !orders) {
@@ -60,47 +103,34 @@ export async function GET(req) {
   }
 
   if (!order.postex_tracking) {
-    return NextResponse.json({
-      tracking: null,
-      orderRefNumber: `#${order.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`,
-      customerName: order.first_name,
-      customerPhone: order.phone,
-      cityName: order.city,
-      deliveryAddress: order.address,
-      statusKey: order.status,
-      orderStatus: order.status,
-      transactionStatusMessage: order.status,
-      invoicePayment: order.total,
-      email: order.email,
-    });
+    return NextResponse.json(safeResponse({
+      statusKey: mapStatus(order.status, order.status),
+      bookingDate: order.created_at,
+      destinationCity: order.city,
+    }));
   }
 
-  // Fetch live status from PostEx
+  // Fetch live status from PostEx — only the status and dates are used;
+  // the rest of that payload (name, phone, address, invoice) is dropped.
   try {
     const res  = await fetch(
       `https://api.postex.pk/services/integration/api/order/v1/track-order/${order.postex_tracking}`,
       { headers: { token: TOKEN } }
     );
     const data = await res.json();
-    return NextResponse.json({
-      ...(data.dist || data),
-      tracking: order.postex_tracking,
-      orderRefNumber: `#${order.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`,
-      customerName: order.first_name,
-    });
+    const dist = data.dist || data;
+    return NextResponse.json(safeResponse({
+      cnNumber: order.postex_tracking,
+      statusKey: mapStatus(dist.transactionStatusMessage || dist.orderStatus, order.status),
+      bookingDate: dist.bookingDate || dist.orderPickupDate || order.created_at,
+      destinationCity: order.city,
+    }));
   } catch {
-    return NextResponse.json({
-      tracking: order.postex_tracking,
-      orderRefNumber: `#${order.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`,
-      customerName: order.first_name,
-      customerPhone: order.phone,
-      cityName: order.city,
-      deliveryAddress: order.address,
-      statusKey: order.status,
-      orderStatus: order.status,
-      transactionStatusMessage: order.status,
-      invoicePayment: order.total,
-      email: order.email,
-    });
+    return NextResponse.json(safeResponse({
+      cnNumber: order.postex_tracking,
+      statusKey: mapStatus(order.status, order.status),
+      bookingDate: order.created_at,
+      destinationCity: order.city,
+    }));
   }
 }

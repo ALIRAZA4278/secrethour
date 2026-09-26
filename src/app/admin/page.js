@@ -2037,6 +2037,10 @@ function ProductsTab() {
   const [variations,    setVariations]    = useState([]);
   const [optionGroups,  setOptionGroups]  = useState([]);
   const [groupLabel,    setGroupLabel]    = useState('');
+  // Draft for the "add a choice" row, keyed by group index — value, an
+  // optional picture, and an optional description, per choice.
+  const [choiceDraft,   setChoiceDraft]   = useState({});
+  const [uploadingChoice, setUploadingChoice] = useState(null);
   const [varInput,      setVarInput]      = useState('');
   const [varPrice,      setVarPrice]      = useState('');
   const [varDesc,       setVarDesc]       = useState('');
@@ -2104,6 +2108,7 @@ function ProductsTab() {
     setVariations(p.variations?.length ? p.variations : []);
     setOptionGroups(p.option_groups?.length ? p.option_groups : []);
     setGroupLabel('');
+    setChoiceDraft({});
     setVarInput('');
     setVarPrice('');
     setVarDesc('');
@@ -2117,7 +2122,7 @@ function ProductsTab() {
     setForm(EMPTY); setImgFile(null); setPreview('');
     setExtraFiles([null, null, null]); setExtraPreviews(['', '', '']);
     setFaq([]); setVariations([]); setVarInput(''); setVarPrice(''); setVarDesc(''); setVarTagline('');
-    setOptionGroups([]); setGroupLabel('');
+    setOptionGroups([]); setGroupLabel(''); setChoiceDraft({});
   }
 
   async function save(e) {
@@ -2581,28 +2586,79 @@ function ProductsTab() {
                     <button type="button" onClick={() => setOptionGroups(prev => prev.filter((_, j) => j !== gi))}
                       className="text-red-500 hover:text-red-700 text-xs font-medium transition">Remove</button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {(group.choices || []).map((choice, ci) => (
-                      <span key={choice} className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-700">
-                        {choice}
-                        <button type="button"
-                          onClick={() => setOptionGroups(prev => prev.map((g, j) => j === gi ? { ...g, choices: g.choices.filter((_, k) => k !== ci) } : g))}
-                          className="text-gray-300 hover:text-red-500 font-bold leading-none">×</button>
-                      </span>
-                    ))}
+                  <div className="space-y-2">
+                    {(group.choices || []).length === 0 && (
+                      <p className="text-gray-400 text-xs italic">No choices yet — add one below.</p>
+                    )}
+                    {(group.choices || []).map((raw, ci) => {
+                      const choice = typeof raw === 'string' ? { value: raw } : raw;
+                      return (
+                        <div key={choice.value} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+                          {choice.image ? (
+                            <div className="relative w-10 h-10 shrink-0 rounded overflow-hidden bg-gray-100 border border-gray-200">
+                              <Image src={choice.image} alt="" fill className="object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 shrink-0 rounded bg-gray-100 border border-gray-200" />
+                          )}
+                          <div className="flex-1 min-w-0 text-xs text-gray-700">
+                            <span className="font-semibold">{choice.value}</span>
+                            {choice.description && <p className="text-gray-400 mt-0.5">{choice.description}</p>}
+                          </div>
+                          <button type="button"
+                            onClick={() => setOptionGroups(prev => prev.map((g, j) => j === gi ? { ...g, choices: g.choices.filter((_, k) => k !== ci) } : g))}
+                            className="text-gray-300 hover:text-red-500 font-bold leading-none shrink-0">×</button>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <input
-                    placeholder="Type a choice and press Enter — e.g. Black"
-                    className={INP}
-                    onKeyDown={e => {
-                      if (e.key !== 'Enter') return;
-                      e.preventDefault();
-                      const choice = e.target.value.trim();
-                      if (!choice || group.choices?.includes(choice)) return;
-                      setOptionGroups(prev => prev.map((g, j) => j === gi ? { ...g, choices: [...(g.choices || []), choice] } : g));
-                      e.target.value = '';
-                    }}
-                  />
+                  {(() => {
+                    const draft = choiceDraft[gi] || { value: '', file: null, preview: '', description: '' };
+                    const setDraft = (patch) => setChoiceDraft(prev => ({ ...prev, [gi]: { ...draft, ...patch } }));
+                    async function addChoice() {
+                      const value = draft.value.trim();
+                      if (!value || (group.choices || []).some(c => (typeof c === 'string' ? c : c.value) === value)) return;
+                      let image;
+                      if (draft.file) {
+                        setUploadingChoice(gi);
+                        try {
+                          image = await uploadImg(draft.file, `${form.slug || 'product'}-${value}`);
+                        } catch (err) {
+                          alert('Image upload failed: ' + err.message);
+                          setUploadingChoice(null);
+                          return;
+                        }
+                        setUploadingChoice(null);
+                      }
+                      setOptionGroups(prev => prev.map((g, j) => j === gi
+                        ? { ...g, choices: [...(g.choices || []), { value, image, description: draft.description.trim() || undefined }] }
+                        : g));
+                      setChoiceDraft(prev => ({ ...prev, [gi]: { value: '', file: null, preview: '', description: '' } }));
+                    }
+                    return (
+                      <div className="flex flex-wrap items-end gap-2 pt-1">
+                        <div className="flex-1 min-w-[140px]">
+                          <label className="block text-[10px] text-gray-400 uppercase tracking-[0.15em] mb-1">Choice</label>
+                          <input value={draft.value} onChange={e => setDraft({ value: e.target.value })}
+                            placeholder="e.g. Black" className={INP} />
+                        </div>
+                        <div className="flex-1 min-w-[160px]">
+                          <label className="block text-[10px] text-gray-400 uppercase tracking-[0.15em] mb-1">Description (optional)</label>
+                          <input value={draft.description} onChange={e => setDraft({ description: e.target.value })}
+                            placeholder="e.g. Classic matte black satin" className={INP} />
+                        </div>
+                        <label className="cursor-pointer flex items-center gap-2 border border-dashed border-gray-300 hover:border-gray-500 px-3 py-2.5 rounded-lg transition text-sm text-gray-400 hover:text-gray-700 shrink-0">
+                          {draft.file ? draft.file.name : 'Picture'}
+                          <input type="file" accept="image/*" className="hidden"
+                            onChange={e => { const file = e.target.files[0]; if (file) setDraft({ file }); }} />
+                        </label>
+                        <button type="button" onClick={addChoice} disabled={uploadingChoice === gi}
+                          className="bg-gray-900 text-white text-xs uppercase tracking-[0.15em] px-4 py-2.5 rounded-lg hover:bg-black transition whitespace-nowrap disabled:opacity-50 shrink-0">
+                          {uploadingChoice === gi ? 'Uploading…' : '+ Add'}
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
             </section>
