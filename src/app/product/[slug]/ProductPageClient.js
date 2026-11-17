@@ -142,7 +142,10 @@ export default function ProductPageClient({ product, images, related, upsell, re
   const shownSlugs = new Set(sets.map((x) => x.slug));
   const showUpsell = upsell && !shownSlugs.has(upsell.slug);
   if (showUpsell) shownSlugs.add(upsell.slug);
-  const relatedList = related.filter((x) => !shownSlugs.has(x.slug));
+  // Products the admin hand-picked under "You May Also Love" always show, even if they
+  // also appear above. Only the auto-filled fallback skips products already shown.
+  const relatedPicked = Array.isArray(product.related_slugs) && product.related_slugs.length > 0;
+  const relatedList = relatedPicked ? related : related.filter((x) => !shownSlugs.has(x.slug));
 
   // Snippet pool: this product's own reviews, else the site's customer stories.
   const snippets = reviews.length
@@ -822,9 +825,10 @@ export default function ProductPageClient({ product, images, related, upsell, re
               <h2 className="text-2xl italic text-cream" style={serif}>You May Also Love</h2>
               <div className="h-px flex-1 max-w-[60px] bg-gradient-to-l from-transparent to-gold/30" />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
+            {/* Flex + centred, so one or two picks sit in the middle instead of the left */}
+            <div className="flex flex-wrap justify-center gap-5 md:gap-6">
               {relatedList.map((p) => (
-                <div key={p.slug} className="group flex flex-col border border-gold-border/40 hover:border-gold transition-colors duration-300">
+                <div key={p.slug} className="group flex flex-col w-[calc(50%-0.625rem)] md:w-[calc(33.333%-1rem)] border border-gold-border/40 hover:border-gold transition-colors duration-300">
                   <Link href={`/product/${p.slug}`} className="block">
                     <div className="relative aspect-square overflow-hidden bg-sh-card">
                       <Image src={p.img} alt={`${p.title} Secret Hour`} fill className="object-cover group-hover:scale-[1.03] transition-transform duration-500" />
@@ -844,7 +848,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
                       );
                     })()}
                     <button
-                      onClick={() => { const s = getSale(p); addToCart({ slug: p.slug, title: p.title, price: fmtPKR(s.effective), numericPrice: s.effective, listPrice: s.onSale ? s.original : null, img: p.img, variation: null, bulkDiscountQty: null, bulkDiscountPct: null, customNote: null }); }}
+                      onClick={() => addSetToCart(p)}
                       className="mt-auto bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] px-4 py-2 btn-glow transition-all duration-300"
                     >
                       Add to Cart
