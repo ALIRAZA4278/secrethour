@@ -40,7 +40,7 @@ async function getProductData(slug) {
 
     const [productRes, allProductsRes, reviewsRes, testimonialsRes] = await Promise.all([
       supabase.from('products').select('*').eq('slug', actualSlug).neq('hidden', true).single(),
-      supabase.from('products').select('slug, title, price, numeric_price, sale_price, img, category').neq('hidden', true),
+      supabase.from('products').select('slug, title, price, numeric_price, sale_price, img, category, variations, option_groups, bulk_discount_qty, bulk_discount_pct').neq('hidden', true),
       supabase.from('product_reviews').select('id, reviewer_name, rating, body, created_at').eq('product_slug', actualSlug).eq('approved', true).order('created_at', { ascending: false }),
       // Site-wide customer stories: shown when this product has no reviews of its own.
       supabase.from('testimonials').select('id, name, location, body').eq('approved', true).order('created_at', { ascending: false }).limit(6),

@@ -67,47 +67,30 @@ function Stars({ value = 5, className = 'text-sm' }) {
   );
 }
 
-// Order → ship → deliver estimate with a live cut-off countdown. Pakistan has no
-// DST (UTC+5), so Pakistan time is just UTC shifted. Computed after mount only,
-// so the server HTML and first client render match.
-const CUTOFF_HOUR_PKT = 18;
+// Delivery estimate: ordered today, then the delivery window by city. The date is
+// worked out after mount only, so the server HTML and first client render match.
 function DeliveryEstimate() {
-  const [now, setNow] = useState(null);
+  const [today, setToday] = useState(null);
   useEffect(() => {
-    const tick = () => setNow(Date.now());
-    tick();
-    const t = setInterval(tick, 30000);
-    return () => clearInterval(t);
+    // Pakistan has no DST (UTC+5), so Pakistan time is just UTC shifted.
+    const t = setTimeout(() => {
+      const pkt = new Date(Date.now() + 5 * 3600 * 1000);
+      setToday(pkt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }));
+    }, 0);
+    return () => clearTimeout(t);
   }, []);
-  if (now == null) return null;
-
-  const pkt = new Date(now + 5 * 3600 * 1000);
-  const cutoff = new Date(pkt);
-  cutoff.setUTCHours(CUTOFF_HOUR_PKT, 0, 0, 0);
-  const afterCutoff = pkt >= cutoff;
-  const msLeft = (afterCutoff ? cutoff.getTime() + 86400000 : cutoff.getTime()) - pkt.getTime();
-  const hrs = Math.floor(msLeft / 3600000);
-  const mins = Math.floor((msLeft % 3600000) / 60000);
-  const shift = afterCutoff ? 1 : 0;
-  const day = (n) => new Date(Date.UTC(pkt.getUTCFullYear(), pkt.getUTCMonth(), pkt.getUTCDate() + n));
-  const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-  const range = (a, b) => `${fmt(day(a + shift))} - ${fmt(day(b + shift))}`;
 
   const steps = [
-    { icon: 'box', label: 'Ordered', sub: 'Today', sub2: `(${fmt(day(0))})` },
-    { icon: 'truck', label: 'Shipped', sub: range(1, 2) },
-    { icon: 'cube', label: 'Delivered', sub: range(3, 4) },
+    { icon: 'box', label: 'Ordered', sub: 'Today', sub2: today ? `(${today})` : null },
+    { icon: 'truck', label: 'Karachi', sub: '24–48 hrs' },
+    { icon: 'cube', label: 'Other cities', sub: '4–6 business days' },
   ];
 
   return (
     <div className="border border-gold-border/40 rounded-lg p-4" style={{ background: 'rgb(40 3 10 / 0.45)' }}>
       <p className="flex items-center gap-2.5 text-cream/75 text-sm">
         <Icon name="clock" size={22} className="text-gold shrink-0" />
-        <span>
-          {afterCutoff ? 'Order within' : 'If you order within'}{' '}
-          <strong className="text-gold font-semibold">{String(hrs).padStart(2, '0')} Hrs. {String(mins).padStart(2, '0')} Min.</strong>
-          , you&rsquo;ll get it by
-        </span>
+        <span>Estimated delivery</span>
       </p>
       <div className="relative mt-5 grid grid-cols-3 text-center">
         <div className="absolute left-[16%] right-[16%] top-5 border-t border-dashed border-gold-border/60" aria-hidden="true" />
@@ -134,7 +117,7 @@ const TRUST = [
 
 export default function ProductPageClient({ product, images, related, upsell, reviews, sets = [], testimonials = [] }) {
   const router = useRouter();
-  const { addToCart, setOpen, promo, setPromo } = useCart();
+  const { items: cartItems, addToCart, setOpen, promo, setPromo } = useCart();
   const [activeImg, setActiveImg] = useState(0);
   const [showVideo, setShowVideo] = useState(false);
   // When a bundle option choice with its own picture is selected, it takes
@@ -152,14 +135,17 @@ export default function ProductPageClient({ product, images, related, upsell, re
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
 
-  // "Choose Your Set": this product first, then the admin-picked sets. A set is
-  // its own product, so choosing one opens its page.
-  const setChoices = [product, ...sets];
+  // "Choose Your Set": the admin-picked products, other than this one. Each is its
+  // own product, so choosing one opens its page.
+  const setChoices = sets;
   // Don't show a product again below once it is already offered as a set.
   const shownSlugs = new Set(sets.map((x) => x.slug));
   const showUpsell = upsell && !shownSlugs.has(upsell.slug);
   if (showUpsell) shownSlugs.add(upsell.slug);
-  const relatedList = related.filter((x) => !shownSlugs.has(x.slug));
+  // Products the admin hand-picked under "You May Also Love" always show, even if they
+  // also appear above. Only the auto-filled fallback skips products already shown.
+  const relatedPicked = Array.isArray(product.related_slugs) && product.related_slugs.length > 0;
+  const relatedList = relatedPicked ? related : related.filter((x) => !shownSlugs.has(x.slug));
 
   // Snippet pool: this product's own reviews, else the site's customer stories.
   const snippets = reviews.length
@@ -232,6 +218,29 @@ export default function ProductPageClient({ product, images, related, upsell, re
     addToCart(cartItem(), qty);
     setOpen(false);
     router.push('/checkout');
+  };
+
+  // "+" on a set card adds that product to the cart as an add-on. Products that need
+  // a choice first (variation / option groups) open their page to make it instead.
+  const addSetToCart = (p) => {
+    if (p.variations?.length || p.option_groups?.length) {
+      router.push(`/product/${p.slug}`);
+      return;
+    }
+    const sl = getSale(p);
+    addToCart({
+      slug: p.slug,
+      title: p.title,
+      price: fmtPKR(sl.effective),
+      numericPrice: sl.effective,
+      listPrice: sl.onSale ? sl.original : null,
+      img: p.img,
+      variation: null,
+      options: null,
+      bulkDiscountQty: p.bulk_discount_qty || null,
+      bulkDiscountPct: p.bulk_discount_pct || null,
+      customNote: null,
+    }, 1);
   };
 
   const applyPromo = async () => {
@@ -386,11 +395,11 @@ export default function ProductPageClient({ product, images, related, upsell, re
 
             {/* Left: gallery — sticky on desktop */}
             <div className="space-y-3 lg:sticky lg:top-20">
-              <div className="relative aspect-[11/10] rounded-lg overflow-hidden border border-gold-border/40 bg-sh-card">
+              <div className="relative aspect-square rounded-lg overflow-hidden border border-gold-border/40 bg-sh-card">
                 {showVideo && hasVideo ? (
                   <video src={product.video_url} controls autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black" />
                 ) : (
-                  <Image src={overrideImage || images[activeImg]} alt={`${product.title} Secret Hour`} fill sizes="(min-width: 1024px) 560px, 100vw" className="object-cover" priority />
+                  <Image src={overrideImage || images[activeImg]} alt={`${product.title} Secret Hour`} fill sizes="(min-width: 1024px) 560px, 100vw" className="object-contain" priority />
                 )}
                 {images.length > 1 && !showVideo && (
                   <>
@@ -450,9 +459,29 @@ export default function ProductPageClient({ product, images, related, upsell, re
               </nav>
 
               <div className="space-y-3">
-                <div>
-                  <p className="text-cream/90 text-sm font-medium">Loved by 200+ couples</p>
-                  <p className="text-cream/50 text-xs">Real stories. Stronger connections.</p>
+                <div className="flex items-center gap-3">
+                  {/* Avatar stack from real testimonial names (initials, no stock faces). */}
+                  {testimonials.some((t) => t.name?.trim()) && (
+                    <div className="flex shrink-0" aria-hidden="true">
+                      {testimonials.filter((t) => t.name?.trim()).slice(0, 4).map((t, i) => (
+                        <span
+                          key={t.id}
+                          className="w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-semibold text-gold-light -ml-3 first:ml-0"
+                          style={{
+                            background: ['#7a1a2b', '#8f2a38', '#5c1220', '#6e3a1e'][i % 4],
+                            borderColor: '#2a050c',
+                            fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)",
+                          }}
+                        >
+                          {t.name.trim().charAt(0).toUpperCase()}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-cream/90 text-sm font-medium">Loved by 200+ couples</p>
+                    <p className="text-cream/50 text-xs">Real stories. Stronger connections.</p>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -472,21 +501,15 @@ export default function ProductPageClient({ product, images, related, upsell, re
 
                 <h1 className="text-4xl md:text-5xl text-gold-light leading-[1.1]" style={serif}>{product.title}</h1>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* Stars only when real ratings exist — never an invented 5.0 */}
-                  {ratingAvg != null ? (
-                    <>
-                      <Stars value={ratingAvg} className="text-lg" />
-                      <Link href="/testimonials" className="text-cream/70 text-sm hover:text-gold transition-colors">
-                        {ratingAvg.toFixed(1)} ({reviews.length} Verified {reviews.length === 1 ? 'Review' : 'Reviews'})
-                      </Link>
-                    </>
-                  ) : testimonials.length > 0 ? (
-                    <Link href="/testimonials" className="text-cream/70 text-sm hover:text-gold transition-colors underline-offset-4 hover:underline">
-                      Read {testimonials.length} customer {testimonials.length === 1 ? 'story' : 'stories'}
+                {/* Stars only when real ratings exist — never an invented 5.0 */}
+                {ratingAvg != null && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Stars value={ratingAvg} className="text-lg" />
+                    <Link href="/testimonials" className="text-cream/70 text-sm hover:text-gold transition-colors">
+                      {ratingAvg.toFixed(1)} ({reviews.length} Verified {reviews.length === 1 ? 'Review' : 'Reviews'})
                     </Link>
-                  ) : null}
-                </div>
+                  </div>
+                )}
 
                 {product.subtitle && <p className="text-cream/70 text-base md:text-lg">{product.subtitle}</p>}
                 {product.tagline && <p className="text-cream/50 text-xs italic" style={serif}>{product.tagline}</p>}
@@ -651,25 +674,16 @@ export default function ProductPageClient({ product, images, related, upsell, re
                     <p className="text-cream/55 text-sm mt-1">More ways to make your moments special.</p>
                   </div>
                   <div className="space-y-3">
-                    {setChoices.map((p, i) => {
+                    {setChoices.map((p) => {
                       const s = getSale(p);
-                      const selected = i === 0;
-                      const Card = selected ? 'div' : Link;
-                      const cardProps = selected ? { 'aria-current': 'true' } : { href: `/product/${p.slug}` };
                       const sub = p.subtitle || p.tagline;
-                      const bullets = (p.included?.length ? p.included : p.features) || [];
-                      const thumb = i === 0 ? images[0] : p.img;
+                      const thumb = p.img;
                       return (
-                        <div key={p.slug}>
-                          <Card
-                            {...cardProps}
-                            className={`w-full text-left flex gap-3 sm:gap-4 rounded-lg p-3 sm:p-4 border transition-colors ${
-                              selected ? 'border-gold bg-gold/5' : 'border-gold-border/40 hover:border-gold-muted'
-                            }`}
+                        <div key={p.slug} className="relative">
+                          <Link
+                            href={`/product/${p.slug}`}
+                            className="w-full text-left flex gap-3 sm:gap-4 rounded-lg p-3 sm:p-4 pb-14 sm:pb-4 border border-gold-border/40 hover:border-gold transition-colors"
                           >
-                            <span className={`mt-1 w-6 h-6 rounded-full border-2 shrink-0 flex items-center justify-center ${selected ? 'border-gold' : 'border-gold-border/70'}`}>
-                              {selected && <span className="w-3 h-3 rounded-full bg-gold" />}
-                            </span>
                             <span className="relative w-20 h-20 sm:w-24 sm:h-24 rounded overflow-hidden shrink-0 bg-sh-card">
                               {thumb && <Image src={thumb} alt="" fill sizes="96px" className="object-cover" />}
                             </span>
@@ -693,17 +707,20 @@ export default function ProductPageClient({ product, images, related, upsell, re
                                   <span className="bg-gold text-sh-bg px-2.5 py-0.5 border-l border-sh-bg/20">{s.pct}% OFF</span>
                                 </span>
                               )}
-                              {bullets.length > 0 && (
-                                <span className="block mt-2 space-y-0.5">
-                                  {bullets.slice(0, 6).map((b, k) => (
-                                    <span key={k} className="flex items-center gap-1.5 text-cream/70 text-xs">
-                                      <Icon name="check" size={14} className="text-gold shrink-0" /> {b}
-                                    </span>
-                                  ))}
-                                </span>
-                              )}
                             </span>
-                          </Card>
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => addSetToCart(p)}
+                            aria-label={`Add ${p.title} to cart`}
+                            className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-gold bg-gold/10 hover:bg-gold hover:text-sh-bg text-gold text-xs font-semibold px-3.5 py-1.5 transition-colors"
+                          >
+                            {cartItems.some((i) => i.slug === p.slug) ? (
+                              <><Icon name="check" size={14} strokeWidth={2} /> Added</>
+                            ) : (
+                              <><span className="text-base leading-none">+</span> Add</>
+                            )}
+                          </button>
                         </div>
                       );
                     })}
@@ -725,21 +742,6 @@ export default function ProductPageClient({ product, images, related, upsell, re
                     </li>
                   ))}
                 </ul>
-              )}
-
-              {/* What's Included */}
-              {product.included?.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-cream italic text-xl" style={serif}>What&apos;s Included</h3>
-                  <ul className="space-y-2">
-                    {product.included.map((item, i) => (
-                      <li key={i} className="flex items-start gap-3 text-cream/65 text-sm">
-                        <span className="text-gold mt-0.5">•</span>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
               )}
 
               {/* How It Works */}
@@ -823,9 +825,10 @@ export default function ProductPageClient({ product, images, related, upsell, re
               <h2 className="text-2xl italic text-cream" style={serif}>You May Also Love</h2>
               <div className="h-px flex-1 max-w-[60px] bg-gradient-to-l from-transparent to-gold/30" />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-5 md:gap-6">
+            {/* Flex + centred, so one or two picks sit in the middle instead of the left */}
+            <div className="flex flex-wrap justify-center gap-5 md:gap-6">
               {relatedList.map((p) => (
-                <div key={p.slug} className="group flex flex-col border border-gold-border/40 hover:border-gold transition-colors duration-300">
+                <div key={p.slug} className="group flex flex-col w-[calc(50%-0.625rem)] md:w-[calc(33.333%-1rem)] border border-gold-border/40 hover:border-gold transition-colors duration-300">
                   <Link href={`/product/${p.slug}`} className="block">
                     <div className="relative aspect-square overflow-hidden bg-sh-card">
                       <Image src={p.img} alt={`${p.title} Secret Hour`} fill className="object-cover group-hover:scale-[1.03] transition-transform duration-500" />
@@ -845,7 +848,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
                       );
                     })()}
                     <button
-                      onClick={() => { const s = getSale(p); addToCart({ slug: p.slug, title: p.title, price: fmtPKR(s.effective), numericPrice: s.effective, listPrice: s.onSale ? s.original : null, img: p.img, variation: null, bulkDiscountQty: null, bulkDiscountPct: null, customNote: null }); }}
+                      onClick={() => addSetToCart(p)}
                       className="mt-auto bg-burgundy border border-gold-muted text-gold-btn-text text-[10px] uppercase tracking-[0.18em] px-4 py-2 btn-glow transition-all duration-300"
                     >
                       Add to Cart

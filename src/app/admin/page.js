@@ -2480,7 +2480,7 @@ function ProductsTab() {
                     <select key={k} value={form[k]} onChange={f(k)} className={INP}>
                       <option value="">— Related {i + 1} —</option>
                       {products.filter(p => p.id !== editId).map(p => (
-                        <option key={p.slug} value={p.slug}>{p.title}</option>
+                        <option key={p.slug} value={p.slug}>{p.title}{p.hidden ? ' (hidden — will not show)' : ''}</option>
                       ))}
                     </select>
                   ))}
@@ -2499,7 +2499,7 @@ function ProductsTab() {
                     <select key={k} value={form[k]} onChange={f(k)} className={INP}>
                       <option value="">— Set {i + 1} —</option>
                       {products.filter(p => p.id !== editId).map(p => (
-                        <option key={p.slug} value={p.slug}>{p.title}</option>
+                        <option key={p.slug} value={p.slug}>{p.title}{p.hidden ? ' (hidden — will not show)' : ''}</option>
                       ))}
                     </select>
                   ))}
