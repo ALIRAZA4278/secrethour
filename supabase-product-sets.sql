@@ -4,5 +4,5 @@
 ALTER TABLE products ADD COLUMN IF NOT EXISTS set_slugs TEXT[];
 
 -- Optional product video (mp4/webm URL). Shows as a "Watch Video" thumbnail
--- in the gallery when set.A
+-- in the gallery when set.
 ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT;
