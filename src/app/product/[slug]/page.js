@@ -38,10 +38,12 @@ async function getProductData(slug) {
     const actualSlug = resolveSlug(slug);
     const supabase = getServerSupabase();
 
-    const [productRes, allProductsRes, reviewsRes] = await Promise.all([
+    const [productRes, allProductsRes, reviewsRes, testimonialsRes] = await Promise.all([
       supabase.from('products').select('*').eq('slug', actualSlug).neq('hidden', true).single(),
       supabase.from('products').select('slug, title, price, numeric_price, sale_price, img, category').neq('hidden', true),
       supabase.from('product_reviews').select('id, reviewer_name, rating, body, created_at').eq('product_slug', actualSlug).eq('approved', true).order('created_at', { ascending: false }),
+      // Site-wide customer stories: shown when this product has no reviews of its own.
+      supabase.from('testimonials').select('id, name, location, body').eq('approved', true).order('created_at', { ascending: false }).limit(6),
     ]);
 
     if (productRes.error || !productRes.data) {
@@ -52,6 +54,19 @@ async function getProductData(slug) {
     const product = productRes.data;
     const allProducts = allProductsRes.data || [];
     const reviews = reviewsRes.data || [];
+    const testimonials = testimonialsRes.data || [];
+
+    // "Choose Your Set": admin-picked products, in order. Full rows, because a
+    // chosen set is bought as-is (its own price, variations and option groups).
+    let sets = [];
+    if (Array.isArray(product.set_slugs) && product.set_slugs.length) {
+      const { data: setRows } = await supabase
+        .from('products').select('*').in('slug', product.set_slugs).neq('hidden', true);
+      sets = product.set_slugs
+        .map(s => (setRows || []).find(p => p.slug === s))
+        .filter(Boolean)
+        .filter(p => p.slug !== product.slug);
+    }
 
     const relatedFiltered = allProducts.filter(p => p.slug !== product.slug);
 
@@ -71,6 +86,8 @@ async function getProductData(slug) {
       related,
       upsell: allProducts.find(x => x.slug === product.upsell_slug) || null,
       reviews,
+      sets,
+      testimonials,
     };
   } catch (err) {
     console.error(`Error fetching product ${slug}:`, err.message);
@@ -162,7 +179,7 @@ export default async function ProductPage({ params }) {
     );
   }
 
-  const { product, related, upsell, reviews } = data;
+  const { product, related, upsell, reviews, sets, testimonials } = data;
   const images = product.images?.length ? product.images : [product.img].filter(Boolean);
 
   return (
@@ -172,6 +189,8 @@ export default async function ProductPage({ params }) {
       related={related}
       upsell={upsell}
       reviews={reviews}
+      sets={sets}
+      testimonials={testimonials}
     />
   );
 }

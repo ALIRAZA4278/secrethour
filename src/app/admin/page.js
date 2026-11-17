@@ -1980,6 +1980,7 @@ const EMPTY = {
   features: '', included: '', how_it_works: '',
   quote: '', quote_label: '', upsell_slug: '', tag: '',
   related_1: '', related_2: '', related_3: '',
+  set_1: '', set_2: '', set_3: '', video_url: '',
   in_stock: true, hidden: false, custom_text_enabled: false,
   bulk_discount_qty: '', bulk_discount_pct: '',
   moods: [],
@@ -2091,7 +2092,11 @@ function ProductsTab() {
       related_1:    p.related_slugs?.[0] || '',
       related_2:    p.related_slugs?.[1] || '',
       related_3:    p.related_slugs?.[2] || '',
-      tag:          p.tag         || '',
+      set_1:        p.set_slugs?.[0] || '',
+      set_2:        p.set_slugs?.[1] || '',
+      set_3:        p.set_slugs?.[2] || '',
+      video_url:    p.video_url || '',
+      tag:         p.tag         || '',
       in_stock:            p.in_stock !== false,
       hidden:              p.hidden === true,
       custom_text_enabled: p.custom_text_enabled === true,
@@ -2157,7 +2162,9 @@ function ProductsTab() {
         quote_label:   form.quote_label.trim(),
         upsell_slug:   form.upsell_slug.trim() || null,
         related_slugs: (() => { const a = [form.related_1, form.related_2, form.related_3].map(s => s.trim()).filter(Boolean); return a.length ? a : null; })(),
-        tag:           form.tag.trim() || null,
+        set_slugs: (() => { const a = [form.set_1, form.set_2, form.set_3].map(s => s.trim()).filter(Boolean); return a.length ? a : null; })(),
+        video_url:     form.video_url.trim() || null,
+        tag:          form.tag.trim() || null,
         in_stock:            form.in_stock,
         hidden:              form.hidden,
         custom_text_enabled: form.custom_text_enabled,
@@ -2478,6 +2485,29 @@ function ProductsTab() {
                     </select>
                   ))}
                 </div>
+              </div>
+            </section>
+
+            {/* ─ Choose Your Set ─ */}
+            <section className="space-y-4">
+              <h4 className="text-xs uppercase tracking-[0.25em] text-gray-400 border-b border-gray-200 pb-2 font-semibold">Choose Your Set + Video (optional)</h4>
+              <div>
+                <label className={LBL}>Choose Your Set — up to 3 other products (bundles) shown under this one</label>
+                <p className="text-[10px] text-gray-400 mb-2">Leave all empty to hide the section. Requires supabase-product-sets.sql to be run.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {['set_1', 'set_2', 'set_3'].map((k, i) => (
+                    <select key={k} value={form[k]} onChange={f(k)} className={INP}>
+                      <option value="">— Set {i + 1} —</option>
+                      {products.filter(p => p.id !== editId).map(p => (
+                        <option key={p.slug} value={p.slug}>{p.title}</option>
+                      ))}
+                    </select>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className={LBL}>Product video URL (mp4 / webm)</label>
+                <input type="url" value={form.video_url} onChange={f('video_url')} placeholder="https://…/video.mp4" className={INP} />
               </div>
             </section>
 

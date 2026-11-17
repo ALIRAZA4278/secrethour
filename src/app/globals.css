@@ -4,7 +4,11 @@
 @theme inline {
   --font-sans: var(--font-inter);
   --font-heading: var(--font-playfair);
+}
 
+/* Colours are deliberately NOT `inline`: utilities must read them through var(),
+   otherwise a wrapper such as .theme-wine cannot override them. */
+@theme {
   /* Black theme stays as-is. Logo/accent gold recentred on the brand color
      #C5A059 — the family keeps its original light/muted/border spread,
      just moved to that hue (39°) and saturation (48%) instead of (43°, 72%). */
@@ -19,6 +23,52 @@
   --color-cream:          hsl(38 30% 85%);
   --color-burgundy:       hsl(350 60% 12%);
   --color-burgundy-deep:  hsl(350 80% 6%);
+}
+
+/* Product page palette: deep wine background with a brighter amber gold, sampled
+   from the product-page design. Tailwind's colour utilities read these variables,
+   so overriding them on a wrapper restyles everything inside without touching the
+   black theme used by the rest of the site. */
+.theme-wine {
+  --color-sh-bg:         #210305;
+  --color-sh-card:       #28030a;
+  --color-sh-muted:      #3a0a12;
+  --color-gold:          #E5B06E;
+  --color-gold-light:    #F2D9AE;
+  --color-gold-muted:    #C1A575;
+  --color-gold-border:   hsl(8 28% 30%);
+  --color-gold-btn-text: #F2D9AE;
+  --color-burgundy:      #590d19;
+  --color-burgundy-deep: #36090e;
+
+  /* Red silk: glows at the edges, diagonal fold highlights and shadows, over a
+     wine base. Pinned to the viewport (fixed, one tile) so a long page never shows
+     a seam where a repeating background would end and start again. */
+  background-image:
+    linear-gradient(112deg, transparent 0%, transparent 16%, rgb(255 95 105 / 0.06) 24%, transparent 33%, transparent 50%, rgb(255 95 105 / 0.045) 58%, transparent 67%, transparent 100%),
+    linear-gradient(68deg, transparent 0%, transparent 28%, rgb(10 0 2 / 0.45) 37%, transparent 46%, transparent 68%, rgb(10 0 2 / 0.40) 77%, transparent 86%),
+    radial-gradient(ellipse 65% 40% at 0% 12%,   rgb(180 28 50 / 0.40), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 45%, rgb(160 24 44 / 0.36), transparent 70%),
+    radial-gradient(ellipse 65% 40% at 0% 80%,   rgb(170 26 47 / 0.33), transparent 70%),
+    radial-gradient(ellipse 60% 35% at 100% 100%, rgb(150 22 41 / 0.32), transparent 70%),
+    linear-gradient(180deg, #26050a 0%, #170205 100%);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* The footer is shared across the site, so it keeps the standard black theme. */
+.theme-wine footer {
+  --color-sh-bg:         hsl(20 10% 4%);
+  --color-sh-card:       hsl(20 15% 7%);
+  --color-sh-muted:      hsl(20 15% 12%);
+  --color-gold:          #C5A059;
+  --color-gold-light:    hsl(39 40% 75%);
+  --color-gold-muted:    hsl(39 34% 41%);
+  --color-gold-border:   hsl(39 27% 27%);
+  --color-gold-btn-text: hsl(39 40% 75%);
+  --color-burgundy:      hsl(350 60% 12%);
+  --color-burgundy-deep: hsl(350 80% 6%);
 }
 
 /* Hide scrollbar (used on horizontal bundle scroller) while keeping scroll */

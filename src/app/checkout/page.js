@@ -18,14 +18,15 @@ const inputCls = 'w-full px-4 py-3 bg-sh-card/60 border border-gold-border/40 ro
 const cardCls = 'rounded-lg p-6 md:p-7 border border-gold-border/20 bg-gradient-to-b from-sh-card/50 to-sh-card/20 backdrop-blur-sm';
 
 export default function CheckoutPage() {
-  const { items, totalPrice, totalItems, totalCompareAt, totalSavings } = useCart();
+  const { items, totalPrice, totalItems, totalCompareAt, totalSavings, promo } = useCart();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [payment, setPayment] = useState('cod');
-  const [promoCode, setPromoCode] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoDiscount, setPromoDiscount] = useState(0);
+  // Starts from a code already applied on the product page.
+  const [promoCode, setPromoCode] = useState(promo?.code || '');
+  const [promoApplied, setPromoApplied] = useState(!!promo);
+  const [promoDiscount, setPromoDiscount] = useState(promo?.pct || 0);
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [phoneError, setPhoneError] = useState('');

@@ -88,6 +88,9 @@ export function itemEffectivePrice(item) {
 export function CartProvider({ children }) {
   const [cartItems, dispatch] = useReducer(cartReducer, []);
   const [open, setOpen] = useState(false);
+  // A promo code verified on the product page, carried through to checkout.
+  // { code, pct } or null. Checkout still re-derives the discount from `pct`.
+  const [promo, setPromo] = useState(null);
 
   function addToCart(item, qty) {
     dispatch({ type: 'ADD', item, qty });
@@ -115,7 +118,7 @@ export function CartProvider({ children }) {
 
   return (
     <CartContext.Provider
-      value={{ items, open, setOpen, addToCart, removeFromCart, updateQty, totalItems, totalPrice, totalCompareAt, totalSavings }}
+      value={{ items, open, setOpen, promo, setPromo, addToCart, removeFromCart, updateQty, totalItems, totalPrice, totalCompareAt, totalSavings }}
     >
       {children}
     </CartContext.Provider>
