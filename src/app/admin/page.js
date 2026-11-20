@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import BlogsList from '@/components/admin/blogs-list';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import { getSale } from '../../lib/pricing';
+import { DEFAULT_ANNOUNCEMENT, DEFAULT_HERO, normalizeSetting } from '../../lib/site-defaults';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -2046,6 +2047,7 @@ function ProductsTab() {
   const [varPrice,      setVarPrice]      = useState('');
   const [varDesc,       setVarDesc]       = useState('');
   const [varTagline,    setVarTagline]    = useState('');
+  const [varUploading,  setVarUploading]  = useState(-1);
   const [saving,        setSaving]        = useState(false);
   const [editId,        setEditId]        = useState(null);
   const [search,        setSearch]        = useState('');
@@ -2516,7 +2518,7 @@ function ProductsTab() {
               <div className="flex items-center justify-between border-b border-gray-200 pb-2">
                 <h4 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold">Variations (optional)</h4>
               </div>
-              <p className="text-gray-400 text-sm">Enter name, combination, tagline, and price for each variation.</p>
+              <p className="text-gray-400 text-sm">Enter name, combination, tagline, and price for each variation. Leave the price empty to use the product price. Add pictures to a variation after adding it, then press Update Product to save.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <input
                   type="text"
@@ -2568,15 +2570,45 @@ function ProductsTab() {
               {variations.length > 0 && (
                 <div className="space-y-2">
                   {variations.map((v, i) => (
-                    <div key={i} className="flex items-start justify-between gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                      <div className="text-xs text-gray-700 leading-relaxed">
-                        <span className="font-semibold">{v?.name ?? v}</span>
-                        {v?.description ? <span className="text-gray-400"> · {v.description}</span> : ''}
-                        {v?.price ? <span className="text-gray-500"> · Rs. {Number(v.price).toLocaleString()}</span> : ''}
-                        {v?.tagline ? <p className="text-gray-400 mt-0.5 italic">{v.tagline}</p> : ''}
+                    <div key={i} className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="text-xs text-gray-700 leading-relaxed">
+                          <span className="font-semibold">{v?.name ?? v}</span>
+                          {v?.description ? <span className="text-gray-400"> · {v.description}</span> : ''}
+                          {v?.price ? <span className="text-gray-500"> · Rs. {Number(v.price).toLocaleString()}</span> : ''}
+                          {v?.tagline ? <p className="text-gray-400 mt-0.5 italic">{v.tagline}</p> : ''}
+                        </div>
+                        <button type="button" onClick={() => setVariations(prev => prev.filter((_, j) => j !== i))}
+                          className="text-gray-300 hover:text-red-500 transition leading-none font-bold shrink-0 mt-0.5">×</button>
                       </div>
-                      <button type="button" onClick={() => setVariations(prev => prev.filter((_, j) => j !== i))}
-                        className="text-gray-300 hover:text-red-500 transition leading-none font-bold shrink-0 mt-0.5">×</button>
+                      {/* Pictures for this variation: when a shopper picks it, the product gallery shows only these. */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {(v?.images || []).map((url, k) => (
+                          <div key={url} className="relative w-14 h-14 rounded border border-gray-200 overflow-hidden bg-white">
+                            <Image src={url} alt="" fill sizes="56px" className="object-cover" />
+                            <button type="button" aria-label="Remove picture"
+                              onClick={() => setVariations(prev => prev.map((x, j) => j === i ? { ...x, images: x.images.filter((_, m) => m !== k) } : x))}
+                              className="absolute top-0 right-0 bg-black/60 hover:bg-red-600 text-white text-[10px] leading-none w-4 h-4 flex items-center justify-center">×</button>
+                          </div>
+                        ))}
+                        <label className={`cursor-pointer text-[11px] uppercase tracking-[0.12em] border border-dashed border-gray-300 hover:border-gray-500 text-gray-500 rounded px-3 py-2 ${varUploading === i ? 'opacity-50 pointer-events-none' : ''}`}>
+                          {varUploading === i ? 'Uploading…' : '+ Pictures'}
+                          <input type="file" accept="image/*" multiple className="hidden"
+                            onChange={async e => {
+                              const files = [...(e.target.files || [])];
+                              e.target.value = '';
+                              if (!files.length) return;
+                              setVarUploading(i);
+                              try {
+                                const urls = [];
+                                for (const f of files) urls.push(await uploadImg(f, `${form.slug || 'product'}-${v?.name || 'variation'}`));
+                                setVariations(prev => prev.map((x, j) => j === i ? { ...x, images: [...(x.images || []), ...urls] } : x));
+                              } catch (err) { alert('Upload failed: ' + err.message); }
+                              setVarUploading(-1);
+                            }} />
+                        </label>
+                        {!(v?.images || []).length && <span className="text-[11px] text-gray-400">No pictures: the product&apos;s own gallery shows.</span>}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -2999,6 +3031,225 @@ function ReviewsTab() {
         onToggle={toggleProductReview}
         onDelete={deleteProductReview}
       />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   SITE CONTENT TAB — announcement bar + home hero
+═══════════════════════════════════════════ */
+// Saves go through the server route, which re-checks the admin login; the table has no
+// public write access.
+async function saveSiteSetting(key, value) {
+  const res = await fetch('/api/site-settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASS, key, value }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Save failed');
+  return data.value;
+}
+
+const SAVE_BTN = 'bg-gray-900 hover:bg-gray-700 text-white text-xs uppercase tracking-[0.2em] font-medium px-6 py-3 rounded-lg transition disabled:opacity-50';
+const GHOST_BTN = 'border border-gray-300 hover:border-gray-500 text-gray-600 text-xs uppercase tracking-[0.18em] px-4 py-2.5 rounded-lg transition disabled:opacity-40';
+
+function SiteStatus({ text }) {
+  if (!text) return null;
+  return <span className={`text-sm ${text.startsWith('Error') ? 'text-red-500' : 'text-green-600'}`}>{text}</span>;
+}
+
+function SiteContentTab() {
+  const [ann, setAnn]         = useState(DEFAULT_ANNOUNCEMENT);
+  const [hero, setHero]       = useState(DEFAULT_HERO);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy]       = useState('');
+  const [msg, setMsg]         = useState({});
+  const [uploading, setUploading] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.from('site_settings').select('key, value');
+      if (!error) {
+        const row = (k) => (data || []).find(r => r.key === k)?.value;
+        if (row('announcement')) setAnn(normalizeSetting('announcement', row('announcement')));
+        if (row('hero'))         setHero(normalizeSetting('hero', row('hero')));
+      } else {
+        setMsg({ load: 'Could not load saved content. Run supabase-site-settings.sql in Supabase first. Showing the defaults.' });
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  async function save(key, value) {
+    setBusy(key);
+    setMsg(m => ({ ...m, [key]: '' }));
+    try {
+      const saved = await saveSiteSetting(key, value);
+      if (key === 'announcement') {
+        setAnn(saved);
+        // Keep this browser's cached copy in step so the bar updates on the next page view.
+        try { localStorage.setItem('sh_announcement', JSON.stringify(saved)); } catch {}
+      } else {
+        setHero(saved);
+      }
+      setMsg(m => ({ ...m, [key]: 'Saved ✓' }));
+    } catch (e) {
+      setMsg(m => ({ ...m, [key]: `Error: ${e.message}` }));
+    }
+    setBusy('');
+  }
+
+  const setH = (k) => (e) => setHero(h => ({ ...h, [k]: e.target.value }));
+  const setBadge = (i, v) => setHero(h => { const b = [...h.badges]; b[i] = v; return { ...h, badges: b }; });
+  const setSlide = (i, patch) => setHero(h => ({ ...h, slides: h.slides.map((s, j) => j === i ? { ...s, ...patch } : s) }));
+  const moveSlide = (i, d) => setHero(h => {
+    const j = i + d;
+    if (j < 0 || j >= h.slides.length) return h;
+    const s = [...h.slides];
+    [s[i], s[j]] = [s[j], s[i]];
+    return { ...h, slides: s };
+  });
+
+  async function pickImage(i, field, file) {
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { setMsg(m => ({ ...m, hero: 'Error: image is over 3MB, please compress it.' })); return; }
+    setUploading(`${i}-${field}`);
+    try { setSlide(i, { [field]: await uploadImg(file, `banner-${field}`) }); }
+    catch (e) { setMsg(m => ({ ...m, hero: `Error: upload failed (${e.message})` })); }
+    setUploading('');
+  }
+
+  if (loading) return <p className="text-gray-400 text-sm">Loading…</p>;
+
+  return (
+    <div className="space-y-10 max-w-4xl">
+      <div>
+        <p className="text-gray-400 text-xs uppercase tracking-[0.3em] mb-1">Admin</p>
+        <h1 className="text-3xl italic text-gray-900" style={serif}>Site Content</h1>
+        <p className="text-gray-500 text-sm mt-1">Edit the bar above the header and the home page banner. Changes go live as soon as you save.</p>
+        {msg.load && <p className="text-amber-600 text-sm mt-3">{msg.load}</p>}
+      </div>
+
+      {/* ── Announcement bar ── */}
+      <section className="bg-white border border-gray-200 rounded-xl p-5 md:p-6 space-y-4">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold border-b border-gray-200 pb-2">Announcement bar (top of every page)</h2>
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input type="checkbox" checked={ann.enabled} onChange={e => setAnn(a => ({ ...a, enabled: e.target.checked }))} />
+          Show the bar
+        </label>
+        <div>
+          <label className={LBL}>Text</label>
+          <input type="text" value={ann.text} onChange={e => setAnn(a => ({ ...a, text: e.target.value }))} maxLength={300} className={INP}
+            placeholder="Get 10% Off on Online Payment — Pay via Bank Transfer   •   Free Delivery Across Pakistan" />
+          <p className="text-[11px] text-gray-400 mt-1">It scrolls across the bar. Use a bullet (•) to separate several messages.</p>
+        </div>
+        <div className="rounded-lg overflow-hidden" style={{ background: 'hsl(350 80% 5%)' }}>
+          <p className="py-1.5 px-4 text-[11px] uppercase tracking-[0.25em] font-medium whitespace-pre overflow-hidden" style={{ color: '#C5A059' }}>
+            {ann.enabled ? (ann.text || DEFAULT_ANNOUNCEMENT.text) : '(bar hidden)'}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <button disabled={busy === 'announcement'} onClick={() => save('announcement', ann)} className={SAVE_BTN}>{busy === 'announcement' ? 'Saving…' : 'Save announcement'}</button>
+          <button type="button" onClick={() => setAnn(DEFAULT_ANNOUNCEMENT)} className={GHOST_BTN}>Reset to default</button>
+          <SiteStatus text={msg.announcement} />
+        </div>
+      </section>
+
+      {/* ── Hero text ── */}
+      <section className="bg-white border border-gray-200 rounded-xl p-5 md:p-6 space-y-5">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold border-b border-gray-200 pb-2">Home page hero: text on the banner</h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className={LBL}>Headline</label>
+            <input type="text" value={hero.headline} onChange={setH('headline')} maxLength={120} className={INP} />
+          </div>
+          <div>
+            <label className={LBL}>Highlighted words (gold)</label>
+            <input type="text" value={hero.highlight} onChange={setH('highlight')} maxLength={80} className={INP} placeholder="optional" />
+          </div>
+          <div>
+            <label className={LBL}>Button 1 text</label>
+            <input type="text" value={hero.cta1_text} onChange={setH('cta1_text')} maxLength={40} className={INP} />
+          </div>
+          <div>
+            <label className={LBL}>Button 1 link</label>
+            <input type="text" value={hero.cta1_href} onChange={setH('cta1_href')} className={INP} placeholder="/shop" />
+          </div>
+          <div>
+            <label className={LBL}>Button 2 text (empty = hide button)</label>
+            <input type="text" value={hero.cta2_text} onChange={setH('cta2_text')} maxLength={40} className={INP} />
+          </div>
+          <div>
+            <label className={LBL}>Button 2 link</label>
+            <input type="text" value={hero.cta2_href} onChange={setH('cta2_href')} className={INP} placeholder="/quiz" />
+          </div>
+        </div>
+        <div>
+          <label className={LBL}>Small line under the buttons (up to 3 short items)</label>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {[0, 1, 2].map(i => (
+              <input key={i} type="text" value={hero.badges[i] || ''} onChange={e => setBadge(i, e.target.value)} maxLength={60} className={INP} placeholder={`Item ${i + 1}`} />
+            ))}
+          </div>
+        </div>
+        <p className="text-[11px] text-gray-400">Links must start with a slash (a page on this site, e.g. /shop) or https://</p>
+      </section>
+
+      {/* ── Hero banners ── */}
+      <section className="bg-white border border-gray-200 rounded-xl p-5 md:p-6 space-y-5">
+        <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+          <h2 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold">Home page hero: banner images</h2>
+          <button type="button" disabled={hero.slides.length >= 8}
+            onClick={() => setHero(h => ({ ...h, slides: [...h.slides, { desk: '', mob: '', alt: '' }] }))}
+            className={GHOST_BTN}>+ Add banner</button>
+        </div>
+        <p className="text-[11px] text-gray-400">Desktop: 1920×1080 (landscape). Mobile: 750×1334 (portrait). Max 3MB each. Banners rotate in this order. If you only add one image it is used on both.</p>
+
+        <div className="space-y-4">
+          {hero.slides.map((s, i) => (
+            <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-gray-700">Banner {i + 1}</p>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => moveSlide(i, -1)} disabled={i === 0} className={GHOST_BTN} aria-label="Move up">↑</button>
+                  <button type="button" onClick={() => moveSlide(i, 1)} disabled={i === hero.slides.length - 1} className={GHOST_BTN} aria-label="Move down">↓</button>
+                  <button type="button" disabled={hero.slides.length <= 1}
+                    onClick={() => setHero(h => ({ ...h, slides: h.slides.filter((_, j) => j !== i) }))}
+                    className="border border-red-200 text-red-500 hover:bg-red-50 text-xs uppercase tracking-[0.18em] px-3 py-2.5 rounded-lg transition disabled:opacity-40">Remove</button>
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-[2fr_1fr] gap-4">
+                {[['desk', 'Desktop image', 'aspect-video'], ['mob', 'Mobile image', 'aspect-[9/16] max-h-56']].map(([field, label, shape]) => (
+                  <div key={field} className="space-y-2">
+                    <label className={LBL}>{label}</label>
+                    <div className={`${shape} bg-gray-100 border border-gray-200 rounded-lg overflow-hidden flex items-center justify-center`}>
+                      {s[field]
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={encodeURI(s[field])} alt="" className="w-full h-full object-cover" />
+                        : <span className="text-xs text-gray-400">No image</span>}
+                    </div>
+                    <input type="file" accept="image/*" disabled={!!uploading}
+                      onChange={e => { pickImage(i, field, e.target.files?.[0]); e.target.value = ''; }}
+                      className="block w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-700" />
+                    {uploading === `${i}-${field}` && <p className="text-xs text-gray-500">Uploading…</p>}
+                  </div>
+                ))}
+              </div>
+              <div>
+                <label className={LBL}>Image description (for accessibility / SEO)</label>
+                <input type="text" value={s.alt} onChange={e => setSlide(i, { alt: e.target.value })} maxLength={200} className={INP} placeholder="e.g. The Midnight Deck card game by Secret Hour" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 pt-2">
+          <button disabled={busy === 'hero' || !!uploading} onClick={() => save('hero', hero)} className={SAVE_BTN}>{busy === 'hero' ? 'Saving…' : 'Save hero (text + banners)'}</button>
+          <button type="button" onClick={() => setHero(DEFAULT_HERO)} className={GHOST_BTN}>Reset hero to default</button>
+          <SiteStatus text={msg.hero} />
+        </div>
+      </section>
     </div>
   );
 }
@@ -3681,6 +3932,7 @@ export default function AdminPage() {
     { id: 'reviews',   label: 'Reviews' },
     { id: 'promos',    label: 'Promos' },
     { id: 'blogs',     label: 'Blogs' },
+    { id: 'site',      label: 'Site Content' },
     { id: 'settings',  label: 'Settings' },
     { id: 'dashboard', label: 'Dashboard' },
   ];
@@ -3723,6 +3975,7 @@ export default function AdminPage() {
         {tab === 'reviews'   && <ReviewsTab />}
         {tab === 'promos'    && <PromoCodesTab />}
         {tab === 'blogs'     && <BlogsList />}
+        {tab === 'site'      && <SiteContentTab />}
         {tab === 'settings'  && <SettingsTab />}
         {tab === 'dashboard' && <Dashboard />}
       </main>

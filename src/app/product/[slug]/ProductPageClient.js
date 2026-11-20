@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -134,6 +134,10 @@ export default function ProductPageClient({ product, images, related, upsell, re
   const [promoInput, setPromoInput] = useState(promo?.code || '');
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
+  // Mobile sticky buy bar: hidden until the shopper scrolls down to "Choose Your Set"
+  // (or, on products without sets, past the main Buy Now button).
+  const stickyTriggerRef = useRef(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
 
   // "Choose Your Set": the admin-picked products, other than this one. Each is its
   // own product, so choosing one opens its page.
@@ -146,6 +150,17 @@ export default function ProductPageClient({ product, images, related, upsell, re
   // also appear above. Only the auto-filled fallback skips products already shown.
   const relatedPicked = Array.isArray(product.related_slugs) && product.related_slugs.length > 0;
   const relatedList = relatedPicked ? related : related.filter((x) => !shownSlugs.has(x.slug));
+
+  useEffect(() => {
+    const el = stickyTriggerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    // Show once the trigger has entered the viewport or been scrolled past (above it).
+    const io = new IntersectionObserver(([e]) => {
+      setShowStickyBar(e.isIntersecting || e.boundingClientRect.top < 0);
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [sets.length]);
 
   // Snippet pool: this product's own reviews, else the site's customer stories.
   const snippets = reviews.length
@@ -172,12 +187,17 @@ export default function ProductPageClient({ product, images, related, upsell, re
   const variationPrice = (v) => {
     const sale = getSale(product);
     const base = v?.price;
-    if (base == null) return sale.effective;
+    // No price (or 0) on a variation means "same as the product", not "free".
+    if (!base) return sale.effective;
     if (!sale.onSale) return base;
     return Math.round(base * (1 - sale.pct / 100));
   };
 
   const optionGroups = product.option_groups?.length ? product.option_groups : [];
+
+  // A variation can bring its own pictures (e.g. Black vs Red); while one is chosen the
+  // gallery shows only those, otherwise the product's own pictures.
+  const gallery = selectedVariation?.images?.length ? selectedVariation.images : images;
 
   const cartItem = () => {
     const effNumeric = variationPrice(selectedVariation);
@@ -186,8 +206,8 @@ export default function ProductPageClient({ product, images, related, upsell, re
       title: product.title,
       price: fmtPKR(effNumeric),
       numericPrice: effNumeric,
-      listPrice: getSale(product).onSale ? (selectedVariation?.price ?? getSale(product).original) : null,
-      img: images?.[0],
+      listPrice: getSale(product).onSale ? (selectedVariation?.price || getSale(product).original) : null,
+      img: gallery[0],
       variation: selectedVariation?.name || null,
       options: Object.keys(options).length ? options : null,
       bulkDiscountQty: product.bulk_discount_qty || null,
@@ -264,12 +284,12 @@ export default function ProductPageClient({ product, images, related, upsell, re
   const stepImage = (dir) => {
     setShowVideo(false);
     setOverrideImage(null);
-    setActiveImg((i) => (i + dir + images.length) % images.length);
+    setActiveImg((i) => (i + dir + gallery.length) % gallery.length);
   };
 
   const sale = getSale(product);
   const shown = variationPrice(selectedVariation);
-  const original = selectedVariation?.price ?? sale.original;
+  const original = selectedVariation?.price || sale.original;
   const ratingAvg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
   const inStock = product.in_stock !== false;
   const review = snippets.length ? snippets[reviewIdx % snippets.length] : null;
@@ -290,7 +310,12 @@ export default function ProductPageClient({ product, images, related, upsell, re
                 <button
                   key={label}
                   type="button"
-                  onClick={() => { setSelectedVariation(isSelected ? null : (v?.name ? v : { name: v, price: null })); setVariationError(false); }}
+                  onClick={() => {
+                    setSelectedVariation(isSelected ? null : (v?.name ? v : { name: v, price: null }));
+                    setVariationError(false);
+                    // Each variation has its own gallery, so start it from the first picture.
+                    setActiveImg(0); setOverrideImage(null); setShowVideo(false);
+                  }}
                   className={`px-4 py-2 text-[11px] uppercase tracking-[0.15em] border transition-all duration-200 ${
                     isSelected
                       ? 'border-gold bg-gold/10 text-gold'
@@ -399,9 +424,9 @@ export default function ProductPageClient({ product, images, related, upsell, re
                 {showVideo && hasVideo ? (
                   <video src={product.video_url} controls autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black" />
                 ) : (
-                  <Image src={overrideImage || images[activeImg]} alt={`${product.title} Secret Hour`} fill sizes="(min-width: 1024px) 560px, 100vw" className="object-contain" priority />
+                  <Image src={overrideImage || gallery[activeImg] || gallery[0]} alt={`${product.title} Secret Hour`} fill sizes="(min-width: 1024px) 560px, 100vw" className="object-contain" priority />
                 )}
-                {images.length > 1 && !showVideo && (
+                {gallery.length > 1 && !showVideo && (
                   <>
                     <button type="button" onClick={() => stepImage(-1)} aria-label="Previous image"
                       className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/55 border border-gold-border/60 text-cream hover:border-gold hover:text-gold flex items-center justify-center transition-colors">
@@ -414,9 +439,9 @@ export default function ProductPageClient({ product, images, related, upsell, re
                   </>
                 )}
               </div>
-              {(images.length > 1 || hasVideo) && (
+              {(gallery.length > 1 || hasVideo) && (
                 <div className="grid grid-cols-5 gap-2.5">
-                  {images.map((img, i) => (
+                  {gallery.map((img, i) => (
                     <button
                       key={i}
                       type="button"
@@ -615,6 +640,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
 
               <button
                 type="button"
+                ref={sets.length === 0 ? stickyTriggerRef : undefined}
                 onClick={buyNow}
                 className="w-full border border-gold-muted text-gold-light text-base font-semibold rounded px-6 py-3.5 hover:bg-burgundy hover:border-gold transition-colors"
               >
@@ -668,7 +694,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
 
               {/* Choose Your Set */}
               {sets.length > 0 && (
-                <div className="space-y-3 pt-2">
+                <div ref={stickyTriggerRef} className="space-y-3 pt-2">
                   <div>
                     <h2 className="text-3xl text-gold-light" style={serif}>Choose Your Set</h2>
                     <p className="text-cream/55 text-sm mt-1">More ways to make your moments special.</p>
@@ -965,10 +991,10 @@ export default function ProductPageClient({ product, images, related, upsell, re
       )}
 
       {/* Spacer for mobile sticky bar */}
-      <div className="h-20 lg:h-0" />
+      <div className={showStickyBar ? 'h-20 lg:h-0' : 'h-0'} />
 
       {/* Mobile sticky Add to Cart + Buy Now */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-sh-bg/95 backdrop-blur-sm border-t border-gold-border/40 p-3 pr-[84px] flex gap-3">
+      <div className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-sh-bg/95 backdrop-blur-sm border-t border-gold-border/40 p-3 pr-[84px] flex gap-3 transition-transform duration-300 ${showStickyBar ? 'translate-y-0' : 'translate-y-full pointer-events-none'}`} aria-hidden={!showStickyBar}>
         <button
           onClick={handleAddToCart}
           className="flex-1 bg-gold text-sh-bg text-[11px] font-semibold uppercase tracking-[0.18em] py-3.5 rounded transition-all"

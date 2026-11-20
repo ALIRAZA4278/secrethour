@@ -3,8 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
+import { supabase } from '../../lib/supabase';
+import { DEFAULT_ANNOUNCEMENT, normalizeSetting } from '../../lib/site-defaults';
 
 const NAV_LINKS = [
   { label: 'Home',         href: '/' },
@@ -18,6 +20,7 @@ const NAV_LINKS = [
 ];
 
 const LOGO = '/logo.png';
+const ANNOUNCE_CACHE = 'sh_announcement';
 
 export default function Navbar() {
   const pathname                = usePathname();
@@ -25,20 +28,45 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { setOpen, totalItems }  = useCart();
+  // Announcement bar text is editable in admin → Site Content. It starts on the default
+  // (so server and first client render match), then switches to the saved text; the
+  // last saved text is cached so later page loads show it straight away.
+  const [announcement, setAnnouncement] = useState(DEFAULT_ANNOUNCEMENT);
+
+  useEffect(() => {
+    let alive = true;
+    // Deferred a tick so it isn't a synchronous setState inside the effect body.
+    const t = setTimeout(() => {
+      try {
+        const cached = JSON.parse(localStorage.getItem(ANNOUNCE_CACHE) || 'null');
+        if (alive && cached) setAnnouncement(normalizeSetting('announcement', cached));
+      } catch {}
+    }, 0);
+    supabase.from('site_settings').select('value').eq('key', 'announcement').maybeSingle()
+      .then(({ data }) => {
+        if (!alive || !data) return;
+        const value = normalizeSetting('announcement', data.value);
+        setAnnouncement(value);
+        try { localStorage.setItem(ANNOUNCE_CACHE, JSON.stringify(value)); } catch {}
+      });
+    return () => { alive = false; clearTimeout(t); };
+  }, []);
 
 
   return (
     <>
-    {/* Announcement Bar */}
-    <div className="w-full overflow-hidden py-1.5" style={{ background: 'hsl(350 80% 5%)' }}>
-      <div className="flex whitespace-nowrap animate-marquee">
-        {[...Array(2)].map((_, i) => (
-          <span key={i} className="text-gold text-[10px] md:text-xs uppercase tracking-[0.25em] font-medium px-16">
-            Get 10% Off on Online Payment — Pay via Bank Transfer &nbsp;&nbsp;•&nbsp;&nbsp; Free Delivery Across Pakistan
-          </span>
-        ))}
+    {/* Announcement Bar (text editable in admin → Site Content) */}
+    {announcement.enabled && (
+      <div className="w-full overflow-hidden py-1.5" style={{ background: 'hsl(350 80% 5%)' }}>
+        <div className="flex whitespace-nowrap animate-marquee">
+          {[...Array(2)].map((_, i) => (
+            <span key={i} className="text-gold text-[10px] md:text-xs uppercase tracking-[0.25em] font-medium px-16 whitespace-pre">
+              {announcement.text}
+            </span>
+          ))}
+        </div>
       </div>
-    </div>
+    )}
     <nav className="w-full bg-black/90 backdrop-blur-sm border-b border-gold-border/40">
       <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
         <Link href="/" className="relative w-40 h-11 shrink-0">
