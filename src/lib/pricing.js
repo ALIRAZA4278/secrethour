@@ -12,6 +12,12 @@ export function getSale(product) {
   };
 }
 
+// Unit price after taking `pct` % off `list`, rounded to the rupee. Used for the
+// per-product COD / online prices, so the product page, cart and checkout agree.
+export function payUnitPrice(list, pct) {
+  return Math.round((Number(list) || 0) * (1 - (Number(pct) || 0) / 100));
+}
+
 export const fmtPKR = (n) => `Rs. ${(Number(n) || 0).toLocaleString()}`;
 
 // Best bundle discount reached by `count` bundle items (0 when no tier applies).

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { useCart, itemEffectivePrice, itemCompareAtPrice, itemDiscountPct, itemOptionsText } from '../context/CartContext';
+import { useCart, itemEffectivePrice, itemCompareAtPrice, itemDiscountPct, itemOptionsText, itemOnlineUnitPrice } from '../context/CartContext';
 import { getSale, fmtPKR } from '../../lib/pricing';
 
 const supabase = createClient(
@@ -99,6 +99,9 @@ export default function CartDrawer() {
                         );
                       })()}
                     </div>
+                    {itemOnlineUnitPrice(item) != null && itemOnlineUnitPrice(item) < itemEffectivePrice(item) && (
+                      <p className="text-gold/80 text-[10px] mt-0.5">{fmtPKR(itemOnlineUnitPrice(item))} each if you pay online ({item.payPct.online}% off)</p>
+                    )}
                     {itemOptionsText(item) && <p className="text-cream/45 text-[10px] uppercase tracking-[0.15em] mt-0.5">{itemOptionsText(item)}</p>}
                     {item.customNote && <p className="text-cream/40 text-[10px] italic mt-0.5">Note: {item.customNote}</p>}
                     {item.bulkDiscountQty >= 2 && item.qty < item.bulkDiscountQty && (

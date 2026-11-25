@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { useCart, itemEffectivePrice, itemCompareAtPrice, itemOptionsText } from '../context/CartContext';
+import { useCart, itemEffectivePrice, itemCompareAtPrice, itemOptionsText, itemOnlineUnitPrice } from '../context/CartContext';
 import { isValidPkMobile, normalizePkPhone, PK_PHONE_HINT } from '../../lib/phone';
 import { supabase } from '../../lib/supabase';
 
@@ -81,9 +81,19 @@ export default function CheckoutPage() {
     };
   }
 
-  const bankDiscount = payment === 'bank' ? Math.round(totalPrice * 0.10) : 0;
+  // Online (Bank Transfer) discount. Items with their own payment-based pricing get their
+  // online price (the cart holds the COD price, so the difference is the discount) and are
+  // left out of the generic 10%, so the two never stack on the same product.
+  const payItems = items.filter(i => i.payPct);
+  const productOnlineDiscount = payment === 'bank'
+    ? payItems.reduce((s, i) => s + Math.max(0, itemEffectivePrice(i) - itemOnlineUnitPrice(i)) * i.qty, 0)
+    : 0;
+  const genericBankBase = items.filter(i => !i.payPct).reduce((s, i) => s + itemEffectivePrice(i) * i.qty, 0);
+  const bankDiscount = payment === 'bank' ? Math.round(genericBankBase * 0.10) + productOnlineDiscount : 0;
   const promoDiscountAmt = promoApplied ? Math.round(totalPrice * promoDiscount / 100) : 0;
+  const promoWins = promoDiscountAmt > bankDiscount;
   const discount = Math.max(bankDiscount, promoDiscountAmt);
+  const topOnlinePct = Math.max(10, ...payItems.map(i => i.payPct.online));
   const total = totalPrice - discount;
 
   async function handleSubmit(e) {
@@ -317,7 +327,7 @@ export default function CheckoutPage() {
                     </svg>
                     <h2 className="text-lg text-cream font-medium">Payment Method</h2>
                   </div>
-                  <p className="text-gold text-[10px] uppercase tracking-[0.2em] mb-4">✦ Pay Online &amp; Get 10% Discount</p>
+                  <p className="text-gold text-[10px] uppercase tracking-[0.2em] mb-4">✦ Pay Online &amp; Get {payItems.length ? `Up to ${topOnlinePct}%` : '10%'} Discount</p>
 
                   <div className="space-y-3">
                     {/* Bank Transfer */}
@@ -497,7 +507,7 @@ export default function CheckoutPage() {
                   )}
                   {discount > 0 && (
                     <div className="flex justify-between text-gold/70">
-                      <span>Discount ({promoApplied ? `${promoDiscount}% promo` : '10% bank'})</span>
+                      <span>Discount ({promoWins ? `${promoDiscount}% promo` : (payItems.length ? 'online payment' : '10% bank')})</span>
                       <span>− Rs. {discount.toLocaleString()}</span>
                     </div>
                   )}

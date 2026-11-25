@@ -1,11 +1,11 @@
 import HomeClient from './HomeClient';
-import { getHeroSettings } from '../lib/site-settings-server';
+import { getHomeSettings } from '../lib/site-settings-server';
 
-// Statically regenerated at most once a minute; saving the hero in admin also
+// Statically regenerated at most once a minute; saving in admin -> Site Content also
 // revalidates this page on demand, so edits show straight away.
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const hero = await getHeroSettings();
-  return <HomeClient hero={hero} />;
+  const { hero, featured } = await getHomeSettings();
+  return <HomeClient hero={hero} featuredSlug={featured.slug} />;
 }

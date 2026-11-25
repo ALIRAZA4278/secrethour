@@ -1,7 +1,9 @@
 'use client';
 
-import { createContext, useContext, useReducer, useState } from 'react';
-import { bundlePct, bundleUnitPrice } from '../../lib/pricing';
+import { createContext, useContext, useReducer, useState, useEffect } from 'react';
+import { bundlePct, bundleUnitPrice, payUnitPrice } from '../../lib/pricing';
+import { supabase } from '../../lib/supabase';
+import { normalizeSetting } from '../../lib/site-defaults';
 
 const CartContext = createContext(null);
 
@@ -69,6 +71,11 @@ export function itemDiscountPct(item) {
   return Math.round((1 - eff / compareAt) * 100);
 }
 
+// Online (Bank Transfer) unit price for an item with payment-based pricing, else null.
+export function itemOnlineUnitPrice(item) {
+  return item?.payPct ? payUnitPrice(item.listPrice, item.payPct.online) : null;
+}
+
 // Effective unit price: the bundle discount while the bundle still qualifies,
 // otherwise the bulk discount once its quantity threshold is met.
 export function itemEffectivePrice(item) {
@@ -91,6 +98,15 @@ export function CartProvider({ children }) {
   // A promo code verified on the product page, carried through to checkout.
   // { code, pct } or null. Checkout still re-derives the discount from `pct`.
   const [promo, setPromo] = useState(null);
+  // Per-product price by payment method (admin -> Site Content): { slug: { cod, online } }.
+  const [payPricing, setPayPricing] = useState({});
+
+  useEffect(() => {
+    let alive = true;
+    supabase.from('site_settings').select('value').eq('key', 'payment_pricing').maybeSingle()
+      .then(({ data }) => { if (alive && data) setPayPricing(normalizeSetting('payment_pricing', data.value)); });
+    return () => { alive = false; };
+  }, []);
 
   function addToCart(item, qty) {
     dispatch({ type: 'ADD', item, qty });
@@ -106,9 +122,16 @@ export function CartProvider({ children }) {
   // The bundle discount is re-derived from what is still in the cart, so removing
   // bundle items drops the rest to the tier they now qualify for (or none).
   const bundleCount = cartItems.reduce((s, i) => s + (i.bundleTiers ? i.qty : 0), 0);
-  const items = cartItems.map((i) =>
-    i.bundleTiers ? { ...i, bundlePct: bundlePct(bundleCount, i.bundleTiers) } : i
-  );
+  const items = cartItems.map((raw) => {
+    const i = raw.bundleTiers ? { ...raw, bundlePct: bundlePct(bundleCount, raw.bundleTiers) } : raw;
+    const pp = payPricing[i.slug];
+    if (!pp) return i;
+    // The cart carries the Cash on Delivery price (COD is the checkout default); the
+    // original price is the list price, and checkout takes the online price from `payPct`.
+    // Derived here, from the item's own prices, so every "add to cart" path agrees.
+    const orig = Math.max(Number(i.listPrice) || 0, Number(i.numericPrice) || 0);
+    return { ...i, listPrice: orig, numericPrice: payUnitPrice(orig, pp.cod), payPct: pp };
+  });
 
   const totalItems = items.reduce((s, i) => s + i.qty, 0);
   const totalPrice = items.reduce((s, i) => s + itemEffectivePrice(i) * i.qty, 0);
