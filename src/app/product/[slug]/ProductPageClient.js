@@ -292,9 +292,11 @@ export default function ProductPageClient({ product, images, related, upsell, re
   const original = selectedVariation?.price || sale.original;
   // Payment-based pricing (admin -> Site Content): a % off the original price for Cash on
   // Delivery and a bigger one for Bank Transfer / online. The cart holds the COD price.
-  const payCod = payPct ? payUnitPrice(original, payPct.cod) : null;
+  // A COD % of 0 means COD pays the product's normal price (its sale price, if it has one).
+  const payCod = payPct ? (payPct.cod > 0 ? payUnitPrice(original, payPct.cod) : variationPrice(selectedVariation)) : null;
   const payOnline = payPct ? payUnitPrice(original, payPct.online) : null;
   const shown = payPct ? payCod : variationPrice(selectedVariation);
+  const pctOff = (price) => (original > price ? Math.round((1 - price / original) * 100) : 0);
   const ratingAvg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
   const inStock = product.in_stock !== false;
   const review = snippets.length ? snippets[reviewIdx % snippets.length] : null;
@@ -479,7 +481,7 @@ export default function ProductPageClient({ product, images, related, upsell, re
             <span aria-hidden="true">›</span>
             <span className="text-cream/75 truncate">{product.title}</span>
           </nav>
-          <div className="grid lg:grid-cols-[1.05fr_1fr] gap-5 md:gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-5 md:gap-12 items-start">
 
             {/* Left: gallery — sticky on desktop */}
             <div className="space-y-3 lg:sticky lg:top-20">
@@ -606,18 +608,22 @@ export default function ProductPageClient({ product, images, related, upsell, re
               {/* Price */}
               <div>
                 {payPct ? (
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
+                    {/* The headline price is what Cash on Delivery pays; online payment gets more off. */}
                     <div className="flex items-center flex-wrap gap-x-4 gap-y-1">
-                      <p className="text-4xl md:text-[2.6rem] text-gold leading-none" style={serif}>{fmtPKR(payOnline)}</p>
-                      <p className="text-lg text-cream/45 line-through" style={serif}>{fmtPKR(original)}</p>
-                      <span className="bg-burgundy text-gold-light border border-gold-border/70 text-xs font-semibold uppercase tracking-[0.08em] px-3 py-1 rounded">{payPct.online}% OFF</span>
+                      <p className="text-4xl md:text-[2.6rem] text-gold leading-none" style={serif}>{fmtPKR(payCod)}</p>
+                      {original > payCod && <p className="text-lg text-cream/45 line-through" style={serif}>{fmtPKR(original)}</p>}
+                      {pctOff(payCod) > 0 && (
+                        <span className="bg-burgundy text-gold-light border border-gold-border/70 text-xs font-semibold uppercase tracking-[0.08em] px-3 py-1 rounded">{pctOff(payCod)}% OFF</span>
+                      )}
                     </div>
-                    <p className="text-cream/60 text-xs uppercase tracking-[0.18em]">with Bank Transfer / Online Payment</p>
-                    <div className="inline-flex items-center flex-wrap gap-x-3 gap-y-1 border border-gold-border/40 rounded-lg px-3 py-2" style={{ background: 'rgb(40 3 10 / 0.35)' }}>
-                      <span className="text-gold text-lg font-semibold" style={serif}>{fmtPKR(payCod)}</span>
-                      <span className="text-gold-light text-[11px] font-semibold uppercase tracking-[0.08em]">{payPct.cod}% OFF</span>
-                      <span className="text-cream/60 text-xs">with Cash on Delivery</span>
-                    </div>
+                    {payOnline < payCod && (
+                      <p className="flex items-center flex-wrap gap-x-2 gap-y-1 text-sm text-cream/75">
+                        <span className="text-gold font-semibold" style={serif}>Pay online: {fmtPKR(payOnline)}</span>
+                        <span className="text-gold-light text-[11px] font-semibold uppercase tracking-[0.08em]">{payPct.online}% OFF</span>
+                        <span className="text-cream/55 text-xs">with Bank Transfer / Online Payment</span>
+                      </p>
+                    )}
                   </div>
                 ) : sale.onSale ? (
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-1">
@@ -689,8 +695,8 @@ export default function ProductPageClient({ product, images, related, upsell, re
 
               {/* Promo code */}
               <div className="border border-gold-border/40 rounded-lg p-4 space-y-3" style={{ background: 'rgb(40 3 10 / 0.45)' }}>
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="flex items-center gap-2 text-cream/85 text-sm font-medium shrink-0">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="flex items-center gap-1.5 sm:gap-2 text-cream/85 text-xs sm:text-sm font-medium shrink-0">
                     <Icon name="tag" size={20} className="text-gold" /> Apply Promo Code
                   </span>
                   <input
@@ -698,15 +704,15 @@ export default function ProductPageClient({ product, images, related, upsell, re
                     value={promoInput}
                     onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); if (promo) setPromo(null); }}
                     onKeyDown={(e) => { if (e.key === 'Enter') applyPromo(); }}
-                    placeholder="Enter promo code"
+                    placeholder="Promo code"
                     aria-label="Promo code"
-                    className="flex-1 min-w-[140px] px-3 py-2 bg-sh-card/60 border border-gold-border/40 rounded text-cream/85 text-sm placeholder:text-cream/25 outline-none focus:border-gold-muted"
+                    className="w-0 flex-1 min-w-0 px-3 py-2 bg-sh-card/60 border border-gold-border/40 rounded text-cream/85 text-sm placeholder:text-cream/25 outline-none focus:border-gold-muted"
                   />
                   <button
                     type="button"
                     onClick={applyPromo}
                     disabled={promoLoading || !promoInput.trim()}
-                    className="bg-burgundy border border-gold-muted text-gold-btn-text text-xs font-medium uppercase tracking-[0.12em] px-5 py-2 rounded disabled:opacity-50"
+                    className="shrink-0 bg-burgundy border border-gold-muted text-gold-btn-text text-xs font-medium uppercase tracking-[0.12em] px-3 sm:px-5 py-2 rounded disabled:opacity-50"
                   >
                     {promoLoading ? '…' : 'Apply'}
                   </button>

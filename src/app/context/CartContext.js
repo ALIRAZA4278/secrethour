@@ -129,8 +129,9 @@ export function CartProvider({ children }) {
     // The cart carries the Cash on Delivery price (COD is the checkout default); the
     // original price is the list price, and checkout takes the online price from `payPct`.
     // Derived here, from the item's own prices, so every "add to cart" path agrees.
+    // A COD % of 0 keeps the product's normal price (its sale price, if it has one).
     const orig = Math.max(Number(i.listPrice) || 0, Number(i.numericPrice) || 0);
-    return { ...i, listPrice: orig, numericPrice: payUnitPrice(orig, pp.cod), payPct: pp };
+    return { ...i, listPrice: orig, numericPrice: pp.cod > 0 ? payUnitPrice(orig, pp.cod) : i.numericPrice, payPct: pp };
   });
 
   const totalItems = items.reduce((s, i) => s + i.qty, 0);
