@@ -4,6 +4,7 @@ import Navbar from '../../components/Navbar';
 import MetaPixel from '../../components/MetaPixel';
 import Footer from '../../components/Footer';
 import { getServerSupabase } from '../../../lib/supabase-server';
+import { getPaymentPricing } from '../../../lib/site-settings-server';
 import ProductPageClient from './ProductPageClient';
 
 export const dynamicParams = true;
@@ -180,6 +181,7 @@ export default async function ProductPage({ params }) {
   }
 
   const { product, related, upsell, reviews, sets, testimonials } = data;
+  const payPct = await getPaymentPricing(product.slug);
   const images = product.images?.length ? product.images : [product.img].filter(Boolean);
 
   return (
@@ -191,6 +193,7 @@ export default async function ProductPage({ params }) {
       reviews={reviews}
       sets={sets}
       testimonials={testimonials}
+      payPct={payPct}
     />
   );
 }

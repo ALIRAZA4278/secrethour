@@ -56,7 +56,7 @@ function HeroSlide({ slide, eager }) {
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 
-export default function Home({ hero }) {
+export default function Home({ hero, featuredSlug = '' }) {
   const SLIDES = hero.slides;
   const [email, setEmail] = useState('');
   const { addToCart } = useCart();
@@ -117,7 +117,10 @@ export default function Home({ hero }) {
 
         // Card game for featured section (search by category, not slug)
         const deck = visible.find(p => p.category === 'Card Game');
-        if (deck) setProducts({ cardGame: deck });
+        // The Featured section shows the product chosen in admin -> Site Content, or the
+        // card game when none is chosen (or the chosen one is hidden / deleted).
+        const featured = (featuredSlug && visible.find(p => p.slug === featuredSlug)) || deck;
+        if (deck || featured) setProducts({ cardGame: deck, featured });
 
         // Bundles slider — include every visible product (deck shown first)
         const others = visible.filter(p => p.category !== 'Card Game');
@@ -135,7 +138,7 @@ export default function Home({ hero }) {
       ];
       if (combined.length > 0) setReviews(combined);
     });
-  }, []);
+  }, [featuredSlug]);
 
   return (
     <div className="bg-sh-bg text-cream min-h-screen">
@@ -250,13 +253,13 @@ export default function Home({ hero }) {
 
           {/* Image slider — manual arrows only */}
           {(() => {
-            const deck = products.cardGame;
+            const deck = products.featured;
             const imgs = deck?.images?.length ? deck.images : [deck?.img || IMG.cardGame];
             return (
               <div className="relative aspect-square w-full overflow-hidden border border-gold-border/40 group">
                 <Image
                   src={imgs[featImg] || IMG.cardGame}
-                  alt="The Midnight Deck Secret Hour"
+                  alt={`${deck?.title || 'The Midnight Deck'} Secret Hour`}
                   fill
                   className="object-cover transition-opacity duration-500"
                 />
@@ -303,25 +306,25 @@ export default function Home({ hero }) {
             <p className="text-gold/70 text-[10px] uppercase tracking-[0.35em]">Featured</p>
             <div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl italic leading-tight text-cream" style={serif}>
-                <em>{products.cardGame?.title || 'The Midnight Deck'}</em>
+                <em>{products.featured?.title || 'The Midnight Deck'}</em>
               </h2>
             </div>
 
-            {products.cardGame?.subtitle && (
+            {products.featured?.subtitle && (
               <p className="text-cream/55 italic text-sm" style={serif}>
-                {products.cardGame.subtitle}
+                {products.featured.subtitle}
               </p>
             )}
 
-            {products.cardGame?.description && (
+            {products.featured?.description && (
               <p className="text-cream/60 leading-relaxed text-sm">
-                {products.cardGame.description}
+                {products.featured.description}
               </p>
             )}
 
-            {products.cardGame?.features?.length > 0 && (
+            {products.featured?.features?.length > 0 && (
               <ul className="space-y-2">
-                {products.cardGame.features.map((item) => (
+                {products.featured.features.map((item) => (
                   <li key={item} className="flex items-center gap-2.5 text-cream/65 text-sm">
                     <span className="text-gold text-sm leading-none">✓</span>
                     {item}
@@ -332,7 +335,7 @@ export default function Home({ hero }) {
 
             <div>
               {(() => {
-                const deck = products.cardGame;
+                const deck = products.featured;
                 const s = deck ? getSale(deck) : null;
                 return s?.onSale ? (
                   <p className="flex items-baseline flex-wrap gap-x-3 gap-y-1" style={serif}>
@@ -348,7 +351,7 @@ export default function Home({ hero }) {
             </div>
 
             <Link
-              href={`/product/${products.cardGame?.slug || 'midnight-deck'}`}
+              href={`/product/${products.featured?.slug || 'midnight-deck'}`}
               className="inline-block w-full sm:w-auto text-center bg-sh-bg border border-gold-muted text-gold-btn-text text-[11px] font-medium uppercase tracking-[0.2em] px-10 py-4 btn-glow transition-all duration-300 hover:bg-burgundy"
             >
               Open the Box

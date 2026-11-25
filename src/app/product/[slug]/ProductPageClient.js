@@ -8,7 +8,7 @@ import Navbar from '../../components/Navbar';
 import MetaPixel from '../../components/MetaPixel';
 import Footer from '../../components/Footer';
 import { useCart } from '../../context/CartContext';
-import { getSale, fmtPKR } from '../../../lib/pricing';
+import { getSale, fmtPKR, payUnitPrice } from '../../../lib/pricing';
 
 const serif = { fontFamily: "var(--font-playfair, 'Playfair Display', Georgia, serif)" };
 const LOGO = '/assets/logo-secret-hour-DN-hyC6c.png';
@@ -45,6 +45,7 @@ const ICONS = {
   clock: 'M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
   check: 'M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z',
   play: 'M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z',
+  gift: 'M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
   box: 'M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z',
 };
 
@@ -115,7 +116,7 @@ const TRUST = [
   { icon: 'shield', title: 'Secure Payments', sub: 'Your data is safe' },
 ];
 
-export default function ProductPageClient({ product, images, related, upsell, reviews, sets = [], testimonials = [] }) {
+export default function ProductPageClient({ product, images, related, upsell, reviews, sets = [], testimonials = [], payPct = null }) {
   const router = useRouter();
   const { items: cartItems, addToCart, setOpen, promo, setPromo } = useCart();
   const [activeImg, setActiveImg] = useState(0);
@@ -288,8 +289,12 @@ export default function ProductPageClient({ product, images, related, upsell, re
   };
 
   const sale = getSale(product);
-  const shown = variationPrice(selectedVariation);
   const original = selectedVariation?.price || sale.original;
+  // Payment-based pricing (admin -> Site Content): a % off the original price for Cash on
+  // Delivery and a bigger one for Bank Transfer / online. The cart holds the COD price.
+  const payCod = payPct ? payUnitPrice(original, payPct.cod) : null;
+  const payOnline = payPct ? payUnitPrice(original, payPct.online) : null;
+  const shown = payPct ? payCod : variationPrice(selectedVariation);
   const ratingAvg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
   const inStock = product.in_stock !== false;
   const review = snippets.length ? snippets[reviewIdx % snippets.length] : null;
@@ -350,6 +355,64 @@ export default function ProductPageClient({ product, images, related, upsell, re
             const isMissing = missingOptions.includes(group.label);
             const choices = (group.choices || []).map(c => (typeof c === 'string' ? { value: c } : c));
             const selectedChoice = choices.find(c => c.value === options[group.label]);
+            const pick = (choice, selected) => {
+              setOptions(prev => {
+                const next = { ...prev };
+                if (selected) delete next[group.label];
+                else next[group.label] = choice.value;
+                return next;
+              });
+              setMissingOptions(prev => prev.filter(l => l !== group.label));
+              setShowVideo(false);
+              setOverrideImage(selected ? null : (choice.image || null));
+            };
+            // "Free gift" card (a group with a gift_title): picture tiles in a highlighted panel.
+            if (group.gift_title) {
+              return (
+                <div key={group.label} className={`rounded-xl border p-4 md:p-5 space-y-3 ${isMissing ? 'border-red-400/60' : 'border-gold/50'}`} style={{ background: 'rgb(40 3 10 / 0.45)' }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <span className="w-9 h-9 shrink-0 rounded-lg border border-gold-muted flex items-center justify-center text-gold"><Icon name="gift" size={18} /></span>
+                      <div className="min-w-0">
+                        <p className="text-cream font-semibold text-lg leading-tight" style={serif}>{group.gift_title}</p>
+                        {group.gift_note && <p className="text-cream/65 text-sm mt-0.5">{group.gift_note}</p>}
+                      </div>
+                    </div>
+                    {group.gift_badge && (
+                      <span className="shrink-0 bg-gold text-sh-bg text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-sm">{group.gift_badge}</span>
+                    )}
+                  </div>
+                  <p className={`text-sm ${isMissing ? 'text-red-400' : 'text-cream/80'}`}>
+                    {isMissing ? 'Please choose your preferred color to continue:' : 'Choose your preferred color:'}
+                  </p>
+                  <div role="radiogroup" aria-label={group.label} className="grid grid-cols-2 gap-3">
+                    {choices.map((choice) => {
+                      const selected = options[group.label] === choice.value;
+                      return (
+                        <button
+                          key={choice.value}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => pick(choice, selected)}
+                          className={`text-left rounded-lg overflow-hidden border-2 transition-colors ${selected ? 'border-gold bg-gold/5' : 'border-gold-border/50 hover:border-gold-muted'}`}
+                        >
+                          <span className="relative block aspect-[2/1] bg-sh-card">
+                            {choice.image && <Image src={choice.image} alt="" fill sizes="(min-width: 1024px) 260px, 45vw" className="object-cover" />}
+                          </span>
+                          <span className="flex items-center gap-2 px-3 py-2.5">
+                            <span className={`w-4 h-4 shrink-0 rounded-full border-2 flex items-center justify-center ${selected ? 'border-gold' : 'border-cream/40'}`}>
+                              {selected && <span className="w-2 h-2 rounded-full bg-gold" />}
+                            </span>
+                            <span className="text-sm text-cream">{choice.value}{group.gift_item ? ` ${group.gift_item}` : ''}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
             return (
               <div key={group.label} className="space-y-2">
                 <p className={`text-[10px] uppercase tracking-[0.25em] ${isMissing ? 'text-red-400' : 'text-cream/50'}`}>
@@ -542,7 +605,21 @@ export default function ProductPageClient({ product, images, related, upsell, re
 
               {/* Price */}
               <div>
-                {sale.onSale ? (
+                {payPct ? (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center flex-wrap gap-x-4 gap-y-1">
+                      <p className="text-4xl md:text-[2.6rem] text-gold leading-none" style={serif}>{fmtPKR(payOnline)}</p>
+                      <p className="text-lg text-cream/45 line-through" style={serif}>{fmtPKR(original)}</p>
+                      <span className="bg-burgundy text-gold-light border border-gold-border/70 text-xs font-semibold uppercase tracking-[0.08em] px-3 py-1 rounded">{payPct.online}% OFF</span>
+                    </div>
+                    <p className="text-cream/60 text-xs uppercase tracking-[0.18em]">with Bank Transfer / Online Payment</p>
+                    <div className="inline-flex items-center flex-wrap gap-x-3 gap-y-1 border border-gold-border/40 rounded-lg px-3 py-2" style={{ background: 'rgb(40 3 10 / 0.35)' }}>
+                      <span className="text-gold text-lg font-semibold" style={serif}>{fmtPKR(payCod)}</span>
+                      <span className="text-gold-light text-[11px] font-semibold uppercase tracking-[0.08em]">{payPct.cod}% OFF</span>
+                      <span className="text-cream/60 text-xs">with Cash on Delivery</span>
+                    </div>
+                  </div>
+                ) : sale.onSale ? (
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-1">
                     <p className="text-4xl md:text-[2.6rem] text-gold leading-none" style={serif}>{fmtPKR(shown)}</p>
                     <p className="text-lg text-cream/45 line-through" style={serif}>{fmtPKR(original)}</p>
@@ -556,43 +633,6 @@ export default function ProductPageClient({ product, images, related, upsell, re
                 {product.bulk_discount_qty && product.bulk_discount_pct && (
                   <p className="text-green-400/90 text-xs uppercase tracking-[0.15em] mt-1.5 font-medium">
                     Buy {product.bulk_discount_qty} and save {product.bulk_discount_pct}%
-                  </p>
-                )}
-              </div>
-
-              {/* Promo code */}
-              <div className="border border-gold-border/40 rounded-lg p-4 space-y-3" style={{ background: 'rgb(40 3 10 / 0.45)' }}>
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="flex items-center gap-2 text-cream/85 text-sm font-medium shrink-0">
-                    <Icon name="tag" size={20} className="text-gold" /> Apply Promo Code
-                  </span>
-                  <input
-                    type="text"
-                    value={promoInput}
-                    onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); if (promo) setPromo(null); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') applyPromo(); }}
-                    placeholder="Enter promo code"
-                    aria-label="Promo code"
-                    className="flex-1 min-w-[140px] px-3 py-2 bg-sh-card/60 border border-gold-border/40 rounded text-cream/85 text-sm placeholder:text-cream/25 outline-none focus:border-gold-muted"
-                  />
-                  <button
-                    type="button"
-                    onClick={applyPromo}
-                    disabled={promoLoading || !promoInput.trim()}
-                    className="bg-burgundy border border-gold-muted text-gold-btn-text text-xs font-medium uppercase tracking-[0.12em] px-5 py-2 rounded disabled:opacity-50"
-                  >
-                    {promoLoading ? '…' : 'Apply'}
-                  </button>
-                </div>
-                {promoError && <p className="text-red-400 text-xs">{promoError}</p>}
-                {promo && !promoError && (
-                  <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                    <span className="flex items-center gap-1.5 text-green-400 font-medium">
-                      <Icon name="check" size={18} /> {promo.pct}% discount applied!
-                    </span>
-                    <span className="text-cream/55">
-                      You&apos;ll save {fmtPKR(Math.round(shown * qty * promo.pct / 100))} on this order.
-                    </span>
                   </p>
                 )}
               </div>
@@ -646,6 +686,43 @@ export default function ProductPageClient({ product, images, related, upsell, re
               >
                 Buy Now
               </button>
+
+              {/* Promo code */}
+              <div className="border border-gold-border/40 rounded-lg p-4 space-y-3" style={{ background: 'rgb(40 3 10 / 0.45)' }}>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="flex items-center gap-2 text-cream/85 text-sm font-medium shrink-0">
+                    <Icon name="tag" size={20} className="text-gold" /> Apply Promo Code
+                  </span>
+                  <input
+                    type="text"
+                    value={promoInput}
+                    onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); if (promo) setPromo(null); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') applyPromo(); }}
+                    placeholder="Enter promo code"
+                    aria-label="Promo code"
+                    className="flex-1 min-w-[140px] px-3 py-2 bg-sh-card/60 border border-gold-border/40 rounded text-cream/85 text-sm placeholder:text-cream/25 outline-none focus:border-gold-muted"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyPromo}
+                    disabled={promoLoading || !promoInput.trim()}
+                    className="bg-burgundy border border-gold-muted text-gold-btn-text text-xs font-medium uppercase tracking-[0.12em] px-5 py-2 rounded disabled:opacity-50"
+                  >
+                    {promoLoading ? '…' : 'Apply'}
+                  </button>
+                </div>
+                {promoError && <p className="text-red-400 text-xs">{promoError}</p>}
+                {promo && !promoError && (
+                  <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                    <span className="flex items-center gap-1.5 text-green-400 font-medium">
+                      <Icon name="check" size={18} /> {promo.pct}% discount applied!
+                    </span>
+                    <span className="text-cream/55">
+                      You&apos;ll save {fmtPKR(Math.round(shown * qty * promo.pct / 100))} on this order.
+                    </span>
+                  </p>
+                )}
+              </div>
 
               <div className="space-y-1">
                 <p className={`flex items-center gap-2 text-sm ${inStock ? 'text-green-400' : 'text-red-400'}`}>

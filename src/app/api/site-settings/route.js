@@ -28,7 +28,7 @@ export async function POST(req) {
     }
 
     // The home page is statically regenerated; refresh it so the edit shows immediately.
-    if (key === 'hero') revalidatePath('/');
+    if (key === 'hero' || key === 'featured') revalidatePath('/');
     return NextResponse.json({ ok: true, value: clean });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });

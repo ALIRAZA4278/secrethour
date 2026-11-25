@@ -6,7 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import BlogsList from '@/components/admin/blogs-list';
 import SearchableSelect from '@/components/admin/SearchableSelect';
 import { getSale } from '../../lib/pricing';
-import { DEFAULT_ANNOUNCEMENT, DEFAULT_HERO, normalizeSetting } from '../../lib/site-defaults';
+import { DEFAULT_ANNOUNCEMENT, DEFAULT_HERO, DEFAULT_FEATURED, DEFAULT_PAYMENT_PRICING, normalizeSetting } from '../../lib/site-defaults';
+import { payUnitPrice } from '../../lib/pricing';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -2695,6 +2696,19 @@ function ProductsTab() {
                     <button type="button" onClick={() => setOptionGroups(prev => prev.filter((_, j) => j !== gi))}
                       className="text-red-500 hover:text-red-700 text-xs font-medium transition">Remove</button>
                   </div>
+                  {/* Optional "free gift" card: when a title is set, this group shows on the product page
+                      as a highlighted card with picture tiles instead of plain buttons. */}
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    {[
+                      ['gift_title', 'Gift card title (e.g. Free Gift: Silk Bond)'],
+                      ['gift_badge', 'Badge (e.g. Limited Time)'],
+                      ['gift_note',  'Short line (e.g. Get a complimentary Silk Bond with your Midnight Deck.)'],
+                      ['gift_item',  'Name added after each choice (e.g. Silk Bond)'],
+                    ].map(([k, ph]) => (
+                      <input key={k} type="text" value={group[k] || ''} placeholder={ph} className={INP}
+                        onChange={e => setOptionGroups(prev => prev.map((g, j) => j === gi ? { ...g, [k]: e.target.value } : g))} />
+                    ))}
+                  </div>
                   <div className="space-y-2">
                     {(group.choices || []).length === 0 && (
                       <p className="text-gray-400 text-xs italic">No choices yet — add one below.</p>
@@ -3109,6 +3123,10 @@ function SiteStatus({ text }) {
 function SiteContentTab() {
   const [ann, setAnn]         = useState(DEFAULT_ANNOUNCEMENT);
   const [hero, setHero]       = useState(DEFAULT_HERO);
+  const [featured, setFeatured] = useState(DEFAULT_FEATURED);
+  const [prods, setProds]     = useState([]);
+  // Payment pricing is edited as rows; a row is { slug, cod, online } (strings while typing).
+  const [payRows, setPayRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy]       = useState('');
   const [msg, setMsg]         = useState({});
@@ -3117,10 +3135,17 @@ function SiteContentTab() {
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase.from('site_settings').select('key, value');
+      const { data: plist } = await supabase.from('products').select('slug, title, hidden, numeric_price').order('created_at', { ascending: false });
+      setProds(plist || []);
       if (!error) {
         const row = (k) => (data || []).find(r => r.key === k)?.value;
         if (row('announcement')) setAnn(normalizeSetting('announcement', row('announcement')));
         if (row('hero'))         setHero(normalizeSetting('hero', row('hero')));
+        if (row('featured'))     setFeatured(normalizeSetting('featured', row('featured')));
+        if (row('payment_pricing')) {
+          const pp = normalizeSetting('payment_pricing', row('payment_pricing'));
+          setPayRows(Object.entries(pp).map(([slug, e]) => ({ slug, cod: String(e.cod), online: String(e.online) })));
+        }
       } else {
         setMsg({ load: 'Could not load saved content. Run supabase-site-settings.sql in Supabase first. Showing the defaults.' });
       }
@@ -3137,6 +3162,10 @@ function SiteContentTab() {
         setAnn(saved);
         // Keep this browser's cached copy in step so the bar updates on the next page view.
         try { localStorage.setItem('sh_announcement', JSON.stringify(saved)); } catch {}
+      } else if (key === 'featured') {
+        setFeatured(saved);
+      } else if (key === 'payment_pricing') {
+        setPayRows(Object.entries(saved).map(([slug, e]) => ({ slug, cod: String(e.cod), online: String(e.online) })));
       } else {
         setHero(saved);
       }
@@ -3200,6 +3229,74 @@ function SiteContentTab() {
           <button disabled={busy === 'announcement'} onClick={() => save('announcement', ann)} className={SAVE_BTN}>{busy === 'announcement' ? 'Saving…' : 'Save announcement'}</button>
           <button type="button" onClick={() => setAnn(DEFAULT_ANNOUNCEMENT)} className={GHOST_BTN}>Reset to default</button>
           <SiteStatus text={msg.announcement} />
+        </div>
+      </section>
+
+      {/* ── Featured product ── */}
+      <section className="bg-white border border-gray-200 rounded-xl p-5 md:p-6 space-y-4">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold border-b border-gray-200 pb-2">Home page: Featured product</h2>
+        <p className="text-sm text-gray-500">The large product section under the hero. Its photos, title, description, price and the “Open the Box” link come from the product you pick.</p>
+        <div>
+          <label className={LBL}>Product</label>
+          <select value={featured.slug} onChange={e => setFeatured({ slug: e.target.value })} className={INP}>
+            <option value="">Default: the card game</option>
+            {prods.map(p => (
+              <option key={p.slug} value={p.slug}>{p.title}{p.hidden ? ' (hidden: will not show)' : ''}</option>
+            ))}
+          </select>
+          <p className="text-[11px] text-gray-400 mt-1">If the chosen product is hidden or deleted, the home page falls back to the card game.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <button disabled={busy === 'featured'} onClick={() => save('featured', featured)} className={SAVE_BTN}>{busy === 'featured' ? 'Saving…' : 'Save featured product'}</button>
+          <SiteStatus text={msg.featured} />
+        </div>
+      </section>
+
+      {/* ── Payment-based pricing ── */}
+      <section className="bg-white border border-gray-200 rounded-xl p-5 md:p-6 space-y-4">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold border-b border-gray-200 pb-2">Payment-based pricing (per product)</h2>
+        <p className="text-sm text-gray-500">
+          Give a product one discount for Cash on Delivery and a bigger one for Bank Transfer / online payment. Both are % off the product&apos;s
+          original price. Customers see both prices on the product page; the cart shows the COD price and checkout applies the online one.
+          This replaces the standard 10% online discount for that product (they do not stack). Products not listed here are unchanged.
+        </p>
+        <div className="space-y-3">
+          {payRows.length === 0 && <p className="text-sm text-gray-400 italic">No product has payment-based pricing.</p>}
+          {payRows.map((r, i) => {
+            const p = prods.find(x => x.slug === r.slug);
+            const orig = p?.numeric_price || 0;
+            const upd = (patch) => setPayRows(rows => rows.map((x, j) => j === i ? { ...x, ...patch } : x));
+            return (
+              <div key={i} className="grid sm:grid-cols-[2fr_1fr_1fr_auto] gap-3 items-end border border-gray-200 rounded-lg p-3">
+                <div>
+                  <label className={LBL}>Product</label>
+                  <select value={r.slug} onChange={e => upd({ slug: e.target.value })} className={INP}>
+                    <option value="">Choose a product…</option>
+                    {prods.map(x => <option key={x.slug} value={x.slug}>{x.title}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={LBL}>COD % off</label>
+                  <input type="number" min="0" max="90" value={r.cod} onChange={e => upd({ cod: e.target.value })} className={INP} />
+                  {orig > 0 && <p className="text-[11px] text-gray-400 mt-1">= Rs. {payUnitPrice(orig, Number(r.cod) || 0).toLocaleString()}</p>}
+                </div>
+                <div>
+                  <label className={LBL}>Online % off</label>
+                  <input type="number" min="0" max="90" value={r.online} onChange={e => upd({ online: e.target.value })} className={INP} />
+                  {orig > 0 && <p className="text-[11px] text-gray-400 mt-1">= Rs. {payUnitPrice(orig, Number(r.online) || 0).toLocaleString()}</p>}
+                </div>
+                <button type="button" onClick={() => setPayRows(rows => rows.filter((_, j) => j !== i))}
+                  className="border border-red-200 text-red-500 hover:bg-red-50 text-xs uppercase tracking-[0.18em] px-3 py-2.5 rounded-lg transition">Remove</button>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <button type="button" onClick={() => setPayRows(rows => [...rows, { slug: '', cod: '', online: '' }])} className={GHOST_BTN}>+ Add product</button>
+          <button disabled={busy === 'payment_pricing'}
+            onClick={() => save('payment_pricing', Object.fromEntries(payRows.filter(r => r.slug).map(r => [r.slug, { cod: Number(r.cod) || 0, online: Number(r.online) || 0 }])))}
+            className={SAVE_BTN}>{busy === 'payment_pricing' ? 'Saving…' : 'Save payment pricing'}</button>
+          <SiteStatus text={msg.payment_pricing} />
         </div>
       </section>
 
