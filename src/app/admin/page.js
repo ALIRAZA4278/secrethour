@@ -1406,7 +1406,9 @@ function OrdersChart({ orders, status = null }) {
    DASHBOARD
 ═══════════════════════════════════════════ */
 function Dashboard() {
-  const [stats,         setStats]         = useState({ total: 0, revenue: 0, pending: 0, deliveryRate: 0 });
+  const [stats,         setStats]         = useState({ total: 0, revenue: 0, pending: 0, deliveryRate: 0, avgOrder: 0, validOrders: 0 });
+  // COD vs online (Bank Transfer) split for the selected period.
+  const [payments,      setPayments]      = useState({ cod: { count: 0, pct: 0, revenue: 0 }, online: { count: 0, pct: 0, revenue: 0 } });
   const [statusCounts,  setStatusCounts]  = useState({});
   const [statusRevenue, setStatusRevenue] = useState({});
   const [recent,        setRecent]        = useState([]);
@@ -1468,11 +1470,30 @@ function Dashboard() {
         setStatusCounts(counts);
         setStatusRevenue(revenue);
 
+        // Revenue and average order ignore cancelled & returned orders.
+        const valid   = periodFiltered.filter(o => !['cancelled', 'returned'].includes(o.status));
+        const totalRevenue = valid.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
         setStats({
           total:        periodFiltered.length,
-          revenue:      periodFiltered.filter(o => !['cancelled','returned'].includes(o.status)).reduce((s, o) => s + (Number(o.total) || 0), 0),
+          revenue:      totalRevenue,
           pending:      periodFiltered.filter(o => o.status === 'pending').length,
           deliveryRate: periodFiltered.length ? Math.round((delivered / periodFiltered.length) * 100) : 0,
+          avgOrder:     valid.length ? Math.round(totalRevenue / valid.length) : 0,
+          validOrders:  valid.length,
+        });
+
+        // Payments: 'bank' = paid online (Bank Transfer), everything else is COD.
+        // Counts and % cover every order in the period (they add up to Total Orders);
+        // revenue per method excludes cancelled & returned, like the Revenue card.
+        const isOnline   = (o) => o.payment_method === 'bank';
+        const validSet   = new Set(valid);
+        const sumTotals  = (list) => list.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+        const onlineAll  = periodFiltered.filter(isOnline);
+        const codAll     = periodFiltered.filter(o => !isOnline(o));
+        const onlinePct  = periodFiltered.length ? Math.round((onlineAll.length / periodFiltered.length) * 100) : 0;
+        setPayments({
+          cod:    { count: codAll.length,    pct: periodFiltered.length ? 100 - onlinePct : 0, revenue: sumTotals(codAll.filter(o => validSet.has(o))) },
+          online: { count: onlineAll.length, pct: onlinePct,                                   revenue: sumTotals(onlineAll.filter(o => validSet.has(o))) },
         });
         setRecent(periodFiltered.slice(0, 8));
       }
@@ -1565,18 +1586,44 @@ function Dashboard() {
       </div>
 
       {/* Main Stats */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
         {[
           { label: 'Total Orders',  value: stats.total },
-          { label: 'Revenue',       value: `Rs. ${stats.revenue.toLocaleString()}` },
+          { label: 'Revenue',       value: `Rs. ${stats.revenue.toLocaleString()}`,         note: 'Excludes cancelled & returned' },
+          { label: 'Average Order', value: `Rs. ${stats.avgOrder.toLocaleString()}`,        note: `Across ${stats.validOrders} order${stats.validOrders === 1 ? '' : 's'}` },
           { label: 'Pending',       value: stats.pending },
           { label: 'Delivery Rate', value: `${stats.deliveryRate}%` },
         ].map(s => (
-          <div key={s.label} className="border border-gray-200 p-5 bg-white rounded-xl shadow-sm">
+          <div key={s.label} className="border border-gray-200 p-5 bg-white rounded-xl shadow-sm last:col-span-2 xl:last:col-span-1">
             <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-2">{s.label}</p>
             <p className="text-3xl text-gray-900 font-bold">{s.value}</p>
+            {s.note && <p className="text-gray-400 text-xs mt-1.5">{s.note}</p>}
           </div>
         ))}
+      </div>
+
+      {/* Payments: COD vs online, number of orders and share */}
+      <div>
+        <h2 className="text-lg italic text-gray-800 mb-4" style={serif}>Payments</h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {[
+            { key: 'cod',    label: 'Cash on Delivery',           bar: 'bg-gray-700' },
+            { key: 'online', label: 'Online (Bank Transfer)',     bar: 'bg-blue-600' },
+          ].map(m => (
+            <div key={m.key} className="border border-gray-200 p-5 bg-white rounded-xl shadow-sm">
+              <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-2">{m.label}</p>
+              <div className="flex items-baseline gap-3">
+                <p className="text-3xl text-gray-900 font-bold">{payments[m.key].count}</p>
+                <p className="text-gray-500 text-sm">order{payments[m.key].count === 1 ? '' : 's'}</p>
+                <p className="ml-auto text-2xl font-semibold text-gray-800">{payments[m.key].pct}%</p>
+              </div>
+              <div className="h-1.5 bg-gray-100 rounded-full mt-3 overflow-hidden">
+                <div className={`h-full rounded-full ${m.bar}`} style={{ width: `${payments[m.key].pct}%` }} />
+              </div>
+              <p className="text-gray-400 text-xs mt-2">Rs. {payments[m.key].revenue.toLocaleString()} revenue</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Timeline Chart */}
