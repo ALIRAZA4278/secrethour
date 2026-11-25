@@ -401,6 +401,8 @@ export default function ProductPageClient({ product, images, related, upsell, re
                         >
                           <span className="relative block aspect-[2/1] bg-sh-card">
                             {choice.image && <Image src={choice.image} alt="" fill sizes="(min-width: 1024px) 260px, 45vw" className="object-cover" />}
+                            {/* Every choice in a gift card is the free gift, so each tile carries a FREE tag. */}
+                            <span className="absolute top-2 left-2 bg-gold text-sh-bg text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded-sm shadow">Free</span>
                           </span>
                           <span className="flex items-center gap-2 px-3 py-2.5">
                             <span className={`w-4 h-4 shrink-0 rounded-full border-2 flex items-center justify-center ${selected ? 'border-gold' : 'border-cream/40'}`}>
