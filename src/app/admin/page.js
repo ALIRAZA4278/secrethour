@@ -3135,7 +3135,7 @@ function SiteContentTab() {
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase.from('site_settings').select('key, value');
-      const { data: plist } = await supabase.from('products').select('slug, title, hidden, numeric_price').order('created_at', { ascending: false });
+      const { data: plist } = await supabase.from('products').select('slug, title, hidden, numeric_price, sale_price').order('created_at', { ascending: false });
       setProds(plist || []);
       if (!error) {
         const row = (k) => (data || []).find(r => r.key === k)?.value;
@@ -3257,7 +3257,7 @@ function SiteContentTab() {
         <h2 className="text-xs uppercase tracking-[0.25em] text-gray-400 font-semibold border-b border-gray-200 pb-2">Payment-based pricing (per product)</h2>
         <p className="text-sm text-gray-500">
           Give a product one discount for Cash on Delivery and a bigger one for Bank Transfer / online payment. Both are % off the product&apos;s
-          original price. Customers see both prices on the product page; the cart shows the COD price and checkout applies the online one.
+          original price. A COD % of 0 keeps the product&apos;s normal price (its sale price) for Cash on Delivery. The product page shows the COD price with the online price below it; the cart shows the COD price and checkout applies the online one.
           This replaces the standard 10% online discount for that product (they do not stack). Products not listed here are unchanged.
         </p>
         <div className="space-y-3">
@@ -3276,9 +3276,13 @@ function SiteContentTab() {
                   </select>
                 </div>
                 <div>
-                  <label className={LBL}>COD % off</label>
+                  <label className={LBL}>COD % off (0 = normal price)</label>
                   <input type="number" min="0" max="90" value={r.cod} onChange={e => upd({ cod: e.target.value })} className={INP} />
-                  {orig > 0 && <p className="text-[11px] text-gray-400 mt-1">= Rs. {payUnitPrice(orig, Number(r.cod) || 0).toLocaleString()}</p>}
+                  {orig > 0 && (
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      = Rs. {(Number(r.cod) > 0 ? payUnitPrice(orig, Number(r.cod)) : (p?.sale_price > 0 && p.sale_price < orig ? p.sale_price : orig)).toLocaleString()}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className={LBL}>Online % off</label>
